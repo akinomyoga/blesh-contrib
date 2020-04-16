@@ -1,10 +1,11 @@
-# fzf-completion.sh (C) 2020, akinomyoga
-# -*- mode: sh; mode: sh-bash -*-
+# ble/contrib/fzf-completion.bash (C) 2020, akinomyoga
+
+[[ $- == *i* ]] || return 0
 
 function ble/contrib/fzf-completion/initialize {
   if [[ ! $_ble_contrib_fzf_base ]]; then
     local path
-    if ! ble/assign path 'type -p fzf 2>/dev/null'; then
+    if ! ble/util/assign path 'type -p fzf 2>/dev/null'; then
       echo 'ble/contrib/fzf-completion: "fzf" not found.'
       return 1
     fi
