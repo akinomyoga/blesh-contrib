@@ -10,6 +10,7 @@ function ble/contrib/fzf-completion/initialize {
       return 1
     fi
     _ble_contrib_fzf_base=${path%/*}
+    _ble_contrib_fzf_base=${_ble_contrib_fzf_base%/bin}
   fi
   [[ -d $_ble_contrib_fzf_base ]]
 }
