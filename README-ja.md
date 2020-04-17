@@ -1,3 +1,5 @@
+\[ Language: [English](README.md) | **日本語** ]
+
 # blesh-contrib
 [akinomyoga/ble.sh](https://github.com/akinomyoga/ble.sh)向けの設定
 
