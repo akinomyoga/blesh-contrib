@@ -71,7 +71,7 @@ _ble_contrib_fzf_git_config=key-binding:sabbrev:arpeggio
 ble-import -d contrib/fzf-git
 ```
 
-シェル変数`$_ble_contrib_fzf_git_config`にはコロン区切りで束縛の型を列挙します。
-`key-binding`はキー束縛の形式であり，内容は<kbd>C-g C-f</kbd>, <kbd>C-g C-b</kbd>, <kbd>C-g C-t</kbd>, <kbd>C-g C-h</kbd>及び<kbd>C-g C-r</kbd>です。
-`sabbrev`は静的略語展開する単語であり，内容は`gf`, `gb`, `gt`, `gh`及び`gr`です。
-`arpeggio`は同時押下するキーの組み合せであり，内容は<kbd>g f</kbd>, <kbd>g b</kbd>, <kbd>g t</kbd>, <kbd>g h</kbd>及び<kbd>g r</kbd>です。
+シェル変数`$_ble_contrib_fzf_git_config`には，有効にする束縛の種別をコロン区切りで列挙します。
+`key-binding`という値で，次の形式のキー束縛を有効にします: <kbd>C-g C-f</kbd>, <kbd>C-g C-b</kbd>, <kbd>C-g C-t</kbd>, <kbd>C-g C-h</kbd>及び<kbd>C-g C-r</kbd>。
+`sabbrev`という値で，次の語に対する静的略語展開を有効にします: `gf`, `gb`, `gt`, `gh`及び`gr`。
+`arpeggio`という値で，次のキーの組み合わせを同時に押下できるようにします: <kbd>g f</kbd>, <kbd>g b</kbd>, <kbd>g t</kbd>, <kbd>g h</kbd>及び<kbd>g r</kbd>。
