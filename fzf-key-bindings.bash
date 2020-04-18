@@ -1,26 +1,8 @@
 # ble/contrib/fzf-key-bindings.bash (C) 2020, akinomyoga
 
-[[ $- == *i* ]] || return 0
+ble-import contrib/fzf-initialize
 
-function ble/contrib/fzf-key-bindings/initialize {
-  [[ $_ble_contrib_fzf_base ]] && return 0
-  
-  local ret
-  if ! ble/util/assign ret 'type -p fzf 2>/dev/null'; then
-    echo 'ble/contrib/fzf: "fzf" not found.'
-    return 1
-  fi
-  ble/util/readlink "$ret"
-  ret=${ret%/*}
-  ret=${ret%/bin}
-  if [[ -d $ret/shell ]]; then
-    _ble_contrib_fzf_base=$ret
-  else
-    echo 'ble/contrib/fzf: failed to find "fzf" base directory' >&2
-    return 1
-  fi
-}
-ble/contrib/fzf-key-bindings/initialize || return 1
+[[ $- == *i* ]] || return 0
 
 ble/function#push bind :
 source "$_ble_contrib_fzf_base/shell/key-bindings.bash"
