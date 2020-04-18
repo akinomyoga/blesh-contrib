@@ -3,16 +3,22 @@
 [[ $- == *i* ]] || return 0
 
 function ble/contrib/fzf-key-bindings/initialize {
-  if [[ ! $_ble_contrib_fzf_base ]]; then
-    local path
-    if ! ble/util/assign path 'type -p fzf 2>/dev/null'; then
-      echo 'ble/contrib/fzf-key-bindings: "fzf" not found.'
-      return 1
-    fi
-    _ble_contrib_fzf_base=${path%/*}
-    _ble_contrib_fzf_base=${_ble_contrib_fzf_base%/bin}
+  [[ $_ble_contrib_fzf_base ]] && return 0
+  
+  local ret
+  if ! ble/util/assign ret 'type -p fzf 2>/dev/null'; then
+    echo 'ble/contrib/fzf: "fzf" not found.'
+    return 1
   fi
-  [[ -d $_ble_contrib_fzf_base ]]
+  ble/util/readlink "$ret"
+  ret=${ret%/*}
+  ret=${ret%/bin}
+  if [[ -d $ret/shell ]]; then
+    _ble_contrib_fzf_base=$ret
+  else
+    echo 'ble/contrib/fzf: failed to find "fzf" base directory' >&2
+    return 1
+  fi
 }
 ble/contrib/fzf-key-bindings/initialize || return 1
 

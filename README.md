@@ -69,7 +69,7 @@ _ble_contrib_fzf_git_config=key-binding:sabbrev:arpeggio
 ble-import -d contrib/fzf-git
 ```
 
-The shell variable `_ble_contrib_fzf_git_config` is a colon separated list of the enabled types of bindings.
+The shell variable `_ble_contrib_fzf_git_config` is a colon-separated list of the enabled types of bindings.
 The value `key-binding` enables the key bindings of the form <kbd>C-g C-f</kbd>, <kbd>C-g C-b</kbd>, <kbd>C-g C-t</kbd>, <kbd>C-g C-h</kbd> and <kbd>C-g C-r</kbd>.
 The value `sabbrev` enables the sabbrev expansion for the words `gf`, `gb`, `gt`, `gh` and `gr`.
 The value `arpeggio` enables the simultaneous key combinations of <kbd>g f</kbd>, <kbd>g b</kbd>, <kbd>g t</kbd>, <kbd>g h</kbd> and <kbd>g r</kbd>.

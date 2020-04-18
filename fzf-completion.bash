@@ -3,20 +3,26 @@
 [[ $- == *i* ]] || return 0
 
 function ble/contrib/fzf-completion/initialize {
-  if [[ ! $_ble_contrib_fzf_base ]]; then
-    local path
-    if ! ble/util/assign path 'type -p fzf 2>/dev/null'; then
-      echo 'ble/contrib/fzf-completion: "fzf" not found.'
-      return 1
-    fi
-    _ble_contrib_fzf_base=${path%/*}
-    _ble_contrib_fzf_base=${_ble_contrib_fzf_base%/bin}
+  [[ $_ble_contrib_fzf_base ]] && return 0
+  
+  local ret
+  if ! ble/util/assign ret 'type -p fzf 2>/dev/null'; then
+    echo 'ble/contrib/fzf: "fzf" not found.'
+    return 1
   fi
-  [[ -d $_ble_contrib_fzf_base ]]
+  ble/util/readlink "$ret"
+  ret=${ret%/*}
+  ret=${ret%/bin}
+  if [[ -d $ret/shell ]]; then
+    _ble_contrib_fzf_base=$ret
+  else
+    echo 'ble/contrib/fzf: failed to find "fzf" base directory' >&2
+    return 1
+  fi
 }
 ble/contrib/fzf-completion/initialize || return 1
 
-source "$_ble_contrib_fzf_base/shell/completion.bash" 2>/dev/null
+source "$_ble_contrib_fzf_base/shell/completion.bash"
 
 # clear blesh completer for cd
 blehook/eval-after-load complete 'unset -f ble/cmdinfo/complete:cd'
