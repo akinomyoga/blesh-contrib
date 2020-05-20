@@ -3,7 +3,7 @@
 # blesh-contrib
 [akinomyoga/ble.sh](https://github.com/akinomyoga/ble.sh)向けの設定
 
-<sup>〔訳註: これは[2020年4月17日時点のREADME.md](https://github.com/akinomyoga/blesh-contrib/blob/8d89d469bd46d9d1158ab5295cd48a3df6942074/README.md) (8d89d46)の，技術的内容を変更しない日本語訳です〕</sup>
+<sup>〔訳註: これは[2020年5月20日（日本標準時）時点のREADME.md](https://github.com/akinomyoga/blesh-contrib/blob/8d89d469bd46d9d1158ab5295cd48a3df6942074/README.md) (8d89d46)の，技術的内容を変更しない日本語訳です〕</sup>
 
 ## :pencil: fzfとの統合
 
