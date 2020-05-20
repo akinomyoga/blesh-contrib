@@ -8,6 +8,11 @@ ble/function#push bind :
 source "$_ble_contrib_fzf_base/shell/key-bindings.bash"
 ble/function#pop bind
 
+function ble/contrib/fzf-key-bindings/is-fzf-above-7c447bbd {
+  local def; ble/function#getdef __fzf_history__ 
+  [[ $def == *READLINE_LINE=* ]]
+}
+
 # CTRL-T - Paste the selected file path into the command line
 ble-bind -m emacs   -x C-t fzf-file-widget
 ble-bind -m vi_imap -x C-t fzf-file-widget
@@ -21,6 +26,9 @@ function fzf-history-widget {
   READLINE_LINE=$(history -p "$(__fzf_history__)")
   READLINE_POINT=${#READLINE_LINE}
 }
+((_ble_bash>=40000)) &&
+  ble/contrib/fzf-key-bindings/is-fzf-above-7c447bbd &&
+  function fzf-history-widget { __fzf_history__; }
 
 # ALT-C - cd into the selected directory
 ble-bind -m emacs   -c M-c 'eval "$(__fzf_cd__)"'
