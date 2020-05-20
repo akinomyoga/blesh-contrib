@@ -3,7 +3,7 @@
 # blesh-contrib
 [akinomyoga/ble.sh](https://github.com/akinomyoga/ble.sh)向けの設定
 
-<sup>〔訳註: これは[2020年4月17日時点のREADME.md](https://github.com/akinomyoga/blesh-contrib/blob/092998ff3887ecc5d6d2b5c47b362325c7524732/README.md) (092998f)の，技術的内容を変更しない日本語訳です〕</sup>
+<sup>〔訳註: これは[2020年4月17日時点のREADME.md](https://github.com/akinomyoga/blesh-contrib/blob/8d89d469bd46d9d1158ab5295cd48a3df6942074/README.md) (8d89d46)の，技術的内容を変更しない日本語訳です〕</sup>
 
 ## :pencil: fzfとの統合
 
@@ -17,7 +17,8 @@ fzfを`ble.sh`と共に用いたい場合，`.fzf.bash`を次のように書き�
 # fzfの設定
 # ---------
 
-if [[ ! "$PATH" == *"/path/to/fzf/bin"* ]]; then
+_ble_contrib_fzf_base=/path/to/fzf
+if [[ ! "$PATH" == *"$_ble_contrib_fzf_base/bin"* ]]; then
   export PATH="${PATH:+${PATH}:}/path/to/fzf/bin"
 fi
 
@@ -26,7 +27,7 @@ fi
 if [[ $BLE_VERSION ]]; then
   ble-import -d contrib/fzf-completion
 else
-  [[ $- == *i* ]] && source "/path/to/fzf/shell/completion.bash" 2> /dev/null
+  [[ $- == *i* ]] && source "$_ble_contrib_fzf_base/shell/completion.bash" 2> /dev/null
 fi
 
 # キー束縛
@@ -34,7 +35,7 @@ fi
 if [[ $BLE_VERSION ]]; then
   ble-import -d contrib/fzf-key-bindings
 else
-  source "/path/to/fzf/shell/key-bindings.bash"
+  source "$_ble_contrib_fzf_base/shell/key-bindings.bash"
 fi
 ```
 
@@ -47,9 +48,7 @@ fi
 # blerc
 
 # fzfの設定
-if [[ ! "$PATH" == *"/path/to/fzf/bin"* ]]; then
-  export PATH="${PATH:+${PATH}:}/path/to/fzf/bin"
-fi
+_ble_contrib_fzf_base=/path/to/fzf
 ble-import -d contrib/fzf-completion
 ble-import -d contrib/fzf-key-bindings
 ```
@@ -60,15 +59,18 @@ ble-import -d contrib/fzf-key-bindings
 
 ```bash
 # bashrc / fzf.bash
-_ble_contrib_fzf_git_config=key-binding:sabbrev:arpeggio
-[[ $BLE_VERSION ]] &&
-  ble-import -d contrib/fzf-git
+if [[ $BLE_VERSION ]]; then
+	_ble_contrib_fzf_base=/path/to/fzf
+	_ble_contrib_fzf_git_config=key-binding:sabbrev:arpeggio
+	ble-import -d contrib/fzf-git
+fi
 ```
 
 または，`~/.blerc`内でも構成できます:
 
 ```bash
 # blerc
+_ble_contrib_fzf_base=/path/to/fzf
 _ble_contrib_fzf_git_config=key-binding:sabbrev:arpeggio
 ble-import -d contrib/fzf-git
 ```
@@ -77,3 +79,16 @@ ble-import -d contrib/fzf-git
 `key-binding`という値で，次の形式のキー束縛を有効にします: <kbd>C-g C-f</kbd>, <kbd>C-g C-b</kbd>, <kbd>C-g C-t</kbd>, <kbd>C-g C-h</kbd>及び<kbd>C-g C-r</kbd>。
 `sabbrev`という値で，次の語に対する静的略語展開を有効にします: `gf`, `gb`, `gt`, `gh`及び`gr`。
 `arpeggio`という値で，次のキーの組み合わせを同時に押下できるようにします: <kbd>g f</kbd>, <kbd>g b</kbd>, <kbd>g t</kbd>, <kbd>g h</kbd>及び<kbd>g r</kbd>。
+
+## :pencil: 入力促進句列
+
+### `\q{contrib/vim-mode}`
+
+この入力促進句列はVimのモード名に展開されます。
+
+```bash
+# blerc（例）
+ble-import contrib/prompt-vim-mode
+PS1='[\u@\h \W]\q{contrib/vim-mode}\$ ' # PS1にモード名を表示
+bleopt keymap_vi_mode_show:=            # モード行を表示しない
+```
