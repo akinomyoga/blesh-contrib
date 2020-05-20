@@ -50,7 +50,7 @@ ble-import -d contrib/fzf-completion
 ble-import -d contrib/fzf-key-bindings
 ```
 
-## :pencil: fzf-git
+## :pencil: `contrib/fzf-git`
 
 You can use [fzf-git](https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d40f17236) settings for `ble.sh` with the following settings.
 
@@ -77,7 +77,9 @@ The value `key-binding` enables the key bindings of the form <kbd>C-g C-f</kbd>,
 The value `sabbrev` enables the sabbrev expansion for the words `gf`, `gb`, `gt`, `gh` and `gr`.
 The value `arpeggio` enables the simultaneous key combinations of <kbd>g f</kbd>, <kbd>g b</kbd>, <kbd>g t</kbd>, <kbd>g h</kbd> and <kbd>g r</kbd>.
 
-## :pencil: Prompt sequences
+# &#x2699; Prompt sequences
+
+## :pencil: `contrib/prompt-vim-mode`
 
 ### `\q{contrib/vim-mode}`
 
@@ -90,3 +92,34 @@ ble-import contrib/prompt-vim-mode
 PS1='[\u@\h \W]\q{contrib/vim-mode}\$ ' # show mode name in PS1
 bleopt keymap_vi_mode_show:=            # hide mode line
 ```
+
+## :pencil: `contrib/prompt-git`
+
+```bash
+# blerc (example)
+
+ble-import contrib/prompt-git
+bleopt rps1='\q{contrib/git-info}'
+```
+
+### `\q{contrib/git-info}`
+
+This expands to a string that explains the current git status.
+
+### `\q{contrib/git-name}`
+
+This expands to the directory name of the repository.
+
+### `\q{contrib/git-hash N}`
+
+This expands to the commit hash.
+The hash is truncated to the length `N`.
+The default value for `N` is `7`.
+
+### `\q{contrib/git-branch}`
+
+This expands to the branch name (or tag name or hash) of `HEAD`.
+
+### `\q{contrib/git-path}`
+
+This expands to the current path relative to the root directory of the repository.
