@@ -76,3 +76,17 @@ The shell variable `_ble_contrib_fzf_git_config` is a colon-separated list of th
 The value `key-binding` enables the key bindings of the form <kbd>C-g C-f</kbd>, <kbd>C-g C-b</kbd>, <kbd>C-g C-t</kbd>, <kbd>C-g C-h</kbd> and <kbd>C-g C-r</kbd>.
 The value `sabbrev` enables the sabbrev expansion for the words `gf`, `gb`, `gt`, `gh` and `gr`.
 The value `arpeggio` enables the simultaneous key combinations of <kbd>g f</kbd>, <kbd>g b</kbd>, <kbd>g t</kbd>, <kbd>g h</kbd> and <kbd>g r</kbd>.
+
+## :pencil: Prompt sequences
+
+### `\q{contrib/vim-mode}`
+
+This prompt sequence expands to the vim mode name.
+
+```bash
+# blerc (example)
+
+ble-import contrib/prompt-vim-mode
+PS1='[\u@\h \W]\q{contrib/vim-mode}\$ ' # show mode name in PS1
+bleopt keymap_vi_mode_show:=            # hide mode line
+```
