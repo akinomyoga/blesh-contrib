@@ -5,6 +5,9 @@ Settings for [akinomyoga/ble.sh](https://github.com/akinomyoga/ble.sh)
 
 ## :pencil: fzf integration
 
+Source: [`fzf-completion.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/fzf-completion.bash)
+Source: [`fzf-key-bindings.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/fzf-key-bindings.bash)
+
 ### Option 1: Setup in `~/.fzf.bash`
 
 If you want to use fzf with `ble.sh`, you can rewrite your `.fzf.bash` in the following way (please replace `/path/to/fzf` by your fzf path):
@@ -52,6 +55,8 @@ ble-import -d contrib/fzf-key-bindings
 
 ## :pencil: `contrib/fzf-git`
 
+Source: [`fzf-git.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/fzf-git.bash)
+
 You can use [fzf-git](https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d40f17236) settings for `ble.sh` with the following settings.
 
 ```bash
@@ -81,6 +86,8 @@ The value `arpeggio` enables the simultaneous key combinations of <kbd>g f</kbd>
 
 ## :pencil: `contrib/prompt-vim-mode`
 
+Source: [`prompt-vim-mode.bash`](https://vim-modehub.com/akinomyoga/blesh-contrib/blob/master/prompt-vim-mode.bash)
+
 ### `\q{contrib/vim-mode}`
 
 This prompt sequence expands to the vim mode name.
@@ -95,11 +102,13 @@ bleopt keymap_vi_mode_show:=            # hide mode line
 
 ## :pencil: `contrib/prompt-git`
 
+Source: [`prompt-git.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/prompt-git.bash)
+
 ```bash
 # blerc (example)
 
 ble-import contrib/prompt-git
-bleopt rps1='\q{contrib/git-info}'
+bleopt prompt_rps1='\q{contrib/git-info}'
 ```
 
 ### `\q{contrib/git-info}`
