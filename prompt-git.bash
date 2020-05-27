@@ -169,7 +169,7 @@ function ble/prompt/backslash:contrib/git-branch {
     ble/prompt/print "$ret"
   fi
 }
-function ble/prompt/backslash:contrib/git-branch {
+function ble/prompt/backslash:contrib/git-path {
   local "${_ble_contrib_prompt_git_vars[@]}"
   if ble/contrib/prompt-git/initialize; then
     if [[ $PWD == "$git_base"/?* ]]; then
