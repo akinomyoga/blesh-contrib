@@ -5,8 +5,8 @@ Settings for [akinomyoga/ble.sh](https://github.com/akinomyoga/ble.sh)
 
 ## :pencil: fzf integration
 
-Source: [`fzf-completion.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/fzf-completion.bash)
-Source: [`fzf-key-bindings.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/fzf-key-bindings.bash)
+Source: [`fzf-completion.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/fzf-completion.bash),
+  [`fzf-key-bindings.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/fzf-key-bindings.bash)
 
 ### Option 1: Setup in `~/.fzf.bash`
 
@@ -86,7 +86,7 @@ The value `arpeggio` enables the simultaneous key combinations of <kbd>g f</kbd>
 
 ## :pencil: `contrib/prompt-vim-mode`
 
-Source: [`prompt-vim-mode.bash`](https://vim-modehub.com/akinomyoga/blesh-contrib/blob/master/prompt-vim-mode.bash)
+Source: [`prompt-vim-mode.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/prompt-vim-mode.bash)
 
 ### `\q{contrib/vim-mode}`
 
