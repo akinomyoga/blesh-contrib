@@ -1,8 +1,33 @@
 # ble/contrib/prompt-git.bash (C) 2020, akinomyoga
 
 # bleopt rps1='\q{contrib/git-info}'
+# bleopt rps1='\q{contrib/git-name}'
+# bleopt rps1='\q{contrib/git-hash}'
+# bleopt rps1='\q{contrib/git-branch}'
+# bleopt rps1='\q{contrib/git-path}'
 
+_ble_contrib_prompt_git_prompt_update=
 _ble_contrib_prompt_git_vars=(git_base git_base_dir)
+
+function ble/contrib/prompt-git/.load-cache {
+  [[ $_ble_contrib_prompt_git_prompt_update == "$_ble_prompt_update" ]] || return 2
+  local var
+  for var in "${_ble_contrib_prompt_git_vars[@]}"; do
+    eval "$var=\$_ble_contrib_prompt_$var"
+  done
+  [[ $git_base ]]
+}
+function ble/contrib/prompt-git/.save-cache {
+  _ble_contrib_prompt_git_prompt_update=$_ble_prompt_update
+  if [[ $1 == none ]]; then
+    _ble_contrib_prompt_git_base=
+  else
+    local var
+    for var in "${_ble_contrib_prompt_git_vars[@]}"; do
+      eval "_ble_contrib_prompt_$var=\$$var"
+    done
+  fi
+}
 
 ## 関数 ble/contrib/prompt-git/.initialize-gitdir path
 ##   @var[out] git_base git_base_dir
@@ -30,17 +55,23 @@ function ble/contrib/prompt-git/.initialize-submodule {
 ## 関数 ble/contrib/prompt-git/initialize
 ##   @var[out] git_base git_base_dir
 function ble/contrib/prompt-git/initialize {
+  ble/contrib/prompt-git/.load-cache; local ext=$?
+  ((ext==2)) || return "$ext"
+
   type git &>/dev/null || return 1
   # [[ $(git rev-parse --is-inside-work-tree 2> /dev/null) ]]
   local path=$PWD
   while
     if ble/contrib/prompt-git/.initialize-gitdir "$path"; then
+      ble/contrib/prompt-git/.save-cache
       return 0
     elif ble/contrib/prompt-git/.initialize-submodule "$path"; then
+      ble/contrib/prompt-git/.save-cache
       return 0
     fi
     [[ $path == */* ]]
   do path=${path%/*}; done
+  ble/contrib/prompt-git/.save-cache none
   return 1
 }
 ## 関数 ble/contrib/prompt-git/get-head-information
