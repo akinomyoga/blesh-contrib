@@ -84,7 +84,7 @@ ble-import -d contrib/fzf-git
 
 ### `\q{contrib/vim-mode}`
 
-この入力促進句列はVimのモード名に展開されます。
+この指定はVimのモード名に展開されます。 
 
 ```bash
 # blerc（例）
