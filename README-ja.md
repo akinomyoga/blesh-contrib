@@ -80,7 +80,7 @@ ble-import -d contrib/fzf-git
 `sabbrev`という値で，次の語に対する静的略語展開を有効にします: `gf`, `gb`, `gt`, `gh`及び`gr`。
 `arpeggio`という値で，次のキーの組み合わせを同時に押下できるようにします: <kbd>g f</kbd>, <kbd>g b</kbd>, <kbd>g t</kbd>, <kbd>g h</kbd>及び<kbd>g r</kbd>。
 
-## :pencil: 入力促進句列
+## :pencil: プロンプトにおける特殊指定
 
 ### `\q{contrib/vim-mode}`
 
