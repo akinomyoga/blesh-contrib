@@ -60,9 +60,9 @@ ble-import -d contrib/fzf-key-bindings
 ```bash
 # bashrc / fzf.bash
 if [[ $BLE_VERSION ]]; then
-	_ble_contrib_fzf_base=/path/to/fzf
-	_ble_contrib_fzf_git_config=key-binding:sabbrev:arpeggio
-	ble-import -d contrib/fzf-git
+  _ble_contrib_fzf_base=/path/to/fzf
+  _ble_contrib_fzf_git_config=key-binding:sabbrev:arpeggio
+  ble-import -d contrib/fzf-git
 fi
 ```
 
