@@ -29,7 +29,7 @@ function ble/contrib/prompt-git/.save-cache {
   fi
 }
 
-## 関数 ble/contrib/prompt-git/.initialize-gitdir path
+## @fn ble/contrib/prompt-git/.initialize-gitdir path
 ##   @var[out] git_base git_base_dir
 function ble/contrib/prompt-git/.initialize-gitdir {
   local path=$1
@@ -38,7 +38,7 @@ function ble/contrib/prompt-git/.initialize-gitdir {
   git_base_dir=$path/.git
   return 0
 }
-## 関数 ble/contrib/prompt-git/.initialize-submodule path
+## @fn ble/contrib/prompt-git/.initialize-submodule path
 ##   @var[out] git_base git_base_dir
 function ble/contrib/prompt-git/.initialize-submodule {
   local path=$1 content
@@ -52,7 +52,7 @@ function ble/contrib/prompt-git/.initialize-submodule {
     git_base_dir=$path/$git_base_dir
   [[ -f $git_base_dir/HEAD ]]
 }
-## 関数 ble/contrib/prompt-git/initialize
+## @fn ble/contrib/prompt-git/initialize
 ##   @var[out] git_base git_base_dir
 function ble/contrib/prompt-git/initialize {
   ble/contrib/prompt-git/.load-cache; local ext=$?
@@ -74,7 +74,7 @@ function ble/contrib/prompt-git/initialize {
   ble/contrib/prompt-git/.save-cache none
   return 1
 }
-## 関数 ble/contrib/prompt-git/get-head-information
+## @fn ble/contrib/prompt-git/get-head-information
 ##   @var[out] hash branch
 function ble/contrib/prompt-git/get-head-information {
   branch= hash=
@@ -94,7 +94,7 @@ function ble/contrib/prompt-git/get-head-information {
   [[ ! ${content//[0-9a-fA-F]} ]] && hash=$content
   return 0
 }
-## 関数 ble/contrib/prompt-git/get-tag-name hash
+## @fn ble/contrib/prompt-git/get-tag-name hash
 ##   @var[out] tag
 function ble/contrib/prompt-git/get-tag-name {
   # ble/util/assign-array tag 'git describe --tags --exact-match 2>/dev/null'
