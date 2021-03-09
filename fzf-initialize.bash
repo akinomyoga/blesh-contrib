@@ -25,12 +25,16 @@ function ble/contrib/fzf-completion/initialize {
     ble/util/readlink "$ret"
     ret=${ret%/*}
     ret=${ret%/bin}
-    if [[ ! -d $ret/shell ]]; then
+    if [[ -d $ret/shell/key-bindings.bash ]]; then
+      _ble_contrib_fzf_base=$ret
+    elif [[ -d $ret/share/fzf/shell ]]; then
+      _ble_contrib_fzf_base=$ret/share/fzf
+    elif [[ -d /usr/share/fzf/shell ]]; then
+      _ble_contrib_fzf_base=/usr/share/fzf
+    else
       echo 'ble/contrib/fzf: failed to find "fzf" base directory' >&2
       return 1
     fi
-
-    _ble_contrib_fzf_base=$ret
   fi
   return 0
 }
