@@ -10,7 +10,7 @@ Source: [`fzf-completion.bash`](https://github.com/akinomyoga/blesh-contrib/blob
 
 ### Option 1: Setup in `~/.fzf.bash`
 
-If you want to use fzf with `ble.sh`, you can rewrite your `.fzf.bash` in the following way (please replace `/path/to/fzf` by your fzf path):
+If you want to use fzf with `ble.sh`, you can rewrite your `.fzf.bash` in the following way (please replace `/path/to/fzf` by your fzf path, the path to the **fzf directory** but not the fzf binary):
 
 ```bash
 # fzf.bash
