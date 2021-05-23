@@ -161,7 +161,7 @@ function ble/contrib/prompt-git/describe-head {
 }
 
 function ble/prompt/backslash:contrib/git-info {
-  local "${_ble_contrib_prompt_git_vars[@]}"
+  local "${_ble_contrib_prompt_git_vars[@]/%/=}"
   if ble/contrib/prompt-git/initialize; then
     local sgr=$'\e[1m' sgr0=$'\e[m'
     local name=$sgr${git_base##*?/}$sgr0
@@ -175,7 +175,7 @@ function ble/prompt/backslash:contrib/git-info {
   fi
 }
 function ble/prompt/backslash:contrib/git-name {
-  local "${_ble_contrib_prompt_git_vars[@]}"
+  local "${_ble_contrib_prompt_git_vars[@]/%/=}"
   if ble/contrib/prompt-git/initialize; then
     local name=${git_base%.git}
     name=${name%/}
@@ -184,7 +184,7 @@ function ble/prompt/backslash:contrib/git-name {
   fi
 }
 function ble/prompt/backslash:contrib/git-hash {
-  local "${_ble_contrib_prompt_git_vars[@]}"
+  local "${_ble_contrib_prompt_git_vars[@]/%/=}"
   if ble/contrib/prompt-git/initialize; then
     local hash branch
     ble/contrib/prompt-git/get-head-information
@@ -192,16 +192,14 @@ function ble/prompt/backslash:contrib/git-hash {
   fi
 }
 function ble/prompt/backslash:contrib/git-branch {
-  local "${_ble_contrib_prompt_git_vars[@]}"
+  local "${_ble_contrib_prompt_git_vars[@]/%/=}"
   if ble/contrib/prompt-git/initialize; then
-    local hash branch
-    ble/contrib/prompt-git/get-head-information
     local ret; ble/contrib/prompt-git/describe-head
     ble/prompt/print "$ret"
   fi
 }
 function ble/prompt/backslash:contrib/git-path {
-  local "${_ble_contrib_prompt_git_vars[@]}"
+  local "${_ble_contrib_prompt_git_vars[@]/%/=}"
   if ble/contrib/prompt-git/initialize; then
     if [[ $PWD == "$git_base"/?* ]]; then
       ble/prompt/print "/${PWD#$git_base/}"
