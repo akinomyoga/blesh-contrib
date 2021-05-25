@@ -24,7 +24,7 @@ fi
 
 # Auto-completion
 # ---------------
-if [[ $BLE_VERSION ]]; then
+if [[ ${BLE_VERSION-} ]]; then
   ble-import -d contrib/fzf-completion
 else
   [[ $- == *i* ]] && source "$_ble_contrib_fzf_base/shell/completion.bash" 2> /dev/null
@@ -32,7 +32,7 @@ fi
 
 # Key bindings
 # ------------
-if [[ $BLE_VERSION ]]; then
+if [[ ${BLE_VERSION-} ]]; then
   ble-import -d contrib/fzf-key-bindings
 else
   source "$_ble_contrib_fzf_base/shell/key-bindings.bash"
@@ -61,7 +61,7 @@ You can use [fzf-git](https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d4
 
 ```bash
 # bashrc / fzf.bash
-if [[ $BLE_VERSION ]]; then
+if [[ ${BLE_VERSION-} ]]; then
   _ble_contrib_fzf_base=/path/to/fzf
   _ble_contrib_fzf_git_config=key-binding:sabbrev:arpeggio
   ble-import -d contrib/fzf-git
