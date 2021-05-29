@@ -3,6 +3,9 @@
 # blesh-contrib
 Settings for [akinomyoga/ble.sh](https://github.com/akinomyoga/ble.sh)
 
+Unless otherwise specified, files in this repository is licensed by [BSD 3-clause license](LICENSE.md).
+The files in `airline` are licensed by the MIT License.
+
 ## :pencil: fzf integration
 
 Source: [`fzf-completion.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/fzf-completion.bash),
