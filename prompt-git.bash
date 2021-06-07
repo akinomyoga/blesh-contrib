@@ -6,74 +6,66 @@
 # bleopt rps1='\q{contrib/git-branch}'
 # bleopt rps1='\q{contrib/git-path}'
 
-_ble_contrib_prompt_git_prompt_update=
+_ble_contrib_prompt_git_data=()
+_ble_contrib_prompt_git_base=
+_ble_contrib_prompt_git_base_dir=
 _ble_contrib_prompt_git_vars=(git_base git_base_dir)
 
-function ble/contrib/prompt-git/.load-cache {
-  [[ $_ble_contrib_prompt_git_prompt_update == "$_ble_prompt_update" ]] || return 2
-  local var
-  for var in "${_ble_contrib_prompt_git_vars[@]}"; do
-    eval "$var=\$_ble_contrib_prompt_$var"
-  done
-  [[ $git_base ]]
-}
-function ble/contrib/prompt-git/.save-cache {
-  _ble_contrib_prompt_git_prompt_update=$_ble_prompt_update
-  if [[ $1 == none ]]; then
-    _ble_contrib_prompt_git_base=
-  else
-    local var
-    for var in "${_ble_contrib_prompt_git_vars[@]}"; do
-      eval "_ble_contrib_prompt_$var=\$$var"
-    done
-  fi
-}
-
-## @fn ble/contrib/prompt-git/.initialize-gitdir path
+## @fn ble/contrib/prompt-git/.check-gitdir path
 ##   @var[out] git_base git_base_dir
-function ble/contrib/prompt-git/.initialize-gitdir {
+function ble/contrib/prompt-git/.check-gitdir {
   local path=$1
   [[ -f $path/.git/HEAD ]] || return 1
-  git_base=$path
-  git_base_dir=$path/.git
+  ble/prompt/unit/assign _ble_contrib_prompt_git_base     "$path"
+  ble/prompt/unit/assign _ble_contrib_prompt_git_base_dir "$path/.git"
   return 0
 }
-## @fn ble/contrib/prompt-git/.initialize-submodule path
+## @fn ble/contrib/prompt-git/.check-submodule path
 ##   @var[out] git_base git_base_dir
-function ble/contrib/prompt-git/.initialize-submodule {
+function ble/contrib/prompt-git/.check-submodule {
   local path=$1 content
   [[ -f $path/.git ]] || return 1
   ble/util/mapfile content < "$path/.git"
   [[ $content == 'gitdir:'* ]] || return 1
-  git_base=$path
-  git_base_dir=${content#'gitdir:'}
+  local git_base=$path
+  local git_base_dir=${content#'gitdir:'}
   git_base_dir=${git_base_dir#' '}
   [[ $git_base_dir == /* ]] ||
     git_base_dir=$path/$git_base_dir
   [[ -f $git_base_dir/HEAD ]]
+  ble/prompt/unit/assign _ble_contrib_prompt_git_base     "$git_base"
+  ble/prompt/unit/assign _ble_contrib_prompt_git_base_dir "$git_base_dir"
+  return 0
 }
-## @fn ble/contrib/prompt-git/initialize
-##   @var[out] git_base git_base_dir
-function ble/contrib/prompt-git/initialize {
-  ble/contrib/prompt-git/.load-cache; local ext=$?
-  ((ext==2)) || return "$ext"
+function ble/prompt/unit:_ble_contrib_prompt_git/update {
+  ble/prompt/unit/add-hash '$PWD'
 
   type git &>/dev/null || return 1
   # [[ $(git rev-parse --is-inside-work-tree 2> /dev/null) ]]
-  local path=$PWD
+  local path=$PWD found=
   while
-    if ble/contrib/prompt-git/.initialize-gitdir "$path"; then
-      ble/contrib/prompt-git/.save-cache
-      return 0
-    elif ble/contrib/prompt-git/.initialize-submodule "$path"; then
-      ble/contrib/prompt-git/.save-cache
-      return 0
+    if ble/contrib/prompt-git/.check-gitdir "$path"; then
+      [[ $prompt_unit_changed ]]
+      return $?
+    elif ble/contrib/prompt-git/.check-submodule "$path"; then
+      [[ $prompt_unit_changed ]]
+      return $?
     fi
     [[ $path == */* ]]
   do path=${path%/*}; done
-  ble/contrib/prompt-git/.save-cache none
-  return 1
+
+  ble/prompt/unit/assign _ble_contrib_prompt_git_base ''
+  [[ $prompt_unit_changed ]]
 }
+
+## @fn ble/contrib/prompt-git/initialize
+##   @var[out] git_base git_base_dir
+function ble/contrib/prompt-git/initialize {
+  ble/prompt/unit#update _ble_contrib_prompt_git
+  ble/util/restore-vars _ble_contrib_prompt_ "${_ble_contrib_prompt_git_vars[@]}"
+  [[ $git_base ]]
+}
+
 ## @fn ble/contrib/prompt-git/get-head-information
 ##   @var[out] hash branch
 function ble/contrib/prompt-git/get-head-information {

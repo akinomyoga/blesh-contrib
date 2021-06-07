@@ -10,11 +10,11 @@
 #
 
 function ble/prompt/backslash:contrib/vim-mode {
-  bleopt keymap_vi_mode_update_prompt:=1
-  case $_ble_decode_keymap in
-  (vi_[on]map) ble/prompt/print '(cmd)' ;;
-  (vi_imap|auto_complete) ble/prompt/print '(ins)' ;;
-  (vi_smap) ble/prompt/print '(sel)' ;;
-  (vi_xmap) ble/prompt/print '(vis)' ;;
+  local mode; ble/keymap:vi/script/get-mode
+  case $mode in
+  ([iR]*) ble/prompt/print '(ins)' ;;
+  (*n)      ble/prompt/print '(cmd)' ;;
+  (*x)      ble/prompt/print '(vis)' ;;
+  (*s)      ble/prompt/print '(sel)' ;;
   esac
 }
