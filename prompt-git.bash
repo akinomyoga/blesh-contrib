@@ -66,6 +66,70 @@ function ble/contrib/prompt-git/initialize {
   [[ $git_base ]]
 }
 
+#------------------------------------------------------------------------------
+## @fn ble/contrib/prompt-git/is-dirty
+##   現在の working tree に編輯があるかどうかを非同期で取得します。
+##   @var[in] git_bas
+
+_ble_contrib_prompt_git_dirty=
+_ble_contrib_prompt_git_dirty_hash=
+_ble_contrib_prompt_git_dirty_base=
+_ble_contrib_prompt_git_dirty_clock=
+_ble_contrib_prompt_git_dirty_bgpid=
+_ble_contrib_prompt_git_dirty_tmpfile=$_ble_base_run/$$.prompt.git.dirty
+function ble/contrib/prompt-git/.check-dirty.worker {
+  git diff --quiet
+  ble/util/print "return $?" >| "$_ble_contrib_prompt_git_dirty_tmpfile"
+}
+function ble/contrib/prompt-git/.check-dirty.callback {
+  _ble_contrib_prompt_git_dirty_bgpid=
+  if source "$_ble_contrib_prompt_git_dirty_tmpfile"; then
+    _ble_contrib_prompt_git_dirty=
+  else
+    _ble_contrib_prompt_git_dirty=1
+  fi
+  local ret; ble/util/clock
+  _ble_contrib_prompt_git_dirty_clock=$ret
+  return 0
+}
+function ble/contrib/prompt-git/is-dirty {
+  [[ $_ble_contrib_prompt_git_base ]] || return 0
+
+  local nbase=$_ble_contrib_prompt_git_base
+  local nhash=$_ble_prompt_version
+  local obase=$_ble_contrib_prompt_git_dirty_base
+  local ohash=$_ble_contrib_prompt_git_dirty_hash
+  local oclock=$_ble_contrib_prompt_git_dirty_clock
+
+  local update= ret
+  [[ $nbase != "$obase" ]] && update=1 _ble_contrib_prompt_git_dirty=
+  [[ $nhash != "$ohash" && ! $_ble_contrib_prompt_git_dirty_bgpid ]] &&
+    { ((nhash>=ohash+10)) || { ble/util/clock; ((ret>=oclock+1000)); } } &&
+    update=1
+  if [[ $update ]]; then
+    _ble_contrib_prompt_git_dirty_hash=$nhash
+    _ble_contrib_prompt_git_dirty_base=$nbase
+
+    if [[ $_ble_contrib_prompt_git_dirty_bgpid ]]; then
+      builtin kill -9 "$_ble_contrib_prompt_git_dirty_bgpid" &>/dev/null
+      ble/util/idle.cancel ble/contrib/prompt-git/.check-dirty.callback
+      _ble_contrib_prompt_git_dirty_bgpid=
+    fi
+
+    : >| "$_ble_contrib_prompt_git_dirty_tmpfile"
+    _ble_contrib_prompt_git_dirty_bgpid=$(shopt -u huponexit; ble/contrib/prompt-git/.check-dirty.worker < /dev/null &> /dev/null & ble/util/print $!)
+    ble/util/msleep 5
+    if [[ -s $_ble_contrib_prompt_git_dirty_tmpfile ]]; then
+      ble/contrib/prompt-git/.check-dirty.callback
+    else
+      ble/util/idle.push -F "$_ble_contrib_prompt_git_dirty_tmpfile" ble/contrib/prompt-git/.check-dirty.callback
+    fi
+  fi
+
+  ble/prompt/unit/add-hash '$_ble_contrib_prompt_git_dirty'
+  [[ $_ble_contrib_prompt_git_dirty ]]
+}
+
 ## @fn ble/contrib/prompt-git/get-head-information
 ##   @var[out] hash branch
 function ble/contrib/prompt-git/get-head-information {
@@ -110,13 +174,21 @@ function ble/contrib/prompt-git/describe-head {
   local opts=:$1:
   ret=
 
+  local dirty_mark=
+  [[ $opts == *:check-dirty:* ]] &&
+    ble/contrib/prompt-git/is-dirty &&
+    dirty_mark=$'\e[1;38:5:202m*\e[m'
+
   local hash branch
   ble/contrib/prompt-git/get-head-information
   if [[ $branch ]]; then
     local sgr=$'\e[1;34m' sgr0=$'\e[m'
     ret=$sgr$branch$sgr0
-    [[ $opts == *:add-hash:* && $hash ]] &&
-      ret="$ret (${hash::7})"
+    if [[ $opts == *:add-hash:* && $hash ]]; then
+      ret="$ret (${hash::7}$dirty_mark)"
+    else
+      ret=$ret$dirty_mark
+    fi
     return
   fi
 
@@ -129,6 +201,7 @@ function ble/contrib/prompt-git/describe-head {
     ret=$sgr$tag$sgr0
     [[ $opts == *:add-hash:* && $hash ]] &&
       ret="$ret ${hash::7}"
+    ret=$ret$dirty_mark
     [[ $opts == *:check-detached:* ]] &&
       ret="$DETACHED ($ret)"
     return
@@ -143,7 +216,7 @@ function ble/contrib/prompt-git/describe-head {
   # fi
 
   if [[ $hash ]]; then
-    ret=${hash::7}
+    ret=${hash::7}$dirty_mark
     [[ $opts == *:check-detached:* ]] &&
       ret="$DETACHED ($ret)"
     return
@@ -152,12 +225,14 @@ function ble/contrib/prompt-git/describe-head {
   ret=$'\e[91mUNKNOWN\e[m'
 }
 
+#------------------------------------------------------------------------------
+
 function ble/prompt/backslash:contrib/git-info {
   local "${_ble_contrib_prompt_git_vars[@]/%/=}" # WA #D1570 checked
   if ble/contrib/prompt-git/initialize; then
     local sgr=$'\e[1m' sgr0=$'\e[m'
     local name=$sgr${git_base##*?/}$sgr0
-    local ret; ble/contrib/prompt-git/describe-head add-hash:check-detached; local branch=$ret
+    local ret; ble/contrib/prompt-git/describe-head add-hash:check-dirty:check-detached; local branch=$ret
     ble/prompt/print "$name $branch"
     [[ $PWD == "$git_base"/?* ]] &&
       ble/prompt/print " /${PWD#$git_base/}"
@@ -186,7 +261,7 @@ function ble/prompt/backslash:contrib/git-hash {
 function ble/prompt/backslash:contrib/git-branch {
   local "${_ble_contrib_prompt_git_vars[@]/%/=}" # WA #D1570 checked
   if ble/contrib/prompt-git/initialize; then
-    local ret; ble/contrib/prompt-git/describe-head
+    local ret; ble/contrib/prompt-git/describe-head check-dirty
     ble/prompt/print "$ret"
   fi
 }
