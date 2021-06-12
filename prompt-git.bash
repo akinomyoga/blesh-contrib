@@ -77,8 +77,11 @@ _ble_contrib_prompt_git_dirty_base=
 _ble_contrib_prompt_git_dirty_clock=
 _ble_contrib_prompt_git_dirty_bgpid=
 _ble_contrib_prompt_git_dirty_tmpfile=$_ble_base_run/$$.prompt.git.dirty
-function ble/contrib/prompt-git/.check-dirty.worker {
+function ble/contrib/prompt-git/.check-dirty.check {
   git diff --quiet
+}
+function ble/contrib/prompt-git/.check-dirty.worker {
+  ble/contrib/prompt-git/.check-dirty.check
   ble/util/print "return $?" >| "$_ble_contrib_prompt_git_dirty_tmpfile"
 }
 function ble/contrib/prompt-git/.check-dirty.callback {
@@ -110,19 +113,28 @@ function ble/contrib/prompt-git/is-dirty {
     _ble_contrib_prompt_git_dirty_hash=$nhash
     _ble_contrib_prompt_git_dirty_base=$nbase
 
-    if [[ $_ble_contrib_prompt_git_dirty_bgpid ]]; then
-      builtin kill -9 "$_ble_contrib_prompt_git_dirty_bgpid" &>/dev/null
-      ble/util/idle.cancel ble/contrib/prompt-git/.check-dirty.callback
-      _ble_contrib_prompt_git_dirty_bgpid=
-    fi
+    if ble/is-function ble/util/idle.push; then
+      if [[ $_ble_contrib_prompt_git_dirty_bgpid ]]; then
+        builtin kill -9 "$_ble_contrib_prompt_git_dirty_bgpid" &>/dev/null
+        ble/util/idle.cancel ble/contrib/prompt-git/.check-dirty.callback
+        _ble_contrib_prompt_git_dirty_bgpid=
+      fi
 
-    : >| "$_ble_contrib_prompt_git_dirty_tmpfile"
-    _ble_contrib_prompt_git_dirty_bgpid=$(shopt -u huponexit; ble/contrib/prompt-git/.check-dirty.worker < /dev/null &> /dev/null & ble/util/print $!)
-    ble/util/msleep 5
-    if [[ -s $_ble_contrib_prompt_git_dirty_tmpfile ]]; then
-      ble/contrib/prompt-git/.check-dirty.callback
+      : >| "$_ble_contrib_prompt_git_dirty_tmpfile"
+      _ble_contrib_prompt_git_dirty_bgpid=$(shopt -u huponexit; ble/contrib/prompt-git/.check-dirty.worker < /dev/null &> /dev/null & ble/util/print $!)
+      ble/util/msleep 5
+      if [[ -s $_ble_contrib_prompt_git_dirty_tmpfile ]]; then
+        ble/contrib/prompt-git/.check-dirty.callback
+      else
+        ble/util/idle.push -F "$_ble_contrib_prompt_git_dirty_tmpfile" ble/contrib/prompt-git/.check-dirty.callback
+      fi
+
     else
-      ble/util/idle.push -F "$_ble_contrib_prompt_git_dirty_tmpfile" ble/contrib/prompt-git/.check-dirty.callback
+      if ble/contrib/prompt-git/.check-dirty.check; then
+        _ble_contrib_prompt_git_dirty=
+      else
+        _ble_contrib_prompt_git_dirty=1
+      fi
     fi
   fi
 
