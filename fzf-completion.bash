@@ -1,4 +1,4 @@
-# ble/contrib/fzf-completion.bash (C) 2020, akinomyoga
+# ble/contrib/fzf-completion.bash (C) 2020-2021, akinomyoga
 
 ble-import contrib/fzf-initialize
 

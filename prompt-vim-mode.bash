@@ -1,4 +1,4 @@
-# ble/contrib/prompt-vim-mode.bash (C) 2020, akinomyoga
+# ble/contrib/prompt-vim-mode.bash (C) 2020-2021, akinomyoga
 
 # \q{contrib/vim-mode} (Prompt escape sequence)
 #

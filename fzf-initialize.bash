@@ -1,4 +1,4 @@
-# ble/contrib/fzf-initialize.bash (C) 2020, akinomyoga
+# ble/contrib/fzf-initialize.bash (C) 2020-2021, akinomyoga
 
 # Usage: Please write the following lines in blerc
 #

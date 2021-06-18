@@ -1,4 +1,4 @@
-# ble/contrib/prompt-git.bash (C) 2020, akinomyoga
+# ble/contrib/prompt-git.bash (C) 2020-2021, akinomyoga
 
 # bleopt rps1='\q{contrib/git-info}'
 # bleopt rps1='\q{contrib/git-name}'
@@ -69,7 +69,7 @@ function ble/contrib/prompt-git/initialize {
 #------------------------------------------------------------------------------
 ## @fn ble/contrib/prompt-git/is-dirty
 ##   現在の working tree に編輯があるかどうかを非同期で取得します。
-##   @var[in] git_bas
+##   @var[in] git_base
 
 _ble_contrib_prompt_git_dirty=
 _ble_contrib_prompt_git_dirty_hash=
