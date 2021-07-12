@@ -31,9 +31,9 @@ function _fzf_complete.advice {
   COMP_WORDS=("${comp_words[@]}") COMP_CWORD=$comp_cword
   COMP_LINE=$comp_line COMP_POINT=$comp_point
   ble/function#push printf '[[ $1 == "\e[5n" ]] || builtin printf "$@"'
-  ble/term/modifyOtherKeys/leave
+  ble/term/leave-for-widget
   ble/function#advice/do <> /dev/tty >&0 2>&0
-  ble/term/modifyOtherKeys/enter
+  ble/term/enter-for-widget
   ble/function#pop printf
   ble/textarea#invalidate
 

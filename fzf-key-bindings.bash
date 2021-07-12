@@ -34,3 +34,17 @@ function fzf-history-widget {
 ble-bind -m emacs   -c M-c 'eval "$(__fzf_cd__)"'
 ble-bind -m vi_imap -c M-c 'eval "$(__fzf_cd__)"'
 ble-bind -m vi_nmap -c M-c 'eval "$(__fzf_cd__)"'
+
+# patch fzf functions
+ble/function#advice around fzf-file-widget ble/contrib/fzf-key-bindings.advice
+ble/function#advice around __fzf_history__ ble/contrib/fzf-key-bindings.advice
+ble/function#advice around __fzf_cd__      ble/contrib/fzf-key-bindings.advice
+function ble/contrib/fzf-key-bindings.advice {
+  if [[ ! $_ble_attached ]]; then
+    ble/function#advice/do
+    return
+  fi
+  ble/term/leave-for-widget
+  ble/function#advice/do
+  ble/term/enter-for-widget
+}

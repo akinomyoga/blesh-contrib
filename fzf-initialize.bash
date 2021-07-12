@@ -25,7 +25,8 @@ function ble/contrib/fzf-completion/initialize {
     ble/util/readlink "$ret"
     ret=${ret%/*}
     ret=${ret%/bin}
-    if [[ -d $ret/shell/key-bindings.bash ]]; then
+    ret=${ret%/target}
+    if [[ -s $ret/shell/key-bindings.bash ]]; then
       _ble_contrib_fzf_base=$ret
     elif [[ -d $ret/share/fzf/shell ]]; then
       _ble_contrib_fzf_base=$ret/share/fzf
