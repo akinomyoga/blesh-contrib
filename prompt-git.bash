@@ -1,10 +1,14 @@
-# ble/contrib/prompt-git.bash (C) 2020-2021, akinomyoga
+# blesh/contrib/prompt-git.bash (C) 2020-2021, akinomyoga
 
 # bleopt rps1='\q{contrib/git-info}'
 # bleopt rps1='\q{contrib/git-name}'
 # bleopt rps1='\q{contrib/git-hash}'
 # bleopt rps1='\q{contrib/git-branch}'
 # bleopt rps1='\q{contrib/git-path}'
+
+ble-import contrib/prompt-defer
+
+#------------------------------------------------------------------------------
 
 _ble_contrib_prompt_git_data=()
 _ble_contrib_prompt_git_base=
@@ -66,81 +70,33 @@ function ble/contrib/prompt-git/initialize {
   [[ $git_base ]]
 }
 
-#------------------------------------------------------------------------------
-## @fn ble/contrib/prompt-git/is-dirty
+## @fn ble/contrib/prompt-git/check-dirty
 ##   現在の working tree に編輯があるかどうかを非同期で取得します。
 ##   @var[in] git_base
-
-_ble_contrib_prompt_git_dirty=
-_ble_contrib_prompt_git_dirty_hash=
-_ble_contrib_prompt_git_dirty_base=
-_ble_contrib_prompt_git_dirty_clock=
-_ble_contrib_prompt_git_dirty_bgpid=
-_ble_contrib_prompt_git_dirty_tmpfile=$_ble_base_run/$$.prompt.git.dirty
-function ble/contrib/prompt-git/.check-dirty.check {
-  git diff --quiet
+_ble_contrib_prompt_git_dirty=0
+function ble/contrib/prompt-defer:_ble_contrib_prompt_git_dirty/clear { _ble_contrib_prompt_git_dirty=0; }
+function ble/contrib/prompt-defer:_ble_contrib_prompt_git_dirty/worker {
+  #git diff --quiet
+  git status --porcelain | ble/bin/awk '
+    /^[^ ?]./ { staged = 1;}
+    /^.[^ ?]/ { unstaged = 1;}
+    /^\?\?/ { untracked = 1; }
+    END {
+      if (unstaged) exit 1;
+      if (staged) exit 2;
+      if (untracked) exit 3;
+      exit 0
+    }
+  '
 }
-function ble/contrib/prompt-git/.check-dirty.worker {
-  ble/contrib/prompt-git/.check-dirty.check
-  ble/util/print "return $?" >| "$_ble_contrib_prompt_git_dirty_tmpfile"
-}
-function ble/contrib/prompt-git/.check-dirty.callback {
-  _ble_contrib_prompt_git_dirty_bgpid=
-  if source "$_ble_contrib_prompt_git_dirty_tmpfile"; then
-    _ble_contrib_prompt_git_dirty=
-  else
-    _ble_contrib_prompt_git_dirty=1
-  fi
-  local ret; ble/util/clock
-  _ble_contrib_prompt_git_dirty_clock=$ret
-  return 0
-}
-function ble/contrib/prompt-git/is-dirty {
+function ble/contrib/prompt-defer:_ble_contrib_prompt_git_dirty/callback { _ble_contrib_prompt_git_dirty=$?; }
+function ble/contrib/prompt-git/check-dirty {
   [[ $_ble_contrib_prompt_git_base ]] || return 0
-
-  local nbase=$_ble_contrib_prompt_git_base
-  local nhash=$_ble_prompt_version
-  local obase=$_ble_contrib_prompt_git_dirty_base
-  local ohash=$_ble_contrib_prompt_git_dirty_hash
-  local oclock=$_ble_contrib_prompt_git_dirty_clock
-
-  local update= ret
-  [[ $nbase != "$obase" ]] && update=1 _ble_contrib_prompt_git_dirty=
-  [[ $nhash != "$ohash" && ! $_ble_contrib_prompt_git_dirty_bgpid ]] &&
-    { ((nhash>=ohash+10)) || { ble/util/clock; ((ret>=oclock+1000)); } } &&
-    update=1
-  if [[ $update ]]; then
-    _ble_contrib_prompt_git_dirty_hash=$nhash
-    _ble_contrib_prompt_git_dirty_base=$nbase
-
-    if ble/is-function ble/util/idle.push; then
-      if [[ $_ble_contrib_prompt_git_dirty_bgpid ]]; then
-        builtin kill -9 "$_ble_contrib_prompt_git_dirty_bgpid" &>/dev/null
-        ble/util/idle.cancel ble/contrib/prompt-git/.check-dirty.callback
-        _ble_contrib_prompt_git_dirty_bgpid=
-      fi
-
-      : >| "$_ble_contrib_prompt_git_dirty_tmpfile"
-      _ble_contrib_prompt_git_dirty_bgpid=$(shopt -u huponexit; ble/contrib/prompt-git/.check-dirty.worker < /dev/null &> /dev/null & ble/util/print $!)
-      ble/util/msleep 5
-      if [[ -s $_ble_contrib_prompt_git_dirty_tmpfile ]]; then
-        ble/contrib/prompt-git/.check-dirty.callback
-      else
-        ble/util/idle.push -F "$_ble_contrib_prompt_git_dirty_tmpfile" ble/contrib/prompt-git/.check-dirty.callback
-      fi
-
-    else
-      if ble/contrib/prompt-git/.check-dirty.check; then
-        _ble_contrib_prompt_git_dirty=
-      else
-        _ble_contrib_prompt_git_dirty=1
-      fi
-    fi
-  fi
-
+  ble/contrib/prompt-defer/submit _ble_contrib_prompt_git_dirty "$_ble_contrib_prompt_git_base" ''
   ble/prompt/unit/add-hash '$_ble_contrib_prompt_git_dirty'
-  [[ $_ble_contrib_prompt_git_dirty ]]
+  return "$_ble_contrib_prompt_git_dirty"
 }
+function ble/contrib/prompt-git/is-dirty { ble/contrib/prompt-git/check-dirty; (($?!=0&&$?!=3)); }
 
 ## @fn ble/contrib/prompt-git/get-head-information
 ##   @var[out] hash branch
@@ -188,8 +144,12 @@ function ble/contrib/prompt-git/describe-head {
 
   local dirty_mark=
   [[ $opts == *:check-dirty:* ]] &&
-    ble/contrib/prompt-git/is-dirty &&
-    dirty_mark=$'\e[1;38:5:202m*\e[m'
+    { ble/contrib/prompt-git/check-dirty;
+      case $? in
+      (1) dirty_mark=$'\e[1;38:5:202m*\e[m' ;;
+      (2) dirty_mark=$'\e[1;32m*\e[m' ;;
+      (3) dirty_mark=$'\e[1;94m+\e[m' ;;
+      esac }
 
   local hash branch
   ble/contrib/prompt-git/get-head-information
