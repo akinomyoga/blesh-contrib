@@ -21,6 +21,18 @@ function ble/contrib/prompt-defer/.finalize {
   ble/util/set "${prefix}_DEFER_clock" "$ret"
 }
 
+function ble/contrib/prompt-defer/clear {
+  local prefix=$1 script='
+    [[ $PREFIX_DEFER_bgpid ]] &&
+      builtin kill -9 "$PREFIX_DEFER_bgpid" &>/dev/null
+    PREFIX_DEFER_index=
+    PREFIX_DEFER_hash1=
+    PREFIX_DEFER_hash2=
+    PREFIX_DEFER_clock=
+    PREFIX_DEFER_bgpid='
+  builtin eval -- "${script//PREFIX/$prefix}"
+}
+
 ## @fn ble/contrib/prompt-defer/submit prefix [hash1] [hash2] [opts]
 ##   @param[in] prefix
 ##     関連変数の接頭辞を指定します。
@@ -99,7 +111,7 @@ function ble/contrib/prompt-defer/submit {
     ble/contrib/prompt-defer:"$prefix"/clear
   elif [[ ! ${!rbgpid} ]]; then
     if [[ $nindex:$nhash2 != "$oindex:$ohash2" ]]; then
-      if ((nindex>=oindex+opt_nprompt)) || { local ret; ble/util/clock; ((ret>=oclock+opt_cooling)); }; then
+      if ((nindex<=oindex-opt_nprompt||oindex+opt_nprompt<=nindex)) || { local ret; ble/util/clock; ((ret>=oclock+opt_cooling)); }; then
         update=1
       fi
     elif [[ $opt_expires && $opt_expires != none ]]; then

@@ -74,6 +74,7 @@ function ble/contrib/prompt-git/initialize {
 ##   現在の working tree に編輯があるかどうかを非同期で取得します。
 ##   @var[in] git_base
 _ble_contrib_prompt_git_dirty=0
+ble/contrib/prompt-defer/clear _ble_contrib_prompt_git_dirty
 function ble/contrib/prompt-defer:_ble_contrib_prompt_git_dirty/clear { _ble_contrib_prompt_git_dirty=0; }
 function ble/contrib/prompt-defer:_ble_contrib_prompt_git_dirty/worker {
   #git diff --quiet
