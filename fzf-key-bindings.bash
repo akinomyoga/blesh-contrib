@@ -5,7 +5,11 @@ ble-import contrib/fzf-initialize
 [[ $- == *i* ]] || return 0
 
 ble/function#push bind :
-source "$_ble_contrib_fzf_base/shell/key-bindings.bash"
+if [[ -f $_ble_contrib_fzf_base/key-bindings.bash ]]; then
+  source "$_ble_contrib_fzf_base/key-bindings.bash"
+elif [[ -f $_ble_contrib_fzf_base/shell/key-bindings.bash ]]; then
+  source "$_ble_contrib_fzf_base/shell/key-bindings.bash"
+fi
 ble/function#pop bind
 
 function ble/contrib/fzf-key-bindings/is-fzf-above-7c447bbd {

@@ -6,7 +6,9 @@ ble-import contrib/fzf-initialize
 
 # fzf/shell/completion.bash を未ロードの時のみロードする
 if ! ble/is-function _fzf_complete; then
-  if [[ -f $_ble_contrib_fzf_base/shell/completion.bash ]]; then
+  if [[ -f $_ble_contrib_fzf_base/completion.bash ]]; then
+    source "$_ble_contrib_fzf_base/completion.bash"
+  elif [[ -f $_ble_contrib_fzf_base/shell/completion.bash ]]; then
     source "$_ble_contrib_fzf_base/shell/completion.bash"
   elif [[ $_ble_contrib_fzf_base == */share/fzf && -f /etc/bash_completion.d/fzf ]]; then
     source /etc/bash_completion.d/fzf
