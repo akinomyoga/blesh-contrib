@@ -30,8 +30,17 @@ function ble/contrib/fzf-completion/initialize {
       _ble_contrib_fzf_base=$ret
     elif [[ -d $ret/share/fzf/shell ]]; then
       _ble_contrib_fzf_base=$ret/share/fzf
+    elif [[ -s $ret/share/fzf/key-bindings.bash ]]; then
+      # NixOS package (https://github.com/akinomyoga/blesh-contrib/pull/5#issuecomment-1019394821)
+      _ble_contrib_fzf_base=$ret/share/fzf
+    elif [[ -s $ret/share/doc/fzf/examples/key-bindings.bash ]]; then
+      # Ubuntu fzf package (https://github.com/akinomyoga/blesh-contrib/pull/5#issuecomment-1019394821)
+      _ble_contrib_fzf_base=$ret/share/doc/fzf/examples
     elif [[ -d /usr/share/fzf/shell ]]; then
       _ble_contrib_fzf_base=/usr/share/fzf
+    elif [[ -d /usr/share/doc/fzf/examples/key-bindings.bash ]]; then
+      # Ubuntu fzf package (https://github.com/akinomyoga/blesh-contrib/pull/5#issuecomment-1019394821)
+      _ble_contrib_fzf_base=/usr/share/doc/fzf/examples
     else
       echo 'ble/contrib/fzf: failed to find "fzf" base directory' >&2
       return 1
