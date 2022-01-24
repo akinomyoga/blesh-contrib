@@ -1,10 +1,10 @@
 # blesh/contrib/prompt-git.bash (C) 2020-2021, akinomyoga
 
-# bleopt rps1='\q{contrib/git-info}'
-# bleopt rps1='\q{contrib/git-name}'
-# bleopt rps1='\q{contrib/git-hash}'
-# bleopt rps1='\q{contrib/git-branch}'
-# bleopt rps1='\q{contrib/git-path}'
+# bleopt prompt_rps1='\q{contrib/git-info}'
+# bleopt prompt_rps1='\q{contrib/git-name}'
+# bleopt prompt_rps1='\q{contrib/git-hash}'
+# bleopt prompt_rps1='\q{contrib/git-branch}'
+# bleopt prompt_rps1='\q{contrib/git-path}'
 
 ble-import contrib/prompt-defer
 

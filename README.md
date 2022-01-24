@@ -135,3 +135,36 @@ This expands to the branch name (or tag name or hash) of `HEAD`.
 ### `\q{contrib/git-path}`
 
 This expands to the current path relative to the root directory of the repository.
+
+## :pencil: `contrib/prompt-elapsed`
+
+Source: [`prompt-elapsed.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/prompt-elapsed.bash)
+
+Measures the time of the previous command execution.
+
+```bash
+# blerc (example)
+
+ble-import contrib/prompt-elapsed
+bleopt prompt_rps1='\g{fg=69,italic}\q{contrib/elapsed}'
+```
+
+### `\q{contrib/elapsed}`
+
+This expands to the high-resolution elapsed time for the command execution.
+
+### `\q{contrib/elapsed-real}`
+
+This expands to the `real` time of `time`.
+
+### `\q{contrib/elapsed-user}`
+
+This expands to the `user` time of `time`.
+
+### `\q{contrib/elapsed-sys}`
+
+This expands to the `sys` time of `time`.
+
+### `\q{contrib/elapsed-cpu}`
+
+This expands to the average cpu usage.
