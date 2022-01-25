@@ -1,10 +1,14 @@
 # -*- mode: makefile-gmake -*-
 
+contrib-subdirs := airline config
+contrib-outdirs := $(OUTDIR)/contrib $(contrib-subdirs:%=$(OUTDIR)/contrib/%)
+contrib-srcfiles := $(wildcard contrib/*.bash $(contrib-subdirs:%=contrib/%/*.bash))
+contrib-outfiles := $(contrib-srcfiles:contrib/%=$(OUTDIR)/contrib/%)
+
 # files
-outdirs += $(OUTDIR)/contrib $(OUTDIR)/contrib/airline
-contrib-files = $(wildcard contrib/*.bash contrib/airline/*.bash)
-outfiles += $(contrib-files:contrib/%=$(OUTDIR)/contrib/%)
-$(OUTDIR)/contrib/%.bash: contrib/%.bash | contrib/.git $(OUTDIR)/contrib $(OUTDIR)/contrib/airline
+outdirs += $(contrib-outdirs)
+outfiles += $(contrib-outfiles)
+$(OUTDIR)/contrib/%.bash: contrib/%.bash | contrib/.git $(contrib-outdirs)
 	cp -p $< $@
 
 # docs
