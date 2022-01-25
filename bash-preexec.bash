@@ -26,8 +26,8 @@
 function ble/contrib/bash-preexec/add-convenience-functions {
   ble/array#remove precmd_functions  precmd
   ble/array#remove preexec_functions preexec
-  ble/array#push precmd_functions  precmd
-  ble/array#push preexec_functions preexec
+  ble/array#unshift precmd_functions  precmd
+  ble/array#unshift preexec_functions preexec
 }
 
 function ble/contrib/bash-preexec/precmd.hook {
