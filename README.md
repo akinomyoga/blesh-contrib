@@ -11,9 +11,11 @@ The files in `airline` are licensed by the MIT License.
 Source: [`fzf-completion.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/fzf-completion.bash),
   [`fzf-key-bindings.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/fzf-key-bindings.bash)
 
+Note: If you would like to integrate `fzf-completion` with `bash-completion`, `bash-completion` needs to be loaded before `fzf-completion` is loaded.
+
 ### Option 1: Setup in `~/.fzf.bash`
 
-If you want to use fzf with `ble.sh`, you can rewrite your `.fzf.bash` in the following way (please replace `/path/to/fzf` by your fzf path, the path to the **fzf directory** but not the fzf binary):
+If you would like to use fzf with `ble.sh`, you can rewrite your `.fzf.bash` in the following way (please replace `/path/to/fzf` by your fzf path, the path to the **fzf directory** but not the fzf binary):
 
 ```bash
 # fzf.bash
