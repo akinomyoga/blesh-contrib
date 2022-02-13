@@ -29,7 +29,7 @@ function _fzf_complete.advice {
   fi
 
   [[ :$comp_type: == *:auto:* || :$comp_type: == *:[maA]:* ]] && return
-  compopt -o noquote
+  compopt -o noquote -o syntax-raw
   COMP_WORDS=("${comp_words[@]}") COMP_CWORD=$comp_cword
   COMP_LINE=$comp_line COMP_POINT=$comp_point
   ble/function#push printf '[[ $1 == "\e[5n" ]] || builtin printf "$@"'
