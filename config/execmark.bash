@@ -43,7 +43,7 @@ function ble/contrib/config:execmark/postexec.hook {
 
     # ata
     local ata=$_ble_exec_time_ata
-    local d=${#ata}
+    local d=${#ata} sec min hour
     if ((d<=3)); then
       ata=${ata}us
     elif ((d<=5)); then
@@ -52,10 +52,12 @@ function ble/contrib/config:execmark/postexec.hook {
       ata=${ata::3}ms
     elif ((d<=9)); then
       ata=${ata::${#ata}-6}.${ata:${#ata}-6:3}s
-    else
-      local min
-      ((ata/=1000*1000,min=ata/60,ata%=60))
+    elif ((sec=ata/1000*1000,min=sec/60,sec%=60,min<100)); then
       ata="${min}m${ata}s"
+    elif ((hour=min/60,min%=60,hour<100)); then
+      ata="${hour}h${min}m${ata}s"
+    else
+      ata="$((hour/24))d$((hour%24))h${min}m"
     fi
     ata="${sgrV}elapsed$sgr $sgrN$ata$sgr"
 
