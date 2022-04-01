@@ -52,7 +52,7 @@ function ble/contrib/config:execmark/postexec.hook {
       ata=${ata::3}ms
     elif ((d<=9)); then
       ata=${ata::${#ata}-6}.${ata:${#ata}-6:3}s
-    elif ((sec=ata/1000*1000,min=sec/60,sec%=60,min<100)); then
+    elif ((sec=ata/(1000*1000),min=sec/60,sec%=60,min<100)); then
       ata="${min}m${ata}s"
     elif ((hour=min/60,min%=60,hour<100)); then
       ata="${hour}h${min}m${ata}s"
