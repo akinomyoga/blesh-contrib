@@ -55,7 +55,7 @@ function ble/contrib/config:execmark/postexec.hook {
     elif ((sec=ata/(1000*1000),min=sec/60,sec%=60,min<100)); then
       ata="${min}m${sec}s"
     elif ((hour=min/60,min%=60,hour<100)); then
-      ata="${hour}h${min}m${ata}s"
+      ata="${hour}h${min}m${sec}s"
     else
       ata="$((hour/24))d$((hour%24))h${min}m"
     fi
