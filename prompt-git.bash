@@ -77,8 +77,8 @@ _ble_contrib_prompt_git_dirty=0
 ble/contrib/prompt-defer/clear _ble_contrib_prompt_git_dirty
 function ble/contrib/prompt-defer:_ble_contrib_prompt_git_dirty/clear { _ble_contrib_prompt_git_dirty=0; }
 function ble/contrib/prompt-defer:_ble_contrib_prompt_git_dirty/worker {
-  #git diff --quiet
-  git status --porcelain | ble/bin/awk '
+  # git 1.7.2 (2010-09) supports --ignore-submodules=untracked
+  git status --porcelain --ignore-submodules=untracked | ble/bin/awk '
     /^[^ ?]./ { staged = 1;}
     /^.[^ ?]/ { unstaged = 1;}
     /^\?\?/ { untracked = 1; }
