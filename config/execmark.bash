@@ -28,17 +28,21 @@ function ble/contrib/config:execmark/postexec.hook {
   if ((_ble_edit_exec_lastexit)) || ble/exec/time#mark-enabled; then
     local ret
     local sgr=$'\e[;94m' sgrC=$'\e[38:5:244m' sgr0=$'\e[m'
-    ((_ble_edit_exec_lastexit)) && sgr=$'\e[;91m'
     ble/color/face2sgr-ansi syntax_varname; local sgrV=$ret
     ble/color/face2sgr-ansi command_function; local sgrS=$ret
     ble/color/face2sgr-ansi varname_number; local sgrN=$ret
 
     # exit
-    local exit=$_ble_edit_exec_lastexit name=
-    if ((exit>=128)) && [[ ${name:=${_ble_builtin_trap_signames[exit&127]}} ]]; then
-      exit=$'\e[1m'"$name"$'\e[22m'" ($sgrN$exit$sgr)"
-    else
-      exit="exit $sgrN$exit$sgr"
+    if ((_ble_edit_exec_lastexit)); then
+      local sgrE=$'\e[;91m'
+      local exit=$_ble_edit_exec_lastexit name=
+      if ((exit>=128)) && [[ ${name:=${_ble_builtin_trap_signames[exit&127]}} ]]; then
+        exit=$'\e[1m'"$name"$'\e[22m'" ($sgrN$exit$sgrE)"
+      else
+        exit="exit $sgrN$exit$sgrE"
+      fi
+      local mark=$sgrE'[ble: '$exit']'$sgr0
+      ble/util/buffer.print "$mark"
     fi
 
     # ata
@@ -101,7 +105,7 @@ function ble/contrib/config:execmark/postexec.hook {
       cpu="$cpu ${usr}usr/${sys}sys"
     fi
 
-    local msg=$sgr'[ble: '$exit', '$ata', '$cpu']'$sgr0
+    local msg=$sgr'[ble: '$ata', '$cpu']'$sgr0
     local ret; ble/string#ltrim "$command"; msg="$msg${ret:+ $sgrC$ret$sgr0}"
     x=0 y=0 g=0 LINES=1 ble/canvas/trace "$msg" confine:truncate
     ble/util/buffer.print "$ret"
