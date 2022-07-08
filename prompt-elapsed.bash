@@ -44,7 +44,7 @@ function ble/contrib/prompt-elapsed/output-time-format.ps {
     return 0
   fi
 
-  ble/contrib/prompt-elapsed/output-sec.ps $((min*60+sec))
+  ble/contrib/prompt-elapsed/output-sec.ps "$((min*60+sec))"
 }
 
 function ble/prompt/backslash:contrib/elapsed {
@@ -67,7 +67,7 @@ function ble/prompt/backslash:contrib/elapsed {
     return 0
   fi
 
-  ble/contrib/prompt-elapsed/output-sec.ps $((ata/1000000))
+  ble/contrib/prompt-elapsed/output-sec.ps "$((ata/1000000))"
 }
 
 function ble/prompt/backslash:contrib/elapsed-real {
