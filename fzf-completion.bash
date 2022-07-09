@@ -24,18 +24,30 @@ ble/function#advice around _fzf_complete                 _fzf_complete.advice
 ble/function#advice around _fzf_complete_kill            _fzf_complete.advice
 function _fzf_complete.advice {
   if [[ ! $_ble_attached ]]; then
+    ble/function#push caller 'builtin caller ${1+"$(($1+6))"}'
     ble/function#advice/do
+    ble/function#pop caller
     return
   fi
 
   [[ :$comp_type: == *:auto:* || :$comp_type: == *:[maA]:* ]] && return
   compopt -o noquote -o ble/syntax-raw
-  COMP_WORDS=("${comp_words[@]}") COMP_CWORD=$comp_cword
-  COMP_LINE=$comp_line COMP_POINT=$comp_point
+  if [[ ! ${_fzf_contrib_comp_words_raw-} ]]; then
+    local _fzf_contrib_comp_words_raw=1
+    local COMP_WORDS; COMP_WORDS=("${comp_words[@]}")
+    local COMP_CWORD=$comp_cword
+    local COMP_LINE=$comp_line COMP_POINT=$comp_point
+  fi
   ble/function#push printf '[[ $1 == "\e[5n" ]] || builtin printf "$@"'
+  ble/function#push caller 'builtin caller ${1+"$(($1+6))"}'
   ble/term/leave-for-widget
-  ble/function#advice/do <> /dev/tty >&0 2>&0
+  if [[ ${ADVICE_WORDS[0]} == _fzf_complete ]]; then
+    ble/function#advice/do >/dev/tty 2>&1
+  else
+    ble/function#advice/do <> /dev/tty >&0 2>&0
+  fi
   ble/term/enter-for-widget
+  ble/function#pop caller
   ble/function#pop printf
   ble/textarea#invalidate
 

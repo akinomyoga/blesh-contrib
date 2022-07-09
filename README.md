@@ -15,16 +15,16 @@ Note: If you would like to integrate `fzf-completion` with `bash-completion`, `b
 
 ### Option 1: Setup in `~/.fzf.bash`
 
-If you would like to use fzf with `ble.sh`, you can rewrite your `.fzf.bash` in the following way (please replace `/path/to/fzf` by your fzf path, the path to the **fzf directory** but not the fzf binary):
+If you would like to use fzf with `ble.sh`, you can rewrite your `.fzf.bash` in the following way (please replace `/path/to/fzf-directory` by your fzf path (e.g., `$HOME/.fzf`), the path to the **fzf directory** but not the fzf binary):
 
 ```bash
 # fzf.bash
 
 # Setup fzf
 # ---------
-_ble_contrib_fzf_base=/path/to/fzf
+_ble_contrib_fzf_base=/path/to/fzf-directory
 if [[ ! "$PATH" == *"$_ble_contrib_fzf_base/bin"* ]]; then
-  export PATH="${PATH:+${PATH}:}/path/to/fzf/bin"
+  export PATH="${PATH:+${PATH}:}/path/to/fzf-directory/bin"
 fi
 
 # Auto-completion
@@ -46,14 +46,14 @@ fi
 
 ### Option 2: Setup in `~/.blerc`
 
-Or, you can directly write settings in your `blerc` as follows (please replace `/path/to/fzf` by your fzf path).
+Or, you can directly write settings in your `blerc` as follows (please replace `/path/to/fzf-directory` by your fzf path).
 In this case do not source `.fzf.bash` in your `.bashrc`.
 
 ```bash
 # blerc
 
 # Setup fzf
-_ble_contrib_fzf_base=/path/to/fzf
+_ble_contrib_fzf_base=/path/to/fzf-directory
 ble-import -d contrib/fzf-completion
 ble-import -d contrib/fzf-key-bindings
 ```
@@ -67,7 +67,7 @@ You can use [fzf-git](https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d4
 ```bash
 # bashrc / fzf.bash
 if [[ ${BLE_VERSION-} ]]; then
-  _ble_contrib_fzf_base=/path/to/fzf
+  _ble_contrib_fzf_base=/path/to/fzf-directory
   _ble_contrib_fzf_git_config=key-binding:sabbrev:arpeggio
   ble-import -d contrib/fzf-git
 fi
@@ -77,7 +77,7 @@ Or you can configure it in `~/.blerc`:
 
 ```bash
 # blerc
-_ble_contrib_fzf_base=/path/to/fzf
+_ble_contrib_fzf_base=/path/to/fzf-directory
 _ble_contrib_fzf_git_config=key-binding:sabbrev:arpeggio
 ble-import -d contrib/fzf-git
 ```
