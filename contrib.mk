@@ -1,6 +1,6 @@
 # -*- mode: makefile-gmake -*-
 
-contrib-subdirs := airline config
+contrib-subdirs := airline config integration
 contrib-outdirs := $(OUTDIR)/contrib $(contrib-subdirs:%=$(OUTDIR)/contrib/%)
 contrib-srcfiles := $(wildcard contrib/*.bash $(contrib-subdirs:%=contrib/%/*.bash))
 contrib-outfiles := $(contrib-srcfiles:contrib/%=$(OUTDIR)/contrib/%)
