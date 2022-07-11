@@ -24,7 +24,7 @@ If you would like to use fzf with `ble.sh`, you can rewrite your `.fzf.bash` in 
 # ---------
 _ble_contrib_fzf_base=/path/to/fzf-directory
 if [[ ! "$PATH" == *"$_ble_contrib_fzf_base/bin"* ]]; then
-  export PATH="${PATH:+${PATH}:}/path/to/fzf-directory/bin"
+  export PATH="${PATH:+${PATH}:}$_ble_contrib_fzf_base/bin"
 fi
 
 # Auto-completion
