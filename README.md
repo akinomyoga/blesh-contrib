@@ -93,7 +93,7 @@ The value `arpeggio` enables the simultaneous key combinations of <kbd>g f</kbd>
 
 Source: [`prompt-vim-mode.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/prompt-vim-mode.bash)
 
-### `\q{contrib/vim-mode}`
+### Prompt sequence `\q{contrib/vim-mode}`
 
 This prompt sequence expands to the vim mode name.
 
@@ -116,25 +116,25 @@ ble-import contrib/prompt-git
 bleopt prompt_rps1='\q{contrib/git-info}'
 ```
 
-### `\q{contrib/git-info}`
+### Prompt sequence `\q{contrib/git-info}`
 
 This expands to a string that explains the current git status.
 
-### `\q{contrib/git-name}`
+### Prompt sequence `\q{contrib/git-name}`
 
 This expands to the directory name of the repository.
 
-### `\q{contrib/git-hash N}`
+### Prompt sequence `\q{contrib/git-hash N}`
 
 This expands to the commit hash.
 The hash is truncated to the length `N`.
 The default value for `N` is `7`.
 
-### `\q{contrib/git-branch}`
+### Prompt sequence `\q{contrib/git-branch}`
 
 This expands to the branch name (or tag name or hash) of `HEAD`.
 
-### `\q{contrib/git-path}`
+### Prompt sequence `\q{contrib/git-path}`
 
 This expands to the current path relative to the root directory of the repository.
 
@@ -151,22 +151,22 @@ ble-import contrib/prompt-elapsed
 bleopt prompt_rps1='\g{fg=69,italic}\q{contrib/elapsed}'
 ```
 
-### `\q{contrib/elapsed}`
+### Prompt sequence `\q{contrib/elapsed}`
 
 This expands to the high-resolution elapsed time for the command execution.
 
-### `\q{contrib/elapsed-real}`
+### Prompt sequence `\q{contrib/elapsed-real}`
 
 This expands to the `real` time of `time`.
 
-### `\q{contrib/elapsed-user}`
+### Prompt sequence `\q{contrib/elapsed-user}`
 
 This expands to the `user` time of `time`.
 
-### `\q{contrib/elapsed-sys}`
+### Prompt sequence `\q{contrib/elapsed-sys}`
 
 This expands to the `sys` time of `time`.
 
-### `\q{contrib/elapsed-cpu}`
+### Prompt sequence `\q{contrib/elapsed-cpu}`
 
 This expands to the average cpu usage.
