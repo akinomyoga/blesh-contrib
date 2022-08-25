@@ -36,7 +36,7 @@ function ble/contrib/config:execmark/postexec.hook {
     if ((_ble_edit_exec_lastexit)); then
       local sgrE=$'\e[;91m'
       local exit=$_ble_edit_exec_lastexit name=
-      if ((exit>=128)) && [[ ${name:=${_ble_builtin_trap_signames[exit&127]}} ]]; then
+      if ((exit>=128)) && [[ ${name:=${_ble_builtin_trap_sig_name[exit&127]}} ]]; then
         exit=$'\e[1m'"$name"$'\e[22m'" ($sgrN$exit$sgrE)"
       else
         exit="exit $sgrN$exit$sgrE"
