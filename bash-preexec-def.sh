@@ -14,6 +14,6 @@ function ble/contrib/bash-preexec/loader {
 if [[ ${bp_imported-${__bp_imported}} ]]; then
   ble-import contrib/bash-preexec
 else
-  blehook ATTACH+=ble/contrib/bash-preexec/loader
-  blehook POSTEXEC+=ble/contrib/bash-preexec/loader
+  blehook ATTACH!=ble/contrib/bash-preexec/loader
+  blehook POSTEXEC!=ble/contrib/bash-preexec/loader
 fi

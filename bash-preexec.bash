@@ -136,10 +136,10 @@ function ble/contrib/bash-preexec/detach.hook {
 }
 
 ble/contrib/bash-preexec/add-convenience-functions
-blehook PRECMD-+=ble/contrib/bash-preexec/precmd.hook
-blehook PREEXEC-+=ble/contrib/bash-preexec/preexec.hook
-blehook ATTACH-+=ble/contrib/bash-preexec/attach.hook
-blehook DETACH-+=ble/contrib/bash-preexec/detach.hook
+blehook PRECMD!=ble/contrib/bash-preexec/precmd.hook
+blehook PREEXEC!=ble/contrib/bash-preexec/preexec.hook
+blehook ATTACH!=ble/contrib/bash-preexec/attach.hook
+blehook DETACH!=ble/contrib/bash-preexec/detach.hook
 if [[ ${bp_imported-${__bp_imported-}} ]]; then
   ble/contrib/bash-preexec/attach.hook
 fi

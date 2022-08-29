@@ -112,4 +112,4 @@ function ble/contrib/config:execmark/postexec.hook {
   fi
 }
 bleopt exec_@_mark=
-blehook POSTEXEC-+=ble/contrib/config:execmark/postexec.hook
+blehook POSTEXEC!=ble/contrib/config:execmark/postexec.hook
