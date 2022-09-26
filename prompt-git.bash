@@ -50,10 +50,10 @@ function ble/prompt/unit:_ble_contrib_prompt_git/update {
   while
     if ble/contrib/prompt-git/.check-gitdir "$path"; then
       [[ $prompt_unit_changed ]]
-      return $?
+      return "$?"
     elif ble/contrib/prompt-git/.check-submodule "$path"; then
       [[ $prompt_unit_changed ]]
-      return $?
+      return "$?"
     fi
     [[ $path == */* ]]
   do path=${path%/*}; done
