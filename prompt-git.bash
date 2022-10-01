@@ -139,6 +139,56 @@ function ble/contrib/prompt-git/get-tag-name {
   done
 }
 
+function ble/contrib/prompt-git/describe-head/.determine-state {
+  local opts=$1
+  # https://github.com/git/git/blob/4fd6c5e44459e6444c2cd93383660134c95aabd1/contrib/completion/git-prompt.sh#L452-L475
+  # https://github.com/git/git/blob/4fd6c5e44459e6444c2cd93383660134c95aabd1/contrib/completion/git-prompt.sh#L312-L333
+  if [[ -d $git_base_dir/rebase-merge ]]; then
+    ret=REBASE
+  elif [[ -d $git_base_dir/rebase-apply ]]; then
+    if [[ -f $git_base_dir/rebase-apply/rebasing ]]; then
+      ret=REBASE
+    elif [[ -f $git_base_dir/rebase-apply/applying ]]; then
+      ret=AM
+    else
+      ret=AM/REBASE
+    fi
+  elif [[ -f $git_base_dir/MERGE_HEAD ]]; then
+    ret=MERGING
+  elif [[ -f $git_base_dir/CHERRY_PICK_HEAD ]]; then
+    ret=CHERRY-PICKING
+  elif [[ -f $git_base_dir/REVERT_HEAD ]]; then
+    ret=REVERTING
+  elif
+    local todo= rest IFS=$_ble_term_IFS TMOUT= 2>/dev/null # #D1630 WA readonly TMOUT
+    [[ -f $git_base_dir/sequencer/todo ]] &&
+      builtin read "${_ble_bash_tmout_wa[@]}" -r todo rest < "$git_base_dir/sequencer/todo"
+    [[ $todo == p || $todo == pick ]]; then
+    ret=CHERRY-PICKING
+  elif [[ $todo == revert ]]; then
+    ret=REVERTING
+  elif [[ -f $git_base_dir/BISECT_LOG ]]; then
+    ret=BISECTING
+  elif [[ :$opts: == *:detached:* ]]; then
+    ret=DETACHED
+  else
+    ret=
+  fi
+
+  case $ret in
+  (REBASE)         ret=$'\e[1;48;5;27;38;5;231m '$ret$' \e[m' ;;
+  (AM | AM/REBASE) ret=$'\e[1;48;5;34;38;5;231m '$ret$' \e[m' ;;
+  (MERGING)        ret=$'\e[1;48;5;172;38;5;231m '$ret$' \e[m' ;;
+  (CHERRY-PICKING) ret=$'\e[1;48;5;200;38;5;231m '$ret$' \e[m' ;;
+  (REVERTING)      ret=$'\e[1;48;5;124;38;5;231m '$ret$' \e[m' ;;
+  (BISECTING)      ret=$'\e[1;48;5;93;38;5;231m '$ret$' \e[m' ;;
+  (DETACHED)       ret=$'\e[91m'$ret$'\e[m' ;;
+  (?*)             ret=$'\e[1;48;5;242;38;5;231m '$ret$' \e[m' ;;
+  esac
+
+  [[ $ret ]]
+}
+
 function ble/contrib/prompt-git/describe-head {
   local opts=:$1:
   ret=
@@ -156,42 +206,50 @@ function ble/contrib/prompt-git/describe-head {
   ble/contrib/prompt-git/get-head-information
   if [[ $branch ]]; then
     local sgr=$'\e[1;34m' sgr0=$'\e[m'
-    ret=$sgr$branch$sgr0
+    local out=$sgr$branch$sgr0
     if [[ $opts == *:add-hash:* && $hash ]]; then
-      ret="$ret (${hash::7}$dirty_mark)"
+      out="$out (${hash::7}$dirty_mark)"
     else
-      ret=$ret$dirty_mark
+      out=$out$dirty_mark
     fi
+
+    [[ $opts == *:check-state:* ]] &&
+      ble/contrib/prompt-git/describe-head/.determine-state &&
+      out="$ret $out"
+    ret=$out
     return
   fi
-
-  local DETACHED=$'\e[91mDETACHED\e[m'
 
   local tag
   ble/contrib/prompt-git/get-tag-name "$hash"
   if [[ $tag ]]; then
     local sgr=$'\e[1;32m' sgr0=$'\e[m'
-    ret=$sgr$tag$sgr0
+    local out=$sgr$tag$sgr0
     [[ $opts == *:add-hash:* && $hash ]] &&
-      ret="$ret ${hash::7}"
-    ret=$ret$dirty_mark
-    [[ $opts == *:check-detached:* ]] &&
-      ret="$DETACHED ($ret)"
+      out="$out ${hash::7}"
+    out=$out$dirty_mark
+    [[ $opts == *:check-state:* ]] &&
+      ble/contrib/prompt-git/describe-head/.determine-state detached &&
+      out="$ret ($out)"
+    ret=$out
     return
   fi
 
   # "master~23" 等の分かりにくい説明なのでこれは使わない
   # ble/util/assign-array ret 'git describe --contains --all 2>/dev/null'
   # if [[ $ret ]]; then
+  #   local DETACHED=$'\e[91mDETACHED\e[m'
   #   local sgr=$'\e[32m' sgr0=$'\e[m'
   #   ret="($DETACHED at $sgr$ret$sgr0)"
   #   return
   # fi
 
   if [[ $hash ]]; then
-    ret=${hash::7}$dirty_mark
-    [[ $opts == *:check-detached:* ]] &&
-      ret="$DETACHED ($ret)"
+    local out=${hash::7}$dirty_mark
+    [[ $opts == *:check-state:* ]] &&
+      ble/contrib/prompt-git/describe-head/.determine-state detached &&
+      out="$ret ($out)"
+    ret=$out
     return
   fi
 
@@ -205,7 +263,7 @@ function ble/prompt/backslash:contrib/git-info {
   if ble/contrib/prompt-git/initialize; then
     local sgr=$'\e[1m' sgr0=$'\e[m'
     local name=$sgr${git_base##*?/}$sgr0
-    local ret; ble/contrib/prompt-git/describe-head add-hash:check-dirty:check-detached; local branch=$ret
+    local ret; ble/contrib/prompt-git/describe-head add-hash:check-dirty:check-state; local branch=$ret
     ble/prompt/print "$name $branch"
     [[ $PWD == "$git_base"/?* ]] &&
       ble/prompt/print " /${PWD#$git_base/}"
