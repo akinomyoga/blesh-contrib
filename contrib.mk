@@ -8,7 +8,7 @@ contrib-outfiles := $(contrib-srcfiles:contrib/%=$(OUTDIR)/contrib/%)
 # files
 outdirs += $(contrib-outdirs)
 outfiles += $(contrib-outfiles)
-$(OUTDIR)/contrib/%.bash: contrib/%.bash | contrib/.git $(contrib-outdirs)
+$(OUTDIR)/contrib/%.bash: contrib/%.bash | $(contrib-outdirs)
 	cp -p $< $@
 
 # docs
