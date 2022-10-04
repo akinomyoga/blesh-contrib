@@ -1,0 +1,343 @@
+# bash
+
+bleopt/declare -v colorglass_gamma 0
+bleopt/declare -v colorglass_contrast 0
+bleopt/declare -v colorglass_rotate 0
+bleopt/declare -v colorglass_alpha 255
+bleopt/declare -v colorglass_color 0x8888FF
+#bleopt/declare -v colorglass_color   0xFF8888
+function bleopt/check:colorglass_gamma {
+  if ! ((value=value,value>-100)); then
+    ble/util/print "bleopt colorglass_gamma: invalid value '$value'" >&2
+    return 1
+  fi
+  ble/color/g2sgr/.clear-cache
+  _ble_contrib_colorglass_gamma=()
+  return 0
+}
+function bleopt/check:colorglass_contrast {
+  if ! ((value=value,-100<value&&value<100)); then
+    ble/util/print "bleopt colorglass_contrast: invalid value '$value'" >&2
+    return 1
+  fi
+  ble/color/g2sgr/.clear-cache
+  _ble_contrib_colorglass_contrast=()
+  return 0
+}
+function bleopt/check:colorglass_rotate {
+  ((value=value%360,value<0&&(value+=360)))
+  ble/color/g2sgr/.clear-cache
+  return 0
+}
+function bleopt/check:colorglass_color {
+  ble/color/g2sgr/.clear-cache
+  return 0
+}
+function bleopt/check:colorglass_alpha { ble/color/g2sgr/.clear-cache; return 0; }
+ble/color/g2sgr/.clear-cache
+
+
+_ble_contrib_colorglass_gamma=()
+function ble/contrib/colorglass/.gamma {
+  local x=$1
+  ret=${_ble_contrib_colorglass_gamma[x]-}
+  [[ $ret ]] && return 0
+  local g=$(((100+bleopt_colorglass_gamma)*_ble_fixed_unit/100))
+  ble/fixed-point#pow "$((x*_ble_fixed_unit/255))" "$g"
+  ble/fixed-point#round "$((ret*255))"
+  ((ret=ret/_ble_fixed_unit,ret<0?(ret=0):(ret>255&&(ret=255))))
+  _ble_contrib_colorglass_gamma[x]=$ret
+}
+
+_ble_contrib_colorglass_contrast=()
+function ble/contrib/colorglass/.contrast {
+  local x=$1
+  ret=${_ble_contrib_colorglass_contrast[x]-}
+  [[ $ret ]] && return 0
+
+  local c=$bleopt_colorglass_contrast
+  if ((c>0)); then
+    ((c=_ble_fixed_unit-c*_ble_fixed_unit/100))
+  else
+    ((c=_ble_fixed_unit*_ble_fixed_unit/(_ble_fixed_unit+c*_ble_fixed_unit/100)))
+  fi
+  ble/fixed-point#pow "$((2*x*_ble_fixed_unit/255-_ble_fixed_unit))" "$c"
+  ble/fixed-point#round "$(((ret+_ble_fixed_unit)*255/2))"
+  ((ret=ret/_ble_fixed_unit,ret<0?(ret=0):(ret>255&&(ret=255))))
+  _ble_contrib_colorglass_contrast[x]=$ret
+}
+
+## @fn ble/contrib/colorglass.filter
+##   @var[ref] ccode
+function ble/contrib/colorglass.filter {
+  # 24bit color
+  local R= G= B=
+  if ((ccode<16)); then
+    local L=$((ccode>=8?0xFF:0x80))
+    ((R=(ccode&1)?L:0))
+    ((G=(ccode&2)?L:0))
+    ((B=(ccode&4)?L:0))
+  elif ((ccode<256)); then
+    local index_colors=$_ble_color_index_colors_default
+    [[ $bleopt_term_index_colors == auto ]] || ((index_colors=bleopt_term_index_colors))
+    if ((index_colors==88)); then
+      # xterm-88color (16+4x4x4+8grey)
+      if ((ccode>=80)); then
+        ((R=G=B=46+25*(ccode-80)))
+      else
+        local k
+        ((k=(ccode-16)/16 ,R=k?81+k*58:0))
+        ((k=(ccode-16)/4%4,G=k?81+k*58:0))
+        ((k=(ccode-16)%4  ,B=k?81+k*58:0))
+      fi
+    else
+      # xterm-256color (16+6x6x6+24grey)
+      if ((ccode>=232)); then
+        ((R=G=B=8+10*(ccode-232)))
+      else
+        local k
+        ((k=(ccode-16)/36 ,R=k?55+k*40:0))
+        ((k=(ccode-16)/6%6,G=k?55+k*40:0))
+        ((k=(ccode-16)%6  ,B=k?55+k*40:0))
+      fi
+    fi
+  elif ((0x1000000<=ccode&&ccode<=0x1FFFFFF)); then
+    ((R=0xFF&ccode>>16))
+    ((G=0xFF&ccode>>8))
+    ((B=0xFF&ccode))
+  fi
+
+  if ((bleopt_colorglass_rotate)); then
+    local Min x y h
+    case $((R<=B?(R<=G?0:1):(G<=B?1:2))) in
+    (0) Min=$R x=$((G-Min)) y=$((B-Min)) h=1200 ;;
+    (1) Min=$G x=$((B-Min)) y=$((R-Min)) h=2400 ;;
+    (2) Min=$B x=$((R-Min)) y=$((G-Min)) h=0 ;;
+    esac
+    local Range=$((x>y?x:y))
+    if ((Range)); then
+      if ((x>y)); then
+        ((h+=y*600/x))
+      else
+        ((h+=1200-x*600/y))
+      fi
+    fi
+    ((h=(h+bleopt_colorglass_rotate*10)%3600))
+    local h1 h2 x=$Min y=$Min z=$Min
+    ((h1=h%1200,h2=1200-h1,
+      x+=Range*(h2<600?h2:600)/600,
+      y+=Range*(h1<600?h1:600)/600))
+    case "$((h/1200))" in
+    (0) R=$x G=$y B=$z ;;
+    (1) R=$z G=$x B=$y ;;
+    (2) R=$y G=$z B=$x ;;
+    esac
+  fi
+
+  local alpha=$((bleopt_colorglass_alpha))
+  if ((alpha!=255)); then
+    local min max ofac
+    if ((R<G)); then
+      ((min=R<B?R:B,max=G>B?G:B))
+    else
+      ((min=G<B?G:B,max=R>B?R:B))
+    fi
+    ((ofac=max<255-min?max:255-min))
+    ((ofac=ofac*2<255?ofac*2:255))
+    ((alpha=alpha*ofac/255))
+    if ((alpha)); then
+      local C1=$((bleopt_colorglass_color))
+      local R1=$((0xFF&C1>>16))
+      local G1=$((0xFF&C1>>8))
+      local B1=$((0xFF&C1))
+      ((R=R1+(R-R1)*alpha/255))
+      ((G=G1+(G-G1)*alpha/255))
+      ((B=B1+(B-B1)*alpha/255))
+    fi
+  fi
+
+  if ((bleopt_colorglass_contrast)); then
+    local ret
+    ble/contrib/colorglass/.contrast "$R"; R=$ret
+    ble/contrib/colorglass/.contrast "$G"; G=$ret
+    ble/contrib/colorglass/.contrast "$B"; B=$ret
+  fi
+
+  if ((bleopt_colorglass_gamma)); then
+    local ret
+    ble/contrib/colorglass/.gamma "$R"; R=$ret
+    ble/contrib/colorglass/.gamma "$G"; G=$ret
+    ble/contrib/colorglass/.gamma "$B"; B=$ret
+  fi
+
+  ((ccode=0x1000000|R<<16|G<<8|B))
+}
+_ble_color_color2sgr_filter=ble/contrib/colorglass.filter
+
+_ble_fixed_unit=0x10000
+_ble_fixed_e=$((0x2b7e1))
+_ble_fixed_ln2=$((0xb172))
+_ble_fixed_log2=$((0x4d10))
+
+function ble/fixed-point#tostr {
+  ret=$1
+  ((ret=(ret*1000000+5)/(_ble_fixed_unit*10)))
+  ret=0000$ret
+  ret=${ret::${#ret}-5}.${ret:${#ret}-5}
+  ble/string#match "$ret" '^0+' &&
+    ret=${ret:${#BASH_REMATCH}}
+  ret=${ret/#./0.}
+}
+
+function ble/fixed-point#round {
+  local x=$1
+  ((ret=(x+_ble_fixed_unit/2)/_ble_fixed_unit*_ble_fixed_unit))
+}
+
+function ble/fixed-point#mul {
+  if (($#)); then
+    ret=$1; shift
+    local a
+    for a; do ((ret=ret*a/_ble_fixed_unit)); done
+  else
+    ret=$_ble_fixed_unit
+  fi
+}
+
+_ble_fixed_sqrt=()
+function ble/fixed-point#sqrt {
+  local x=$1
+  if ((x<=0)); then
+    ret=0
+  elif [[ ${_ble_fixed_sqrt[x]} ]]; then
+    ret=${_ble_fixed_sqrt[x]}
+  else
+    local y=$x c=0 dy
+    while ((c++<=16&&(dy=(x*_ble_fixed_unit-y*y)/(2*y)))); do
+      ((y+=dy))
+    done
+
+    # 微修正
+    local res=$((x*_ble_fixed_unit-y*y))
+    if ((res<0)); then
+      while ((res+y<=0)); do
+        ((res+=2*y---1))
+      done
+    elif ((res>0)); then
+      while ((0<res-y)); do
+        ((res-=2*y+++1))
+      done
+    fi
+
+    ret=$y
+    _ble_fixed_sqrt[x]=$ret
+  fi
+}
+
+function ble/fixed-point#pow {
+  local x=$1 y=$2 out=$_ble_fixed_unit sgn=1
+  ((x<0)) && ((x=-x,sgn=-1))
+  if ((x!=_ble_fixed_unit)); then
+    local p xx fac
+    if ((p=y/_ble_fixed_unit)); then
+      xx=$x fac=()
+      while ((p&1)) && ble/array#push fac "$xx"; ((p>>=1)); do
+        ((xx=xx*xx/_ble_fixed_unit))
+      done
+      ((x>_ble_fixed_unit)) && ble/array#reverse fac
+      ble/fixed-point#mul "${fac[@]}"
+      ((out=out*ret/_ble_fixed_unit))
+    fi
+
+    if ((p=y&0xFFFF)); then
+      xx=$x fac=()
+      while
+        ble/fixed-point#sqrt "$xx"
+        xx=$ret
+        (((p<<=1)&_ble_fixed_unit)) && ble/array#push fac "$xx"
+        ((p&0xFFFF))
+      do :; done
+      ((x<_ble_fixed_unit)) && ble/array#reverse fac
+      ble/fixed-point#mul "${fac[@]}"
+      ((out=out*ret/_ble_fixed_unit))
+    fi
+  fi
+  ((ret=out*sgn))
+}
+function ble/fixed-point#exp {
+  ble/fixed-point#pow "$_ble_fixed_e" "$1"
+}
+
+function ble/fixed-point#lb {
+  local x=$1
+  ((x<0&&(x=-x)))
+  if ((x==0)); then
+    ((ret=-32*_ble_fixed_unit))
+  elif ((x==_ble_fixed_unit)); then
+    ret=0
+  else
+    local p=0
+    if ((x>=_ble_fixed_unit)); then
+      while ((x>=256*_ble_fixed_unit)); do ((p+=8,x>>=8)); done
+      while ((x>=8*_ble_fixed_unit)); do ((p+=3,x>>=3)); done
+      while ((x>=2*_ble_fixed_unit)); do ((p+=1,x>>=1)); done
+    else
+      while ((x<256)); do ((p-=8,x<<=8)); done
+      while ((x<_ble_fixed_unit/8)); do ((p-=3,x<<=3)); done
+      while ((x<_ble_fixed_unit)); do ((p--,x<<=1)); done
+    fi
+    local out=$((p*_ble_fixed_unit))
+
+    local bit=$_ble_fixed_unit l
+    ((ret=2*_ble_fixed_unit))
+    for l in {1..8}; do
+      ((bit/=2))
+      ble/fixed-point#sqrt "$ret"
+      ((x>=ret)) && ((x=x*_ble_fixed_unit/ret,out+=bit))
+    done
+    ((x-=_ble_fixed_unit))
+    ((out+=(_ble_fixed_unit-x/2)*x/_ble_fixed_unit*_ble_fixed_unit/_ble_fixed_ln2))
+    ret=$out
+  fi
+}
+function ble/fixed-point#ln {
+  ble/fixed-point#lb "$1"
+  ((ret=ret*_ble_fixed_ln2/_ble_fixed_unit))
+}
+function ble/fixed-point#log {
+  ble/fixed-point#lb "$1"
+  ((ret=ret*_ble_fixed_log2/_ble_fixed_unit))
+}
+
+# --- test codes ---
+
+# ble/fixed-point#lb "$((e=2718281828*_ble_fixed_unit/1000000000))"
+# printf "lb e = %x\n" "$ret"
+# ble/fixed-point#tostr "$((_ble_fixed_unit*_ble_fixed_unit/ret))"
+# echo "ln 2 = $ret"
+# ble/fixed-point#log "$((2*_ble_fixed_unit))"
+# ble/fixed-point#tostr "$ret"
+# echo "$ret"
+
+# ble/fixed-point#sqrt $((0x0100))
+# time for a in {0..256}; do
+#   ble/fixed-point#sqrt "$((a*_ble_fixed_unit/256))"
+#   sqrt[a]=$ret
+#   # ble/fixed-point#tostr "$((ret*ret*256/_ble_fixed_unit))"
+#   # printf "$a -> %x -> $ret\n" "$sqrt"
+# done
+# ble/fixed-point#pow $((2*_ble_fixed_unit)) $((3*_ble_fixed_unit))
+# ble/fixed-point#tostr "$ret"
+# echo "$ret"
+# ble/fixed-point#pow $((2*_ble_fixed_unit)) $((_ble_fixed_unit/2))
+# ble/fixed-point#tostr "$ret"
+# echo "$ret"
+
+# for x in {0..256}; do
+#   for y in {0..256}; do
+#     ble/fixed-point#pow "$((x*256))" "$((y*256))"
+#     ble/fixed-point#tostr "$ret"
+#     echo "$x $y $ret"
+#   done
+#   echo
+# done | awk 'NF == 3 {print $1,$2,$3,($1/256)^($2/256);next}{print}' > colorglass.pow.txt

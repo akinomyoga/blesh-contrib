@@ -170,3 +170,57 @@ This expands to the `sys` time of `time`.
 ### Prompt sequence `\q{contrib/elapsed-cpu}`
 
 This expands to the average cpu usage.
+
+## :pencil: colorglass
+
+If your terminal supports the 24-bit color, you can adjust the theme colors by specifying gamma, contrast, hue rotation, etc.
+
+```bash
+ble-import contrib/colorglass
+```
+
+### Blopet colorglass_gamma
+
+This option specifies the change of gamma by percentage.
+For example, `bleopt colorglass_gamma=5` performs the gamma correction with $\gamma=1.05$, and `bleopt colorglass_gamma=-5` performs the gamma correction with $\gamma=0.95$
+
+```bash
+# default
+bleopt colorglass_gamma=0
+```
+
+### Blopet colorglass_contrast
+
+This option specifies the contrast modification in the range -100..100.
+
+```bash
+# default
+bleopt colorglass_contrast=0
+```
+
+### Blopet colorglass_rotate
+
+This option specifies the angle of hue rotation in degrees.
+
+```bash
+# default
+bleopt colorglass_rotate=0
+```
+
+### Blopet colorglass_alpha
+
+This option specifies the opacity in the range 0..255 when the color is synthesized with the background color specified by `bleopt colorglass_color`.
+
+```bash
+# defualt
+bleopt colorglass_alpha=255
+```
+
+### Blopet colorglass_color
+
+This option specifies the background color used by the color synthesis by `bleopt colorglass_alpha`.
+
+```bash
+# defualt
+bleopt colorglass_color=0x8888FF
+```
