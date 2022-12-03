@@ -9,7 +9,7 @@
 
 function ble/contrib/fzf-completion/initialize {
   if [[ -d $_ble_contrib_fzf_base ]]; then
-    if [[ :$PATH: != *:"$_ble_contrib_fzf_base/bin":* ]]; then
+    if [[ -d $_ble_contrib_fzf_base/bin && :$PATH: != *:"$_ble_contrib_fzf_base/bin":* ]]; then
       export PATH="${PATH:+${PATH}:}$_ble_contrib_fzf_base/bin"
     fi
     if ! type fzf &>/dev/null; then
