@@ -3,6 +3,8 @@
 bleopt/declare -v colorglass_gamma 0
 bleopt/declare -v colorglass_contrast 0
 bleopt/declare -v colorglass_rotate 0
+bleopt/declare -v colorglass_saturation 0
+bleopt/declare -v colorglass_brightness 0
 bleopt/declare -v colorglass_alpha 255
 bleopt/declare -v colorglass_color 0x8888FF
 #bleopt/declare -v colorglass_color   0xFF8888
@@ -16,7 +18,7 @@ function bleopt/check:colorglass_gamma {
   return 0
 }
 function bleopt/check:colorglass_contrast {
-  if ! ((value=value,-100<value&&value<100)); then
+  if ! ((value=value,-100<=value&&value<=100)); then
     ble/util/print "bleopt colorglass_contrast: invalid value '$value'" >&2
     return 1
   fi
@@ -26,6 +28,22 @@ function bleopt/check:colorglass_contrast {
 }
 function bleopt/check:colorglass_rotate {
   ((value=value%360,value<0&&(value+=360)))
+  ble/color/g2sgr/.clear-cache
+  return 0
+}
+function bleopt/check:colorglass_saturation {
+  if ! ((value=value,-100<=value&&value<=100)); then
+    ble/util/print "bleopt colorglass_saturation: invalid value '$value'" >&2
+    return 1
+  fi
+  ble/color/g2sgr/.clear-cache
+  return 0
+}
+function bleopt/check:colorglass_brightness {
+  if ! ((value=value,-100<=value&&value<=100)); then
+    ble/util/print "bleopt colorglass_brightness: invalid value '$value'" >&2
+    return 1
+  fi
   ble/color/g2sgr/.clear-cache
   return 0
 }
@@ -56,12 +74,16 @@ function ble/contrib/colorglass/.contrast {
   [[ $ret ]] && return 0
 
   local c=$bleopt_colorglass_contrast
-  if ((c>0)); then
-    ((c=_ble_fixed_unit-c*_ble_fixed_unit/100))
+  if ((c==-100)); then
+    ((ret=x==0?-_ble_fixed_unit:(x==255?_ble_fixed_unit:0)))
   else
-    ((c=_ble_fixed_unit*_ble_fixed_unit/(_ble_fixed_unit+c*_ble_fixed_unit/100)))
+    if ((c>0)); then
+      ((c=_ble_fixed_unit-c*_ble_fixed_unit/100))
+    else
+      ((c=_ble_fixed_unit*_ble_fixed_unit/(_ble_fixed_unit+c*_ble_fixed_unit/100)))
+    fi
+    ble/fixed-point#pow "$((2*x*_ble_fixed_unit/255-_ble_fixed_unit))" "$c"
   fi
-  ble/fixed-point#pow "$((2*x*_ble_fixed_unit/255-_ble_fixed_unit))" "$c"
   ble/fixed-point#round "$(((ret+_ble_fixed_unit)*255/2))"
   ((ret=ret/_ble_fixed_unit,ret<0?(ret=0):(ret>255&&(ret=255))))
   _ble_contrib_colorglass_contrast[x]=$ret
@@ -107,7 +129,10 @@ function ble/contrib/colorglass.filter {
     ((B=0xFF&ccode))
   fi
 
-  if ((bleopt_colorglass_rotate)); then
+  local rot=$((bleopt_colorglass_rotate))
+  local sat=$((bleopt_colorglass_saturation))
+  local bright=$((bleopt_colorglass_brightness))
+  if ((rot||sat||bright)); then
     local Min x y h
     case $((R<=B?(R<=G?0:1):(G<=B?1:2))) in
     (0) Min=$R x=$((G-Min)) y=$((B-Min)) h=1200 ;;
@@ -122,7 +147,35 @@ function ble/contrib/colorglass.filter {
         ((h+=1200-x*600/y))
       fi
     fi
-    ((h=(h+bleopt_colorglass_rotate*10)%3600))
+    ((h=(h+rot*10)%3600))
+
+    if ((bright)); then
+      ((bright=_ble_fixed_unit*bright/100))
+      if ((bright<0)); then
+        ((bright=_ble_fixed_unit+bright))
+        ((Min=Min*bright/_ble_fixed_unit))
+        ((Range=Range*bright/_ble_fixed_unit))
+      else
+        ((bright=_ble_fixed_unit-bright))
+        ((Min=255-(255-Min)*bright/_ble_fixed_unit))
+        ((Range=Range*bright/_ble_fixed_unit))
+      fi
+    fi
+
+    if ((sat)); then
+      ((sat=_ble_fixed_unit*sat/100))
+      if ((sat<0)); then
+        ((sat=-sat))
+        ((Min+=Range*sat/(2*_ble_fixed_unit)))
+        ((Range=Range*(_ble_fixed_unit-sat)/_ble_fixed_unit))
+      else
+        local delta=$(((255-Range)*sat/_ble_fixed_unit)) Max
+        ((Max=Min+Range+delta/2,Max>255&&(Max=255)))
+        ((Min-=delta/2,Min<0&&(Min=0)))
+        ((Range=Max-Min))
+      fi
+    fi
+
     local h1 h2 x=$Min y=$Min z=$Min
     ((h1=h%1200,h2=1200-h1,
       x+=Range*(h2<600?h2:600)/600,
@@ -236,7 +289,13 @@ function ble/fixed-point#sqrt {
 
 function ble/fixed-point#pow {
   local x=$1 y=$2 out=$_ble_fixed_unit sgn=1
-  ((x<0)) && ((x=-x,sgn=-1))
+  if ((x==0)); then
+    ret=0
+    return 0
+  elif ((x<0)); then
+    ((x=-x,sgn=-1))
+  fi
+
   if ((x!=_ble_fixed_unit)); then
     local p xx fac
     if ((p=y/_ble_fixed_unit)); then

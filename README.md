@@ -226,6 +226,24 @@ This option specifies the angle of hue rotation in degrees.
 bleopt colorglass_rotate=0
 ```
 
+### Blopet colorglass_saturation
+
+This option specifies the change of saturation in the range -100..100..
+
+```bash
+# default
+bleopt colorglass_saturation=0
+```
+
+### Blopet colorglass_brightness
+
+This option specifies the change of brightness in the range -100..100..
+
+```bash
+# default
+bleopt colorglass_brightness=0
+```
+
 ### Blopet colorglass_alpha
 
 This option specifies the opacity in the range 0..255 when the color is synthesized with the background color specified by `bleopt colorglass_color`.
