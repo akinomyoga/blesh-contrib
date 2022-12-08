@@ -24,11 +24,20 @@ function ble/contrib:integration/zoxide/_z.advice {
 }
 
 function ble/contrib:integration/zoxide/adjust {
-  ble/function#advice around _z ble/contrib:integration/zoxide/_z.advice
+  local found=
+  if ble/is-function _z; then
+    ble/function#advice around _z ble/contrib:integration/zoxide/_z.advice
+    found=1
+  fi
+  if ble/is-function __zoxide_z_complete; then
+    ble/function#advice around __zoxide_z_complete ble/contrib:integration/zoxide/_z.advice
+    found=1
+  fi
+  [[ $found ]]
 }
 
-if ! ble/bin#has _z; then
+if ! ble/contrib:integration/zoxide/adjust; then
   ble/bin#has zoxide || return 1
   builtin eval -- "$(zoxide init bash)"
+  ble/contrib:integration/zoxide/adjust
 fi
-ble/contrib:integration/zoxide/adjust
