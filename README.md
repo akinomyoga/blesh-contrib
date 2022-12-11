@@ -193,9 +193,14 @@ This expands to the average cpu usage.
 ## :pencil: colorglass
 
 If your terminal supports the 24-bit color, you can adjust the theme colors by specifying gamma, contrast, hue rotation, etc.
+This also works for the terminals without the 24-bit color if `bleopt term_true_colors` is properly set up, but the resulting colors would be reduced to a smaller number of colors.
 
 ```bash
 ble-import contrib/colorglass
+
+# If your terminal does not support the 24-bit colors, please explicitly
+# configure it by putting the following line:
+#bleopt term_true_colors=
 ```
 
 ### Blopet colorglass_gamma
