@@ -16,6 +16,7 @@ Note: If you would like to integrate `fzf-completion` with `bash-completion`, `b
 ### Option 1: Setup in `~/.fzf.bash`
 
 If you would like to use fzf with `ble.sh`, for example, you can rewrite your `.fzf.bash` in the following way.
+Please replace `/path/to/fzf-directory`, `/path/to/fzf/...`, and `/path/to/bash_completion.sh` if necessary.
 
 ```bash
 # fzf.bash
@@ -36,10 +37,17 @@ fi
 
 # Auto-completion
 # ---------------
-if [[ ${BLE_VERSION-} ]]; then
-  ble-import -d contrib/fzf-completion
-else
-  [[ $- == *i* ]] && source /path/to/fzf/shell/completion.bash 2> /dev/null
+if [[ $- == *i* ]]; then
+  # Note: If you would like to combine fzf-completion with bash_completion, you
+  # need to load bash_completion earlier than fzf-completion.
+
+  #source /path/to/bash_completion.sh
+
+  if [[ ${BLE_VERSION-} ]]; then
+    ble-import -d contrib/fzf-completion
+  else
+    source /path/to/fzf/shell/completion.bash 2> /dev/null
+  fi
 fi
 
 # Key bindings
@@ -66,6 +74,13 @@ In this case do not source `.fzf.bash` in your `.bashrc`.
 # "shell/{completion,key-bindings}.bash" or "{completion,key-bindings}.bash".
 
 #_ble_contrib_fzf_base=/path/to/fzf-directory
+
+
+# Note: If you would like to combine fzf-completion with bash_completion, you
+# need to load bash_completion earlier than fzf-completion.
+
+#source /path/to/bash_completion.sh
+
 
 # Setup fzf
 ble-import -d contrib/fzf-completion
