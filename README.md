@@ -16,6 +16,7 @@ Note: If you would like to integrate `fzf-completion` with `bash-completion`, `b
 ### Option 1: Setup in `~/.fzf.bash`
 
 If you would like to use fzf with `ble.sh`, for example, you can rewrite your `.fzf.bash` in the following way.
+In this case, `.fzf.bash` needs to be sourced after `ble.sh`.
 Please replace `/path/to/fzf-directory`, `/path/to/fzf/...`, and `/path/to/bash_completion.sh` if necessary.
 
 ```bash
