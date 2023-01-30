@@ -8,6 +8,7 @@ bleopt/declare -v colorglass_brightness 0
 bleopt/declare -v colorglass_alpha 255
 bleopt/declare -v colorglass_color 0x8888FF
 #bleopt/declare -v colorglass_color   0xFF8888
+
 function bleopt/check:colorglass_gamma {
   if ! ((value=value,value>-100)); then
     ble/util/print "bleopt colorglass_gamma: invalid value '$value'" >&2
@@ -52,8 +53,8 @@ function bleopt/check:colorglass_color {
   return 0
 }
 function bleopt/check:colorglass_alpha { ble/color/g2sgr/.clear-cache; return 0; }
-ble/color/g2sgr/.clear-cache
 
+bleopt -I colorglass_@
 
 _ble_contrib_colorglass_gamma=()
 function ble/contrib/colorglass/.gamma {
