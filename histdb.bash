@@ -12,6 +12,7 @@ bleopt/declare -v histdb_file ''
 function ble/histdb/.get-filename {
   local basename=${bleopt_histdb_file%.sqlite3}
   local hostname=${HOSTNAME:-$_ble_base_env_HOSTNAME}
+  hostname=${hostname//'/'/'%'} # filename cannot contian /
   ret=${basename:-$_ble_base_state/history}${hostname:+@$hostname}.sqlite3
 }
 function ble/histdb/.get-time {
@@ -28,11 +29,22 @@ function ble/histdb/.get-time {
 _ble_histdb_file=
 _ble_histdb_fd_request=
 _ble_histdb_fd_response=
-_ble_histdb_exec_ignore=
+_ble_histdb_exec_ignore=1
 _ble_histdb_bgpid=
+_ble_histdb_timeout=5000
+
+function ble/histdb/escape-for-sqlite-glob {
+  ret=$1
+  if [[ $ret == *["[*?"]* ]]; then
+    local a b
+    for a in '[' '*' '?'; do
+      b=[$a] ret=${ret//"$a"/"$b"}
+    done
+  fi
+}
 
 function ble/histdb/sqlite3.flush {
-  if [[ $_ble_histdb_fd_response ]]; then
+  if [[ $_ble_histdb_fd_response && _ble_bash -ge 40000 ]]; then
     local line IFS=
     builtin read -t 0.001 -r -d '' line <&"$_ble_histdb_fd_response"
   fi
@@ -44,19 +56,50 @@ function ble/histdb/sqlite3.request {
     ble/util/print "$1" >&"$_ble_histdb_fd_request"
   else
     [[ $1 == .exit ]] && return 0
-    "$_ble_histdb_sqlite3" -quote '.timeout 5000' "$_ble_histdb_file" "$1" 2>/dev/null
+    "$_ble_histdb_sqlite3" -quote ".timeout $_ble_histdb_timeout" "$_ble_histdb_file" "$1" 2>/dev/null
   fi
 }
 
+function ble/histdb/read-single-value {
+  local line nl=$'\n' q=\' qq=\'\' Q="'\''"
+  local IFS= TMOUT=
+  if builtin read "${_ble_bash_tmout_wa[@]}" -r line && [[ $line == \'* ]]; then
+    local out=$line ext=0
+    while ((ext==0)) && ! ble/string#match "$out" '^'"$q"'([^'\'']|'"$qq"')*'"$q"'$'; do
+      builtin read "${_ble_bash_tmout_wa[@]}" -r line; ext=$?
+      out=$out$nl$line
+    done
+    line=$out
+  fi
+  line=${line#$q}
+  line=${line%$q}
+  line=${line//$qq/$q}
+  line=$q${line//$q/$Q}$q
+  ble/util/print "ret=$line"
+}
+
 function ble/histdb/sqlite3.request-single-value {
-  local query=$1
+  local query=$1 opts=$2
   ble/histdb/sqlite3.open
-  if [[ $_ble_histdb_fd_request ]]; then
+  if [[ $_ble_histdb_fd_request && _ble_bash -ge 40000 ]]; then
     ble/histdb/sqlite3.flush
     ble/util/print "$query" >&"$_ble_histdb_fd_request"
-    builtin read -t 1 -r ret <&"$_ble_histdb_fd_response"
+
+    local sync_command='ble/histdb/read-single-value <&"$_ble_histdb_fd_response"'
+    local sync_condition='((sync_elapsed<200)) || ! ble/complete/check-cancel'
+    local sync_opts=progressive-weight
+    [[ :$opts: == *:auto:* && $bleopt_complete_timeout_auto ]] &&
+      sync_opts=$sync_opts:timeout=$((bleopt_complete_timeout_auto))
+    ble/util/assign ret 'ble/util/conditional-sync "$sync_command" "$sync_condition" "" "$sync_opts"' &>/dev/null; local ext=$?
+    builtin eval -- "$ret"
+    ((ext==142)) && ext=148
+    return "$ext"
   else
-    ble/util/assign '"$_ble_histdb_sqlite3" -quote ".timeout 5000" "$_ble_histdb_file" "$query"' 2>/dev/null
+    local out q=\' qq=\'\'
+    ble/util/assign out '"$_ble_histdb_sqlite3" -quote ".timeout $_ble_histdb_timeout" "$_ble_histdb_file" "$query"' 2>/dev/null
+    out=${out#$q}
+    out=${out%$q}
+    ret=${out//$qq/$q}
   fi
 }
 
@@ -107,7 +150,8 @@ function ble/histdb/sqlite3.open {
 
   local q=\' qq=\'\'
   ble/histdb/sqlite3.request "
-    .timeout 5000
+    .timeout $_ble_histdb_timeout
+    BEGIN TRANSACTION;
     CREATE TABLE IF NOT EXISTS misc(key TEXT PRIMARY KEY, value INTEGER);
     INSERT OR IGNORE INTO misc values('version', 1);
     CREATE TABLE IF NOT EXISTS sessions(
@@ -118,6 +162,8 @@ function ble/histdb/sqlite3.open {
       blesh_path TEXT, blesh_version TEXT,
       term TEXT, lang TEXT, display TEXT, screen_info TEXT, ssh_info TEXT,
       tty TEXT, last_time INTEGER, last_wd TEXT);
+    CREATE TABLE IF NOT EXISTS words(
+      word TEXT PRIMARY KEY, count INTEGER, ctime INTEGER, mtime INTEGER);
     CREATE TABLE IF NOT EXISTS command_history(
       session_id TEXT, command_id INTEGER,
       lineno INTEGER, history_index INTEGER,
@@ -154,7 +200,8 @@ function ble/histdb/sqlite3.open {
         '${BASH//$q/$qq}', '${BASH_VERSION//$q/$qq}', '${SHLVL//$q/$qq}',
         '${_ble_base_blesh//$q/$qq}', '${BLE_VERSION//$q/$qq}',
         '${TERM//$q/$qq}', '${LANG//$q/$qq}', '${DISPLAY//$q/$qq}', '${screen_info//$q/$qq}', '${ssh_info//$q/$qq}',
-        '${_ble_prompt_const_l//$q/$qq}');"
+        '${_ble_prompt_const_l//$q/$qq}');
+    COMMIT;"
 }
 
 function ble/histdb/sqlite3.close {
@@ -179,8 +226,32 @@ function ble/histdb/sqlite3.close {
   _ble_histdb_file=
 }
 
-function ble/histdb/preexec.hook {
-  local command=$_ble_edit_exec_BASH_COMMAND
+function ble/histdb/collect-words.proc {
+  [[ $wtype && ! ${wtype//[0-9]} ]] &&
+    ble/array#push collect_words "${_ble_edit_str:wbeg:wlen}"
+}
+function ble/histdb/collect-words {
+  ble-edit/content/update-syntax
+  local -a collect_words=()
+  ble/syntax/tree-enumerate-in-range 0 "${#_ble_edit_str}" ble/histdb/collect-words.proc
+  ble/array#reverse collect_words
+
+  ret=()
+  local word
+  "${_ble_util_set_declare[@]//NAME/mark}"
+  for word in "${collect_words[@]}"; do
+    ble/set#contains mark "$word" && return 0
+    ble/set#add mark "$word"
+    ble/array#push ret "$word"
+  done
+}
+
+## @fn ble/histdb/exec_register.hook command
+##   @var[in] command_id
+##   @var[in] lineno
+##     これらの変数は exec_register の側で用意される。
+function ble/histdb/exec_register.hook {
+  local command=$1
   if [[ $bleopt_histdb_ignore ]]; then
     local patterns pattern
     ble/string#split patterns : "$bleopt_histdb_ignore"
@@ -193,19 +264,30 @@ function ble/histdb/preexec.hook {
   fi
   _ble_histdb_exec_ignore=
 
+  local q=\' qq=\'\'
   local session_id=$_ble_base_session
-  local command_id=$_ble_edit_exec_command_id
   local time; ble/histdb/.get-time; local issue_time=$time
 
-  # @var index ... history index: The current command might not be registered
-  # to the command history, but we always pick up the index of the last entry
-  # because there is no way to check it reliably.  We could compare the top
-  # element with BASH_COMMAND, but the history entry might be transformed by
-  # HISTCONTROL=strip, etc.
-  local index; ble/history/get-index
+  # @var history_index ... history index: The current command might not be
+  # registered to the command history, but we always pick up the index of the
+  # last entry because there is no way to check it reliably.  We could compare
+  # the top element with BASH_COMMAND, but the history entry might be
+  # transformed by HISTCONTROL=strip, etc.
+  local history_index; ble/history/get-count -v history_index
+  ((history_index++))
 
-  local q=\' qq=\'\' ret=
+  local ret word sql_insert_words=
+  ble/histdb/collect-words
+  for word in "${ret[@]}"; do
+    sql_insert_words=$sql_insert_words"INSERT OR REPLACE INTO words(word, count, ctime, mtime)
+      VALUES('${word//$q/$qq}',
+      coalesce((SELECT count FROM words WHERE word = '${word//$q/$qq}'), 0) + 1,
+      coalesce((SELECT ctime FROM words WHERE word = '${word//$q/$qq}'), $issue_time),
+      $issue_time);"
+  done
+
   ble/histdb/sqlite3.request "
+    BEGIN TRANSACTION;
     UPDATE sessions SET
       last_time = '${issue_time//$q/$qq}'
       last_wd = '${PWD//$q/$qq}'
@@ -221,9 +303,11 @@ function ble/histdb/preexec.hook {
         command, cwd, issue_time)
       VALUES(
         '${session_id//$q/$qq}', '${command_id//$q/$qq}',
-        '${_ble_edit_LINENO//$q/$qq}', '${index//$q/$qq}',
+        '${lineno//$q/$qq}', '${history_index//$q/$qq}',
         '${command//$q/$qq}', '${PWD//$q/$qq}',
-        '${issue_time//$q/$qq}');"
+        '${issue_time//$q/$qq}');
+    $sql_insert_words
+    COMMIT;"
 }
 
 function ble/histdb/postexec.hook {
@@ -235,7 +319,7 @@ function ble/histdb/postexec.hook {
 
   IFS=, builtin eval 'local pipestatus="${_ble_edit_exec_PIPESTATUS[*]}"'
   local lastarg=$_ble_edit_exec_lastarg
-  ((${#lastarg}>=1000)) && lastarg=${lastarg::1000}...
+  ((${#lastarg}>=1000)) && lastarg=${lastarg::997}...
 
   local real=$_ble_exec_time_tot
   local usr=$_ble_exec_time_usr
@@ -282,10 +366,79 @@ function ble/histdb/exec_end.hook {
     ble/histdb/sqlite3.close
 }
 
-blehook PREEXEC+=ble/histdb/preexec.hook
+blehook exec_register+=ble/histdb/exec_register.hook
 blehook POSTEXEC+=ble/histdb/postexec.hook
 blehook exec_end+=ble/histdb/exec_end.hook
 blehook EXIT+=ble/histdb/exit.hook
+
+#------------------------------------------------------------------------------
+# auto-complete
+
+function ble/complete/auto-complete/source:histdb-word {
+  # 閉じていない入れ子に対する列挙
+  local iN=${#_ble_edit_str}
+  ((iN>0)) || return 1
+
+  local -a wbegins=()
+
+  local -a stat nest tree
+  ble/string#split-words stat "${_ble_syntax_stat[iN]}"
+  local wlen tclen
+  if (((wlen=stat[1])>=0)); then
+    ble/array#push wbegins "$((iN-wlen))"
+  elif (((tclen=stat[4])>=0)); then
+    local wend=$((iN-tclen))
+    ble/string#split-words tree "${_ble_syntax_tree[wend-1]}"
+    local wtype=${tree[0]} wlen=${tree[1]}
+    [[ $wtype && ! ${wtype//[0-9]} && wlen -ge 0 ]] &&
+      ble/array#push wbegins "$((wend-wlen))"
+  fi
+
+  local inest=$iN nlen=${stat[3]}
+  while ((nlen>0)); do
+    ((inest-=nlen))
+    ble/string#split-words nest "${_ble_syntax_nest[inest]}"
+    (((wlen=nest[1])>=0)) &&
+      ble/array#push wbegins "$((inest-wlen))"
+    nlen=${nest[3]}
+  done
+
+  local -a sqls=()
+
+  local i q=\' qq=\'\'
+  for i in "${wbegins[@]}"; do
+    local word=${_ble_edit_str:i:iN-i}
+    [[ $word ]] || continue
+    local ret; ble/histdb/escape-for-sqlite-glob "$word"
+    local pat=$ret?*
+    ble/array#push sqls "SELECT '$i:' || word FROM (SELECT word, max(mtime) FROM words WHERE word GLOB '${pat//$q/$qq}')"
+  done
+  ((${#sqls[@]})) || return 1
+
+  ble/array#reverse sqls
+  sqls=("${sqls[@]/#/(}")
+  sqls=("${sqls[@]/%/)}")
+  ble/array#push sqls "''"
+  IFS=, builtin eval 'local query="select coalesce(${sqls[*]});"'
+
+  local ret
+  ble/histdb/sqlite3.request-single-value "$query" auto || return 1
+  [[ $ret == *:* ]] || return 1
+
+  local index=${ret%%:*} insert=${ret#*:}
+  if local comps=${_ble_edit_str:index:_ble_edit_ind-index}; [[ $insert == "$comps"* ]]; then
+    local ins=${insert:_ble_edit_ind-index}
+    ble/complete/auto-complete/enter c "$_ble_edit_ind" "$ins" "$insert" "$ins" "$ins" ' '
+  else
+    ble/complete/auto-complete/enter r "$index" " [$insert] " "$insert" "$insert" "$insert" ' '
+  fi
+  return 0
+}
+ble/util/import/eval-after-load core-complete '
+  ble/array#push _ble_complete_auto_source histdb-word'
+
+#------------------------------------------------------------------------------
+# ble histdb command
 
 function ble-histdb {
   local ret
