@@ -29,7 +29,6 @@ function ble/histdb/.get-time {
 _ble_histdb_file=
 _ble_histdb_fd_request=
 _ble_histdb_fd_response=
-_ble_histdb_exec_ignore=1
 _ble_histdb_bgpid=
 _ble_histdb_timeout=5000
 
@@ -104,7 +103,7 @@ function ble/histdb/sqlite3.request-single-value {
 }
 
 function ble/histdb/sqlite3.exec {
-  exec "$_ble_histdb_sqlite3" -quote "$_ble_histdb_file";
+  exec "$_ble_histdb_sqlite3" -quote -cmd "-- [ble: $BLE_SESSION_ID]" "$_ble_histdb_file";
 } <&"$_ble_histdb_fd_request" >&"$_ble_histdb_fd_response" 2>/dev/null
 
 ## @fn ble/histdb/sqlite3.open
@@ -148,12 +147,12 @@ function ble/histdb/sqlite3.open {
     _ble_histdb_bgpid=$(ble/histdb/sqlite3.exec __ble_suppress_joblist__ & ble/util/print "$!")
   fi
 
-  local q=\' qq=\'\'
-  ble/histdb/sqlite3.request "
+  local ret q=\' qq=\'\'
+  ble/histdb/sqlite3.request-single-value "
     .timeout $_ble_histdb_timeout
     BEGIN TRANSACTION;
     CREATE TABLE IF NOT EXISTS misc(key TEXT PRIMARY KEY, value INTEGER);
-    INSERT OR IGNORE INTO misc values('version', 1);
+    INSERT OR IGNORE INTO misc values('version', 2);
     CREATE TABLE IF NOT EXISTS sessions(
       session_id TEXT PRIMARY KEY, pid INTEGER, ppid INTEGER,
       hostname TEXT, user TEXT, uid INTEGER, euid INTEGER, groups TEXT,
@@ -162,12 +161,10 @@ function ble/histdb/sqlite3.open {
       blesh_path TEXT, blesh_version TEXT,
       term TEXT, lang TEXT, display TEXT, screen_info TEXT, ssh_info TEXT,
       tty TEXT, last_time INTEGER, last_wd TEXT);
-    CREATE TABLE IF NOT EXISTS words(
-      word TEXT PRIMARY KEY, count INTEGER, ctime INTEGER, mtime INTEGER);
     CREATE TABLE IF NOT EXISTS command_history(
       session_id TEXT, command_id INTEGER,
       lineno INTEGER, history_index INTEGER,
-      command TEXT, cwd TEXT, issue_time INTEGER,
+      command TEXT, cwd TEXT, inode INTEGER, issue_time INTEGER,
       status             INTEGER,
       pipestatus         TEXT,
       lastarg            TEXT,
@@ -184,6 +181,8 @@ function ble/histdb/sqlite3.open {
       exec_time_usr_chld INTEGER,
       exec_time_sys_chld INTEGER,
       PRIMARY KEY (session_id, command_id));
+    CREATE TABLE IF NOT EXISTS words(
+      word TEXT PRIMARY KEY, count INTEGER, ctime INTEGER, mtime INTEGER);
     INSERT OR IGNORE INTO
       sessions(
         session_id, pid, ppid,
@@ -201,7 +200,14 @@ function ble/histdb/sqlite3.open {
         '${_ble_base_blesh//$q/$qq}', '${BLE_VERSION//$q/$qq}',
         '${TERM//$q/$qq}', '${LANG//$q/$qq}', '${DISPLAY//$q/$qq}', '${screen_info//$q/$qq}', '${ssh_info//$q/$qq}',
         '${_ble_prompt_const_l//$q/$qq}');
-    COMMIT;"
+    COMMIT;
+    SELECT VALUE FROM misc WHERE key = 'version';"
+  version=$ret
+
+  if [[ $version ]] && ((version<2)); then
+    local query="ALTER TABLE command_history ADD COLUMN inode INTEGER;"
+    ble/histdb/sqlite3.request "$query"
+  fi
 }
 
 function ble/histdb/sqlite3.close {
@@ -224,6 +230,20 @@ function ble/histdb/sqlite3.close {
     _ble_histdb_fd_response=
   fi
   _ble_histdb_file=
+}
+
+_ble_histdb_exec_ignore=1
+_ble_histdb_exec_cwd=
+_ble_histdb_exec_cwd_inode=
+
+function ble/histdb/update-cwd-inode {
+  [[ $PWD == "$_ble_histdb_exec_cwd" ]] && return 0
+
+  _ble_histdb_exec_cwd=$PWD
+  _ble_histdb_exec_cwd_inode=
+  if local ret; ble/file#inode "$PWD" && ble/string#match "$ret" '^[0-9]+$'; then
+    _ble_histdb_exec_cwd_inode=$ret
+  fi
 }
 
 function ble/histdb/collect-words.proc {
@@ -276,15 +296,18 @@ function ble/histdb/exec_register.hook {
   local history_index; ble/history/get-count -v history_index
   ((history_index++))
 
-  local ret word sql_insert_words=
+  local ret word extra_query=
   ble/histdb/collect-words
   for word in "${ret[@]}"; do
-    sql_insert_words=$sql_insert_words"INSERT OR REPLACE INTO words(word, count, ctime, mtime)
+    extra_query=$extra_query"INSERT OR REPLACE INTO words(word, count, ctime, mtime)
       VALUES('${word//$q/$qq}',
       coalesce((SELECT count FROM words WHERE word = '${word//$q/$qq}'), 0) + 1,
       coalesce((SELECT ctime FROM words WHERE word = '${word//$q/$qq}'), $issue_time),
       $issue_time);"
   done
+
+  ble/histdb/update-cwd-inode
+  local inode=$_ble_histdb_exec_cwd_inode
 
   ble/histdb/sqlite3.request "
     BEGIN TRANSACTION;
@@ -300,13 +323,12 @@ function ble/histdb/exec_register.hook {
     INSERT INTO command_history(
         session_id, command_id,
         lineno, history_index,
-        command, cwd, issue_time)
+        command, cwd, inode, issue_time)
       VALUES(
         '${session_id//$q/$qq}', '${command_id//$q/$qq}',
         '${lineno//$q/$qq}', '${history_index//$q/$qq}',
-        '${command//$q/$qq}', '${PWD//$q/$qq}',
-        '${issue_time//$q/$qq}');
-    $sql_insert_words
+        '${command//$q/$qq}', '${PWD//$q/$qq}', ${inode-None}, '${issue_time//$q/$qq}');
+    $extra_query
     COMMIT;"
 }
 
@@ -366,13 +388,29 @@ function ble/histdb/exec_end.hook {
     ble/histdb/sqlite3.close
 }
 
-blehook exec_register+=ble/histdb/exec_register.hook
-blehook POSTEXEC+=ble/histdb/postexec.hook
-blehook exec_end+=ble/histdb/exec_end.hook
-blehook EXIT+=ble/histdb/exit.hook
+blehook exec_register!=ble/histdb/exec_register.hook
+blehook POSTEXEC!=ble/histdb/postexec.hook
+blehook exec_end!=ble/histdb/exec_end.hook
+blehook EXIT!=ble/histdb/exit.hook
 
 #------------------------------------------------------------------------------
 # auto-complete
+
+function ble/complete/auto-complete/source:histdb-history {
+  local ret
+  ble/histdb/escape-for-sqlite-glob "$_ble_edit_str"; local pat=$ret?*
+
+  ble/histdb/update-cwd-inode
+  local inode=$_ble_histdb_exec_cwd_inode
+
+  ble/histdb/sqlite3.request-single-value "
+    SELECT coalesce(
+      (SELECT command FROM (SELECT command, max(issue_time) FROM command_history WHERE command GLOB '${pat//$q/$qq}' AND cwd = '${PWD//$q/$qq}')),
+      ${inode:+(SELECT command FROM (SELECT command, max(issue_time) FROM command_history WHERE command GLOB '${pat//$q/$qq}' AND inode = $inode)),}
+      '');"
+  [[ $ret == "$_ble_edit_str"?* ]] || return 1
+  ble/complete/auto-complete/enter h 0 "${ret:${#_ble_edit_str}}" '' "$ret"
+}
 
 function ble/complete/auto-complete/source:histdb-word {
   # 閉じていない入れ子に対する列挙
@@ -435,6 +473,7 @@ function ble/complete/auto-complete/source:histdb-word {
   return 0
 }
 ble/util/import/eval-after-load core-complete '
+  ble/array#insert-before _ble_complete_auto_source history histdb-history
   ble/array#push _ble_complete_auto_source histdb-word'
 
 #------------------------------------------------------------------------------
