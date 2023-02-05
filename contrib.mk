@@ -11,6 +11,17 @@ outfiles += $(contrib-outfiles)
 $(OUTDIR)/contrib/%.bash: contrib/%.bash | $(contrib-outdirs)
 	cp -p $< $@
 
+define LinkOldIngteration =
+  outfiles += $$(OUTDIR)/contrib/$1.bash
+  $$(OUTDIR)/contrib/$1.bash: contrib/integration/$1.bash
+	ln -sf integration/$1.bash $$@
+endef
+$(eval $(call LinkOldIngteration,bash-preexec))
+$(eval $(call LinkOldIngteration,fzf-completion))
+$(eval $(call LinkOldIngteration,fzf-git))
+$(eval $(call LinkOldIngteration,fzf-initialize))
+$(eval $(call LinkOldIngteration,fzf-key-bindings))
+
 # docs
 outdirs += $(OUTDIR)/doc/contrib
 outfiles-doc += $(OUTDIR)/doc/contrib/LICENSE

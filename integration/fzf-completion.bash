@@ -1,6 +1,6 @@
-# ble/contrib/fzf-completion.bash (C) 2020-2021, akinomyoga
+# ble/contrib/integration/fzf-completion.bash (C) 2020-2023, akinomyoga
 
-ble-import contrib/fzf-initialize
+ble-import contrib/integration/fzf-initialize
 
 [[ $- == *i* ]] || return 0
 

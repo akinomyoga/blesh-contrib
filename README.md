@@ -8,8 +8,8 @@ The files in `airline` are licensed by the MIT License.
 
 ## :pencil: fzf integration
 
-Source: [`fzf-completion.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/fzf-completion.bash),
-  [`fzf-key-bindings.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/fzf-key-bindings.bash)
+Source: [`fzf-completion.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/integration/fzf-completion.bash),
+  [`fzf-key-bindings.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/integration/fzf-key-bindings.bash)
 
 Note: If you would like to integrate `fzf-completion` with `bash-completion`, `bash-completion` needs to be loaded before `fzf-completion` is loaded.
 
@@ -22,8 +22,8 @@ Please replace `/path/to/fzf-directory`, `/path/to/fzf/...`, and `/path/to/bash_
 ```bash
 # fzf.bash
 
-# If ble/contrib/fzf cannot find the fzf directory, please set the following
-# variable "_ble_contrib_fzf_base" manually.  The value
+# If ble/contrib/integration/fzf cannot find the fzf directory, please set the
+# following variable "_ble_contrib_fzf_base" manually.  The value
 # "/path/to/fzf-directory" should be replaced by a path to the fzf directory
 # such as "$HOME/.fzf" or "/usr/share/fzf" that contain
 # "shell/{completion,key-bindings}.bash" or "{completion,key-bindings}.bash".
@@ -45,7 +45,7 @@ if [[ $- == *i* ]]; then
   #source /path/to/bash_completion.sh
 
   if [[ ${BLE_VERSION-} ]]; then
-    ble-import -d contrib/fzf-completion
+    ble-import -d integration/fzf-completion
   else
     source /path/to/fzf/shell/completion.bash 2> /dev/null
   fi
@@ -54,7 +54,7 @@ fi
 # Key bindings
 # ------------
 if [[ ${BLE_VERSION-} ]]; then
-  ble-import -d contrib/fzf-key-bindings
+  ble-import -d integration/fzf-key-bindings
 else
   source /path/to/fzf/shell/key-bindings.bash
 fi
@@ -68,8 +68,8 @@ In this case do not source `.fzf.bash` in your `.bashrc`.
 ```bash
 # blerc
 
-# If ble/contrib/fzf cannot find the fzf directory, please set the following
-# variable "_ble_contrib_fzf_base" manually.  The value
+# If ble/contrib/integration/fzf cannot find the fzf directory, please set the
+# following variable "_ble_contrib_fzf_base" manually.  The value
 # "/path/to/fzf-directory" should be replaced by a path to the fzf directory
 # such as "$HOME/.fzf" or "/usr/share/fzf" that contain
 # "shell/{completion,key-bindings}.bash" or "{completion,key-bindings}.bash".
@@ -84,11 +84,11 @@ In this case do not source `.fzf.bash` in your `.bashrc`.
 
 
 # Setup fzf
-ble-import -d contrib/fzf-completion
-ble-import -d contrib/fzf-key-bindings
+ble-import -d integration/fzf-completion
+ble-import -d integration/fzf-key-bindings
 ```
 
-## :pencil: `contrib/fzf-git`
+## :pencil: `integration/fzf-git`
 
 Source: [`fzf-git.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/fzf-git.bash)
 
@@ -101,7 +101,7 @@ if [[ ${BLE_VERSION-} ]]; then
   #_ble_contrib_fzf_base=/path/to/fzf-directory
 
   _ble_contrib_fzf_git_config=key-binding:sabbrev:arpeggio
-  ble-import -d contrib/fzf-git
+  ble-import -d integration/fzf-git
 fi
 ```
 
@@ -114,7 +114,7 @@ Or you can configure it in `~/.blerc`:
 #_ble_contrib_fzf_base=/path/to/fzf-directory
 
 _ble_contrib_fzf_git_config=key-binding:sabbrev:arpeggio
-ble-import -d contrib/fzf-git
+ble-import -d integration/fzf-git
 ```
 
 The shell variable `_ble_contrib_fzf_git_config` is a colon-separated list of the enabled types of bindings.

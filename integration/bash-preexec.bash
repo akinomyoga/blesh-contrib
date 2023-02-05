@@ -1,4 +1,4 @@
-# ble/contrib/bash-preexec.bash (C) 2022, akinomyoga
+# ble/contrib/integration/bash-preexec.bash (C) 2022-2023, akinomyoga
 
 ## @arr[in] precmd_functions
 ## @arr[in] preexec_functions
@@ -23,14 +23,14 @@
 ##   @var __bp_trapdebug_string
 ##   @var __bp_install_string
 
-function ble/contrib/bash-preexec/add-convenience-functions {
+function ble/contrib:integration/bash-preexec/add-convenience-functions {
   ble/array#remove precmd_functions  precmd
   ble/array#remove preexec_functions preexec
   ble/array#unshift precmd_functions  precmd
   ble/array#unshift preexec_functions preexec
 }
 
-function ble/contrib/bash-preexec/precmd.hook {
+function ble/contrib:integration/bash-preexec/precmd.hook {
   local __lastexit=$? __lastarg=$_
 
   # Emulate bash-preexec variables
@@ -52,7 +52,7 @@ function ble/contrib/bash-preexec/precmd.hook {
   fi
 }
 
-function ble/contrib/bash-preexec/preexec.hook {
+function ble/contrib:integration/bash-preexec/preexec.hook {
   local __lastexit=$? __lastarg=$_ __this_command=$1
   __bp_last_argument_prev_command=$__lastarg
 
@@ -71,9 +71,9 @@ function ble/contrib/bash-preexec/preexec.hook {
   fi
 }
 
-## @fn ble/contrib/bash-preexec/attach.hook
+## @fn ble/contrib:integration/bash-preexec/attach.hook
 ##   Remove bash-preexec hooks
-function ble/contrib/bash-preexec/attach.hook {
+function ble/contrib:integration/bash-preexec/attach.hook {
   local BP_TRAPDEBUG_STRING=${__bp_trapdebug_string:-'__bp_preexec_invoke_exec "$_"'}
 
   # Remove bash-preexec preexec hook in builtin DEBUG trap.
@@ -120,8 +120,8 @@ function ble/contrib/bash-preexec/attach.hook {
   fi
 }
 
-## @fn ble/contrib/bash-preexec/detach.hook
-function ble/contrib/bash-preexec/detach.hook {
+## @fn ble/contrib:integration/bash-preexec/detach.hook
+function ble/contrib:integration/bash-preexec/detach.hook {
   # Reinstall bash-preexec hooks
   local BP_INSTALL_STRING=${__bp_install_string-}
   [[ ! $BP_INSTALL_STRING ]] && ble/is-function __bp_install &&
@@ -132,22 +132,22 @@ function ble/contrib/bash-preexec/detach.hook {
   # Note: 重複して登録される (古い bash-preexec.sh) かもしれないし、全
   # く登録されない (bash-preexec.sh をロードしていない時) かもしれない
   # ので、ble.sh 側で末尾で一回呼び出す形に修正する。
-  ble/contrib/bash-preexec/add-convenience-functions
+  ble/contrib:integration/bash-preexec/add-convenience-functions
 }
 
-ble/contrib/bash-preexec/add-convenience-functions
-blehook PRECMD!=ble/contrib/bash-preexec/precmd.hook
-blehook PREEXEC!=ble/contrib/bash-preexec/preexec.hook
-blehook ATTACH!=ble/contrib/bash-preexec/attach.hook
-blehook DETACH!=ble/contrib/bash-preexec/detach.hook
+ble/contrib:integration/bash-preexec/add-convenience-functions
+blehook PRECMD!=ble/contrib:integration/bash-preexec/precmd.hook
+blehook PREEXEC!=ble/contrib:integration/bash-preexec/preexec.hook
+blehook ATTACH!=ble/contrib:integration/bash-preexec/attach.hook
+blehook DETACH!=ble/contrib:integration/bash-preexec/detach.hook
 if [[ ${bp_imported-${__bp_imported-}} ]]; then
-  ble/contrib/bash-preexec/attach.hook
+  ble/contrib:integration/bash-preexec/attach.hook
 fi
 
 # XXX: 以下は uninstall で削除しきれなかった時の為の保険。今の所不要に思われる。
 # __bp_blesh_check() {
 #   if [[ $BLE_ATTACHED && ! ${__bp_blesh_invoking_through_blesh-} ]]; then
-#     ble/contrib/bash-preexec/attach.hook
+#     ble/contrib:integration/bash-preexec/attach.hook
 #   fi
 # }
 # precmd_function+=(__bp_blesh_check)

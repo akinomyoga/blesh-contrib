@@ -28,7 +28,7 @@ fi
 # 自動補完
 # ---------------
 if [[ ${BLE_VERSION-} ]]; then
-  ble-import -d contrib/fzf-completion
+  ble-import -d integration/fzf-completion
 else
   [[ $- == *i* ]] && source "$_ble_contrib_fzf_base/shell/completion.bash" 2> /dev/null
 fi
@@ -36,7 +36,7 @@ fi
 # キー束縛
 # ------------
 if [[ ${BLE_VERSION-} ]]; then
-  ble-import -d contrib/fzf-key-bindings
+  ble-import -d integration/fzf-key-bindings
 else
   source "$_ble_contrib_fzf_base/shell/key-bindings.bash"
 fi
@@ -52,8 +52,8 @@ fi
 
 # fzfの設定
 _ble_contrib_fzf_base=/path/to/fzf
-ble-import -d contrib/fzf-completion
-ble-import -d contrib/fzf-key-bindings
+ble-import -d integration/fzf-completion
+ble-import -d integration/fzf-key-bindings
 ```
 
 ## :pencil: fzf-git
@@ -65,7 +65,7 @@ ble-import -d contrib/fzf-key-bindings
 if [[ ${BLE_VERSION-} ]]; then
   _ble_contrib_fzf_base=/path/to/fzf
   _ble_contrib_fzf_git_config=key-binding:sabbrev:arpeggio
-  ble-import -d contrib/fzf-git
+  ble-import -d integration/fzf-git
 fi
 ```
 
@@ -75,7 +75,7 @@ fi
 # blerc
 _ble_contrib_fzf_base=/path/to/fzf
 _ble_contrib_fzf_git_config=key-binding:sabbrev:arpeggio
-ble-import -d contrib/fzf-git
+ble-import -d integration/fzf-git
 ```
 
 シェル変数`$_ble_contrib_fzf_git_config`には，有効にする束縛の種別をコロン区切りで列挙します。

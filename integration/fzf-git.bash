@@ -1,7 +1,7 @@
-# ble/contrib/fzf-git.bash (C) 2020, akinomyoga
+# ble/contrib/integration/fzf-git.bash (C) 2020, 2023, akinomyoga
 # Ported from https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d40f17236
 
-ble-import contrib/fzf-initialize
+ble-import contrib/integration/fzf-initialize
 
 [[ $- == *i* ]] || return 0
 
