@@ -145,11 +145,11 @@ function ble/histdb/sqlite3.open {
     ble/fd#alloc _ble_histdb_fd_request '<> "$fname_request"'
     ble/fd#alloc _ble_histdb_fd_response '<> "$fname_response"'
     _ble_histdb_bgpid=$(ble/histdb/sqlite3.exec __ble_suppress_joblist__ & ble/util/print "$!")
+    ble/util/print "$_ble_histdb_bgpid" >| "$_ble_base_run/$$.histdb.pid"
   fi
 
   local ret q=\' qq=\'\'
   ble/histdb/sqlite3.request-single-value "
-    .timeout $_ble_histdb_timeout
     BEGIN TRANSACTION;
     CREATE TABLE IF NOT EXISTS misc(key TEXT PRIMARY KEY, value INTEGER);
     INSERT OR IGNORE INTO misc values('version', 2);
@@ -232,7 +232,7 @@ function ble/histdb/sqlite3.close {
   _ble_histdb_file=
 }
 
-_ble_histdb_exec_ignore=1
+_ble_histdb_exec_ignore=()
 _ble_histdb_exec_cwd=
 _ble_histdb_exec_cwd_inode=
 
@@ -277,12 +277,12 @@ function ble/histdb/exec_register.hook {
     ble/string#split patterns : "$bleopt_histdb_ignore"
     for pattern in "${patterns[@]}"; do
       if [[ $command == $pattern ]]; then
-        _ble_histdb_exec_ignore=1
+        _ble_histdb_exec_ignore[command_id]=1
         return 0
       fi
     done
   fi
-  _ble_histdb_exec_ignore=
+  builtin unset -v '_ble_histdb_exec_ignore[command_id]'
 
   local q=\' qq=\'\'
   local session_id=$_ble_base_session
@@ -333,10 +333,13 @@ function ble/histdb/exec_register.hook {
 }
 
 function ble/histdb/postexec.hook {
-  [[ $_ble_histdb_exec_ignore ]] && return 0
-
   local session_id=$_ble_base_session
   local command_id=$_ble_edit_exec_command_id
+  if [[ ${_ble_histdb_exec_ignore[command_id]+set} ]]; then
+    builtin unset -v '_ble_histdb_exec_ignore[command_id]'
+    return 0
+  fi
+
   local time; ble/histdb/.get-time; local last_time=$time
 
   IFS=, builtin eval 'local pipestatus="${_ble_edit_exec_PIPESTATUS[*]}"'
@@ -375,8 +378,37 @@ function ble/histdb/postexec.hook {
       WHERE session_id = '${session_id//$q/$qq}' AND command_id = $command_id;"
 }
 
+function ble/histdb/backup {
+  local file=$1
+  ble/bin/.freeze-utility-path -n gzip || return 1
+
+  local backup=${file%.sqlite3}.backup.sqlite3 q=\' qq=\'\'
+  if [[ -s $backup.gz ]]; then
+    # If there is already an up-to-date backup file, we skip the backup.
+    local ret now
+    ble/file#mtime "$backup.gz" || return 1
+    ble/util/strftime -v now %s
+    ((now>ret+24*3600)) || return 1
+  fi
+
+  "$_ble_histdb_sqlite3" "$file" \
+    ".timeout $_ble_histdb_timeout" \
+    "PRAGMA quick_check;" \
+    ".backup '${backup//$q/$qq}'" \
+    "ATTACH DATABASE '${backup//$q/$qq}' AS backup;
+    PRAGMA backup.quick_check;" &&
+    ble/bin/gzip -c "$backup" >| "$backup.gz.part" &&
+    [[ -s $backup.gz.part ]] &&
+    ble/bin/mv -f "$backup.gz.part" "$backup.gz" &&
+    ble/bin/rm -f "$backup"
+}
+
 function ble/histdb/exit.hook {
-  ble/histdb/sqlite3.close
+  if [[ $_ble_histdb_file ]]; then
+    local file=$_ble_histdb_file
+    ble/histdb/sqlite3.close
+    ble/histdb/backup "$file"
+  fi
 }
 
 # 設定が変化して記録先の history.sqlite3 のパスが変わったら現在のファイルは閉じ
@@ -475,6 +507,7 @@ function ble/complete/auto-complete/source:histdb-word {
 ble/util/import/eval-after-load core-complete '
   ble/array#insert-before _ble_complete_auto_source history histdb-history
   ble/array#push _ble_complete_auto_source histdb-word'
+ble/function#try ble/util/idle.push ble/histdb/sqlite3.open
 
 #------------------------------------------------------------------------------
 # ble histdb command

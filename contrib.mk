@@ -11,9 +11,9 @@ outfiles += $(contrib-outfiles)
 $(OUTDIR)/contrib/%.bash: contrib/%.bash | $(contrib-outdirs)
 	cp -p $< $@
 
-define LinkOldIngteration =
-  outfiles += $$(OUTDIR)/contrib/$1.bash
-  $$(OUTDIR)/contrib/$1.bash: contrib/integration/$1.bash
+define LinkOldIngteration
+outfiles += $$(OUTDIR)/contrib/$1.bash
+$$(OUTDIR)/contrib/$1.bash: contrib/integration/$1.bash
 	ln -sf integration/$1.bash $$@
 endef
 $(eval $(call LinkOldIngteration,bash-preexec))
