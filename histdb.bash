@@ -55,7 +55,7 @@ function ble/histdb/sqlite3.request {
     ble/util/print "$1" >&"$_ble_histdb_fd_request"
   else
     [[ $1 == .exit ]] && return 0
-    "$_ble_histdb_sqlite3" -quote ".timeout $_ble_histdb_timeout" "$_ble_histdb_file" "$1" 2>/dev/null
+    "$_ble_histdb_sqlite3" -quote "$_ble_histdb_file" ".timeout $_ble_histdb_timeout" "$1" 2>/dev/null
   fi
 }
 
@@ -95,7 +95,7 @@ function ble/histdb/sqlite3.request-single-value {
     return "$ext"
   else
     local out q=\' qq=\'\'
-    ble/util/assign out '"$_ble_histdb_sqlite3" -quote ".timeout $_ble_histdb_timeout" "$_ble_histdb_file" "$query"' 2>/dev/null
+    ble/util/assign2 out '"$_ble_histdb_sqlite3" -quote "$_ble_histdb_file" ".timeout $_ble_histdb_timeout" "$query"' 2>/dev/null
     out=${out#$q}
     out=${out%$q}
     ret=${out//$qq/$q}
@@ -205,7 +205,9 @@ function ble/histdb/sqlite3.open {
   version=$ret
 
   if [[ $version ]] && ((version<2)); then
-    local query="ALTER TABLE command_history ADD COLUMN inode INTEGER;"
+    local query="
+      ALTER TABLE command_history ADD COLUMN inode INTEGER;
+      UPDATE misc SET value = 2 WHERE key = 'version';"
     ble/histdb/sqlite3.request "$query"
   fi
 }
@@ -258,7 +260,7 @@ function ble/histdb/collect-words {
 
   ret=()
   local word
-  "${_ble_util_set_declare[@]//NAME/mark}"
+  "${_ble_util_set_declare[@]//NAME/mark}" # WA #D1570 checked
   for word in "${collect_words[@]}"; do
     ble/set#contains mark "$word" && return 0
     ble/set#add mark "$word"
@@ -312,7 +314,7 @@ function ble/histdb/exec_register.hook {
   ble/histdb/sqlite3.request "
     BEGIN TRANSACTION;
     UPDATE sessions SET
-      last_time = '${issue_time//$q/$qq}'
+      last_time = '${issue_time//$q/$qq}',
       last_wd = '${PWD//$q/$qq}'
       WHERE session_id = '${session_id//$q/$qq}';
     -- Update duplicate command_id
@@ -356,7 +358,7 @@ function ble/histdb/postexec.hook {
   local q=\' qq=\'\'
   ble/histdb/sqlite3.request "
     UPDATE sessions SET
-      last_time = '${last_time//$q/$qq}'
+      last_time = '${last_time//$q/$qq}',
       last_wd = '${PWD//$q/$qq}'
       WHERE session_id = '${session_id//$q/$qq}';
     UPDATE command_history SET
@@ -486,8 +488,8 @@ function ble/complete/auto-complete/source:histdb-word {
   ((${#sqls[@]})) || return 1
 
   ble/array#reverse sqls
-  sqls=("${sqls[@]/#/(}")
-  sqls=("${sqls[@]/%/)}")
+  sqls=("${sqls[@]/#/(}") # WA #D1570 checked
+  sqls=("${sqls[@]/%/)}") # WA #D1570 checked
   ble/array#push sqls "''"
   IFS=, builtin eval 'local query="select coalesce(${sqls[*]});"'
 
