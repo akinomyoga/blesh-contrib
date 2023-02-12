@@ -19,7 +19,7 @@ function ble/histdb/.get-time {
   if ((_ble_bash>=50000)); then
     time=$EPOCHSECONDS
   elif ((_ble_bash>=40200)); then
-    printf -v time '%(%s)T'
+    printf -v time '%(%s)T' -1
   else
     ((time=${_ble_base_session%%[./]*}+SECONDS))
   fi
@@ -55,7 +55,7 @@ function ble/histdb/sqlite3.request {
     ble/util/print "$1" >&"$_ble_histdb_fd_request"
   else
     [[ $1 == .exit ]] && return 0
-    "$_ble_histdb_sqlite3" -quote "$_ble_histdb_file" ".timeout $_ble_histdb_timeout" "$1" 2>/dev/null
+    "$_ble_histdb_sqlite3" -quote "$_ble_histdb_file" ".timeout $_ble_histdb_timeout" "$1"
   fi
 }
 
@@ -95,7 +95,7 @@ function ble/histdb/sqlite3.request-single-value {
     return "$ext"
   else
     local out q=\' qq=\'\'
-    ble/util/assign2 out '"$_ble_histdb_sqlite3" -quote "$_ble_histdb_file" ".timeout $_ble_histdb_timeout" "$query"' 2>/dev/null
+    ble/util/assign out '"$_ble_histdb_sqlite3" -quote "$_ble_histdb_file" ".timeout $_ble_histdb_timeout" "$query"'
     out=${out#$q}
     out=${out%$q}
     ret=${out//$qq/$q}
@@ -103,8 +103,12 @@ function ble/histdb/sqlite3.request-single-value {
 }
 
 function ble/histdb/sqlite3.exec {
-  exec "$_ble_histdb_sqlite3" -quote -cmd "-- [ble: $BLE_SESSION_ID]" "$_ble_histdb_file";
-} <&"$_ble_histdb_fd_request" >&"$_ble_histdb_fd_response" 2>/dev/null
+  # Note: bash-3.0 では何故か function fname { } redirections の構文を使うと、
+  # ちゃんとリダイレクトしてくれない。なので、_ble_histdb_fd_{request,response}
+  # のリダイレクトは中の exec に対して直接実行する。
+  exec "$_ble_histdb_sqlite3" -quote -cmd "-- [ble: $BLE_SESSION_ID]" "$_ble_histdb_file" \
+       <&"$_ble_histdb_fd_request" >&"$_ble_histdb_fd_response"
+}
 
 ## @fn ble/histdb/sqlite3.open
 ##   @var[ref] _ble_histdb_file
@@ -144,8 +148,19 @@ function ble/histdb/sqlite3.open {
   if ble/bin/mkfifo "$fname_request" "$fname_response" 2>/dev/null; then
     ble/fd#alloc _ble_histdb_fd_request '<> "$fname_request"'
     ble/fd#alloc _ble_histdb_fd_response '<> "$fname_response"'
-    _ble_histdb_bgpid=$(ble/histdb/sqlite3.exec __ble_suppress_joblist__ & ble/util/print "$!")
-    ble/util/print "$_ble_histdb_bgpid" >| "$_ble_base_run/$$.histdb.pid"
+    _ble_histdb_bgpid=$(ble/histdb/sqlite3.exec __ble_suppress_joblist__ >/dev/null & ble/util/print "$!")
+    if kill -0 "$_ble_histdb_bgpid"; then
+      ble/util/print "$_ble_histdb_bgpid" >| "$_ble_base_run/$$.histdb.pid"
+    else
+      local msg='[ble histdb: background sqlite3 failed to start]'
+      ble/util/print "${_ble_term_setaf[9]}$msg$_ble_term_sgr0" >&2
+      _ble_histdb_bgpid=
+
+      ble/fd#close _ble_histdb_fd_request
+      ble/fd#close _ble_histdb_fd_response
+      _ble_histdb_fd_request=
+      _ble_histdb_fd_response=
+    fi
   fi
 
   local ret q=\' qq=\'\'
@@ -262,7 +277,14 @@ function ble/histdb/collect-words {
   local word
   "${_ble_util_set_declare[@]//NAME/mark}" # WA #D1570 checked
   for word in "${collect_words[@]}"; do
+    # Note (#D1958): Even if the same words appeared in a single command, we
+    #   only count 1 for one command.  This is because the "words" table is
+    #   used for the word completion, where the count is used as an importance
+    #   measure.  We count the number of commands where the word appears
+    #   because the same word can easily appear in a single command multiple
+    #   times.
     ble/set#contains mark "$word" && return 0
+
     ble/set#add mark "$word"
     ble/array#push ret "$word"
   done
@@ -329,7 +351,7 @@ function ble/histdb/exec_register.hook {
       VALUES(
         '${session_id//$q/$qq}', '${command_id//$q/$qq}',
         '${lineno//$q/$qq}', '${history_index//$q/$qq}',
-        '${command//$q/$qq}', '${PWD//$q/$qq}', ${inode-None}, '${issue_time//$q/$qq}');
+        '${command//$q/$qq}', '${PWD//$q/$qq}', ${inode:-None}, '${issue_time//$q/$qq}');
     $extra_query
     COMMIT;"
 }
@@ -437,6 +459,7 @@ function ble/complete/auto-complete/source:histdb-history {
   ble/histdb/update-cwd-inode
   local inode=$_ble_histdb_exec_cwd_inode
 
+  local q=\' qq=\'\'
   ble/histdb/sqlite3.request-single-value "
     SELECT coalesce(
       (SELECT command FROM (SELECT command, max(issue_time) FROM command_history WHERE command GLOB '${pat//$q/$qq}' AND cwd = '${PWD//$q/$qq}')),
