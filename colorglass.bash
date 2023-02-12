@@ -94,12 +94,18 @@ function ble/contrib/colorglass/.contrast {
 ##   @var[ref] ccode
 function ble/contrib/colorglass.filter {
   # 24bit color
-  local R= G= B=
+  local R= G= B= dirty=
   if ((ccode<16)); then
-    local L=$((ccode>=8?0xFF:0x80))
-    ((R=(ccode&1)?L:0))
-    ((G=(ccode&2)?L:0))
-    ((B=(ccode&4)?L:0))
+    if ((ccode==7)); then
+      ((R=G=B=0xAA))
+    elif ((ccode==8)); then
+      ((R=G=B=0x55))
+    else
+      local L=$((ccode>=8?0xFF:0x80))
+      ((R=(ccode&1)?L:0))
+      ((G=(ccode&2)?L:0))
+      ((B=(ccode&4)?L:0))
+    fi
   elif ((ccode<256)); then
     local index_colors=$_ble_color_index_colors_default
     [[ $bleopt_term_index_colors == auto ]] || ((index_colors=bleopt_term_index_colors))
@@ -134,6 +140,7 @@ function ble/contrib/colorglass.filter {
   local sat=$((bleopt_colorglass_saturation))
   local bright=$((bleopt_colorglass_brightness))
   if ((rot||sat||bright)); then
+    dirty=1
     local Min x y h
     case $((R<=B?(R<=G?0:1):(G<=B?1:2))) in
     (0) Min=$R x=$((G-Min)) y=$((B-Min)) h=1200 ;;
@@ -190,6 +197,7 @@ function ble/contrib/colorglass.filter {
 
   local alpha=$((bleopt_colorglass_alpha))
   if ((alpha!=255)); then
+    dirty=1
     local min max ofac
     if ((R<G)); then
       ((min=R<B?R:B,max=G>B?G:B))
@@ -211,6 +219,7 @@ function ble/contrib/colorglass.filter {
   fi
 
   if ((bleopt_colorglass_contrast)); then
+    dirty=1
     local ret
     ble/contrib/colorglass/.contrast "$R"; R=$ret
     ble/contrib/colorglass/.contrast "$G"; G=$ret
@@ -218,13 +227,15 @@ function ble/contrib/colorglass.filter {
   fi
 
   if ((bleopt_colorglass_gamma)); then
+    dirty=1
     local ret
     ble/contrib/colorglass/.gamma "$R"; R=$ret
     ble/contrib/colorglass/.gamma "$G"; G=$ret
     ble/contrib/colorglass/.gamma "$B"; B=$ret
   fi
 
-  ((ccode=0x1000000|R<<16|G<<8|B))
+  ((dirty)) && ((ccode=0x1000000|R<<16|G<<8|B))
+  return 0
 }
 _ble_color_color2sgr_filter=ble/contrib/colorglass.filter
 
