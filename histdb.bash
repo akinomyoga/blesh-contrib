@@ -6,6 +6,54 @@ if [[ ! -x $_ble_histdb_sqlite3 ]]; then
   return 1
 fi
 
+_ble_histdb_version=3
+
+#------------------------------------------------------------------------------
+# histdb_remarks
+
+bleopt/declare -v histdb_remarks 'git: \q{contrib/histdb-remarks-git}'
+
+_ble_histdb_remarks_data=()
+function ble/prompt/unit:_ble_histdb_remarks/update {
+  ble/prompt/unit/add-hash '$bleopt_histdb_remarks'
+  ble/prompt/unit:{section}/update _ble_histdb_remarks "$bleopt_histdb_remarks" no-trace
+}
+
+## @fn ble/histdb/.get-remarks
+##   @var[out] remarks
+function ble/histdb/.get-remarks {
+  remarks=
+  if [[ $bleopt_histdb_remarks ]]; then
+    local ret
+    ble/prompt/unit#update _ble_histdb_remarks "$bleopt_histdb_remarks"
+    ble/prompt/unit:{section}/get _ble_histdb_remarks
+    remarks=$ret
+  fi
+}
+
+function ble/prompt/backslash:contrib/histdb-remarks-git {
+  ble-import prompt-git
+
+  function ble/prompt/backslash:contrib/histdb-remarks-git {
+    local "${_ble_contrib_prompt_git_vars[@]/%/=}" # WA #D1570 checked
+    ble/contrib/prompt-git/initialize || return 0
+    ble/contrib/prompt-git/update-head-information
+    local state; ble/contrib/prompt-git/get-state
+    local dirty_mark; ble/contrib/prompt-git/get-dirty-mark colored
+
+    local path=${git_base%.git}
+    path=${path%/}
+    path=${path##*?/}
+    [[ $PWD == "$git_base"/?* ]] &&
+      path="$path/${PWD#$git_base/}"
+
+    ble/prompt/print "git: ${branch:-(detached)} ${hash:-(orphan)}$dirty_mark${state:+ $state} @ ${path:-/}"
+  } && "$FUNCNAME"
+}
+
+#------------------------------------------------------------------------------
+# background sqlite3 process
+
 bleopt/declare -v histdb_ignore ''
 bleopt/declare -v histdb_file ''
 
@@ -167,7 +215,7 @@ function ble/histdb/sqlite3.open {
   ble/histdb/sqlite3.request-single-value "
     BEGIN TRANSACTION;
     CREATE TABLE IF NOT EXISTS misc(key TEXT PRIMARY KEY, value INTEGER);
-    INSERT OR IGNORE INTO misc values('version', 2);
+    INSERT OR IGNORE INTO misc values('version', $_ble_histdb_version);
     CREATE TABLE IF NOT EXISTS sessions(
       session_id TEXT PRIMARY KEY, pid INTEGER, ppid INTEGER,
       hostname TEXT, user TEXT, uid INTEGER, euid INTEGER, groups TEXT,
@@ -195,6 +243,7 @@ function ble/histdb/sqlite3.open {
       exec_time_sys_self INTEGER,
       exec_time_usr_chld INTEGER,
       exec_time_sys_chld INTEGER,
+      remarks            TEXT,
       PRIMARY KEY (session_id, command_id));
     CREATE TABLE IF NOT EXISTS words(
       word TEXT PRIMARY KEY, count INTEGER, ctime INTEGER, mtime INTEGER);
@@ -219,10 +268,13 @@ function ble/histdb/sqlite3.open {
     SELECT VALUE FROM misc WHERE key = 'version';"
   version=$ret
 
-  if [[ $version ]] && ((version<2)); then
-    local query="
-      ALTER TABLE command_history ADD COLUMN inode INTEGER;
-      UPDATE misc SET value = 2 WHERE key = 'version';"
+  if [[ $version ]] && ((version<_ble_histdb_version)); then
+    local query=
+    ((version<2)) &&
+      query=$query$_ble_term_nl"ALTER TABLE command_history ADD COLUMN inode INTEGER;"
+    ((version<3)) &&
+      query=$query$_ble_term_nl"ALTER TABLE command_history ADD COLUMN remarks TEXT;"
+    query=$query$_ble_term_nl"UPDATE misc SET value = $_ble_histdb_version WHERE key = 'version';"
     ble/histdb/sqlite3.request "$query"
   fi
 }
@@ -320,6 +372,10 @@ function ble/histdb/exec_register.hook {
   local history_index; ble/history/get-count -v history_index
   ((history_index++))
 
+  # Expand "bleopt histdb_remarks"
+  local remarks
+  ble/histdb/.get-remarks
+
   local ret word extra_query=
   ble/histdb/collect-words
   for word in "${ret[@]}"; do
@@ -347,11 +403,11 @@ function ble/histdb/exec_register.hook {
     INSERT INTO command_history(
         session_id, command_id,
         lineno, history_index,
-        command, cwd, inode, issue_time)
+        command, cwd, inode, issue_time, remarks)
       VALUES(
         '${session_id//$q/$qq}', '${command_id//$q/$qq}',
         '${lineno//$q/$qq}', '${history_index//$q/$qq}',
-        '${command//$q/$qq}', '${PWD//$q/$qq}', ${inode:-None}, '${issue_time//$q/$qq}');
+        '${command//$q/$qq}', '${PWD//$q/$qq}', ${inode:-None}, '${issue_time//$q/$qq}', '${remarks//$q/$qq}');
     $extra_query
     COMMIT;"
 }

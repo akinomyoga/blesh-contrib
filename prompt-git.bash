@@ -13,7 +13,7 @@ ble-import contrib/prompt-defer
 _ble_contrib_prompt_git_data=()
 _ble_contrib_prompt_git_base=
 _ble_contrib_prompt_git_base_dir=
-_ble_contrib_prompt_git_vars=(git_base git_base_dir)
+_ble_contrib_prompt_git_vars=(git_base git_base_dir hash branch)
 
 ## @fn ble/contrib/prompt-git/.check-gitdir path
 ##   @var[out] git_base git_base_dir
@@ -66,7 +66,7 @@ function ble/prompt/unit:_ble_contrib_prompt_git/update {
 ##   @var[out] git_base git_base_dir
 function ble/contrib/prompt-git/initialize {
   ble/prompt/unit#update _ble_contrib_prompt_git
-  ble/util/restore-vars _ble_contrib_prompt_ "${_ble_contrib_prompt_git_vars[@]}"
+  ble/util/restore-vars _ble_contrib_prompt_ git_base git_base_dir
   [[ $git_base ]]
 }
 
@@ -98,33 +98,51 @@ function ble/contrib/prompt-git/check-dirty {
   return "$_ble_contrib_prompt_git_dirty"
 }
 function ble/contrib/prompt-git/is-dirty { ble/contrib/prompt-git/check-dirty; (($?!=0&&$?!=3)); }
+function ble/contrib/prompt-git/get-dirty-mark {
+  dirty_mark=
+  ble/contrib/prompt-git/check-dirty; local ext=$?
+  if [[ :$1: == *:colored:* ]]; then
+    case $ext in
+    (1) dirty_mark=$'\e[1;38:5:202m*\e[m' ;;
+    (2) dirty_mark=$'\e[1;32m*\e[m' ;;
+    (3) dirty_mark=$'\e[1;94m+\e[m' ;;
+    esac
+  else
+    case $ext in
+    (1) dirty_mark='*' ;;
+    (2) dirty_mark='^' ;;
+    (3) dirty_mark='+' ;;
+    esac
+  fi
+}
 
-## @fn ble/contrib/prompt-git/get-head-information
+## @fn ble/contrib/prompt-git/update-head-information
 ##   @var[out] hash branch
-function ble/contrib/prompt-git/get-head-information {
-  branch= hash=
+function ble/contrib/prompt-git/update-head-information {
+  [[ $hash || $branch ]] && return 0
 
   local head_file=$git_base_dir/HEAD
-  [[ -s $head_file ]] || return
+  [[ -s $head_file ]] || return 0
   local content; ble/util/mapfile content < "$head_file"
 
   if [[ $content == *'ref: refs/heads/'* ]]; then
     branch=${content#*refs/heads/}
 
     local branch_file=$git_base_dir/refs/heads/$branch
-    [[ -s $branch_file ]] || return
+    [[ -s $branch_file ]] || return 0
     local content; ble/util/mapfile content < "$branch_file"
   fi
 
   [[ ! ${content//[0-9a-fA-F]} ]] && hash=$content
   return 0
 }
-## @fn ble/contrib/prompt-git/get-tag-name hash
+## @fn ble/contrib/prompt-git/get-tag-name
 ##   @var[out] tag
 function ble/contrib/prompt-git/get-tag-name {
   # ble/util/assign-array tag 'git describe --tags --exact-match 2>/dev/null'
   tag=
-  local hash=$1; [[ $hash ]] || return 1
+  ble/contrib/prompt-git/update-head-information # -> hash, branch
+  [[ $hash ]] || return 1
 
   local file tagsdir=$git_base_dir/refs/tags hash1
   local files ret; ble/util/eval-pathname-expansion '"$tagsdir"/*'; files=("${ret[@]}")
@@ -134,12 +152,14 @@ function ble/contrib/prompt-git/get-tag-name {
     ble/util/mapfile hash1 < "$file"
     if [[ $hash1 == "$hash" ]]; then
       tag=$tag1
-      return
+      return 0
     fi
   done
 }
 
-function ble/contrib/prompt-git/describe-head/.determine-state {
+## @fn ble/contrib/prompt-git/get-state opts
+##   @var[out] ret
+function ble/contrib/prompt-git/get-state {
   local opts=$1
   # https://github.com/git/git/blob/4fd6c5e44459e6444c2cd93383660134c95aabd1/contrib/completion/git-prompt.sh#L452-L475
   # https://github.com/git/git/blob/4fd6c5e44459e6444c2cd93383660134c95aabd1/contrib/completion/git-prompt.sh#L312-L333
@@ -169,22 +189,27 @@ function ble/contrib/prompt-git/describe-head/.determine-state {
     ret=REVERTING
   elif [[ -f $git_base_dir/BISECT_LOG ]]; then
     ret=BISECTING
-  elif [[ :$opts: == *:detached:* ]]; then
+  elif ble/contrib/prompt-git/update-head-information; [[ ! $branch ]]; then
     ret=DETACHED
+  elif [[ $branch && ! $hash ]]; then
+    ret=ORPHAN
   else
     ret=
   fi
 
-  case $ret in
-  (REBASE)         ret=$'\e[1;48;5;27;38;5;231m '$ret$' \e[m' ;;
-  (AM | AM/REBASE) ret=$'\e[1;48;5;34;38;5;231m '$ret$' \e[m' ;;
-  (MERGING)        ret=$'\e[1;48;5;172;38;5;231m '$ret$' \e[m' ;;
-  (CHERRY-PICKING) ret=$'\e[1;48;5;200;38;5;231m '$ret$' \e[m' ;;
-  (REVERTING)      ret=$'\e[1;48;5;124;38;5;231m '$ret$' \e[m' ;;
-  (BISECTING)      ret=$'\e[1;48;5;93;38;5;231m '$ret$' \e[m' ;;
-  (DETACHED)       ret=$'\e[91m'$ret$'\e[m' ;;
-  (?*)             ret=$'\e[1;48;5;242;38;5;231m '$ret$' \e[m' ;;
-  esac
+  if [[ :$opts: == *:colored:* ]]; then
+    case $ret in
+    (REBASE)         ret=$'\e[1;48;5;27;38;5;231m '$ret$' \e[m' ;;
+    (AM | AM/REBASE) ret=$'\e[1;48;5;34;38;5;231m '$ret$' \e[m' ;;
+    (MERGING)        ret=$'\e[1;48;5;172;38;5;231m '$ret$' \e[m' ;;
+    (CHERRY-PICKING) ret=$'\e[1;48;5;200;38;5;231m '$ret$' \e[m' ;;
+    (REVERTING)      ret=$'\e[1;48;5;124;38;5;231m '$ret$' \e[m' ;;
+    (BISECTING)      ret=$'\e[1;48;5;93;38;5;231m '$ret$' \e[m' ;;
+    (DETACHED)       ret=$'\e[91m'$ret$'\e[m' ;;
+    (ORPHAN)         ret=$'\e[38;5;70m'$ret$'\e[m' ;;
+    (?*)             ret=$'\e[1;48;5;242;38;5;231m '$ret$' \e[m' ;;
+    esac
+  fi
 
   [[ $ret ]]
 }
@@ -195,15 +220,9 @@ function ble/contrib/prompt-git/describe-head {
 
   local dirty_mark=
   [[ $opts == *:check-dirty:* ]] &&
-    { ble/contrib/prompt-git/check-dirty;
-      case $? in
-      (1) dirty_mark=$'\e[1;38:5:202m*\e[m' ;;
-      (2) dirty_mark=$'\e[1;32m*\e[m' ;;
-      (3) dirty_mark=$'\e[1;94m+\e[m' ;;
-      esac }
+    ble/contrib/prompt-git/get-dirty-mark colored
 
-  local hash branch
-  ble/contrib/prompt-git/get-head-information
+  ble/contrib/prompt-git/update-head-information # -> hash, branch
   if [[ $branch ]]; then
     local sgr=$'\e[1;34m' sgr0=$'\e[m'
     local out=$sgr$branch$sgr0
@@ -214,14 +233,14 @@ function ble/contrib/prompt-git/describe-head {
     fi
 
     [[ $opts == *:check-state:* ]] &&
-      ble/contrib/prompt-git/describe-head/.determine-state &&
+      ble/contrib/prompt-git/get-state colored &&
       out="$ret $out"
     ret=$out
-    return
+    return 0
   fi
 
   local tag
-  ble/contrib/prompt-git/get-tag-name "$hash"
+  ble/contrib/prompt-git/get-tag-name
   if [[ $tag ]]; then
     local sgr=$'\e[1;32m' sgr0=$'\e[m'
     local out=$sgr$tag$sgr0
@@ -229,10 +248,10 @@ function ble/contrib/prompt-git/describe-head {
       out="$out ${hash::7}"
     out=$out$dirty_mark
     [[ $opts == *:check-state:* ]] &&
-      ble/contrib/prompt-git/describe-head/.determine-state detached &&
+      ble/contrib/prompt-git/get-state colored &&
       out="$ret ($out)"
     ret=$out
-    return
+    return 0
   fi
 
   # "master~23" 等の分かりにくい説明なのでこれは使わない
@@ -241,16 +260,16 @@ function ble/contrib/prompt-git/describe-head {
   #   local DETACHED=$'\e[91mDETACHED\e[m'
   #   local sgr=$'\e[32m' sgr0=$'\e[m'
   #   ret="($DETACHED at $sgr$ret$sgr0)"
-  #   return
+  #   return 0
   # fi
 
   if [[ $hash ]]; then
     local out=${hash::7}$dirty_mark
     [[ $opts == *:check-state:* ]] &&
-      ble/contrib/prompt-git/describe-head/.determine-state detached &&
+      ble/contrib/prompt-git/get-state colored &&
       out="$ret ($out)"
     ret=$out
-    return
+    return 0
   fi
 
   ret=$'\e[91mUNKNOWN\e[m'
@@ -284,8 +303,7 @@ function ble/prompt/backslash:contrib/git-name {
 function ble/prompt/backslash:contrib/git-hash {
   local "${_ble_contrib_prompt_git_vars[@]/%/=}" # WA #D1570 checked
   if ble/contrib/prompt-git/initialize; then
-    local hash branch
-    ble/contrib/prompt-git/get-head-information
+    ble/contrib/prompt-git/update-head-information
     ble/prompt/print "${hash::${1:-7}}"
   fi
 }
