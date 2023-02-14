@@ -470,39 +470,61 @@ function ble/complete/auto-complete/source:histdb-history {
 }
 
 function ble/complete/auto-complete/source:histdb-word {
-  # 閉じていない入れ子に対する列挙
   local iN=${#_ble_edit_str}
-  ((iN>0)) || return 1
+  ((_ble_edit_ind>0)) || return 1
 
   local -a wbegins=()
+  if ((_ble_edit_ind<iN)); then
+    # 行中にいる時は現在位置で完結している単語だけを対象にする。
+    if [[ ${_ble_syntax_tree[_ble_edit_ind-1]} ]]; then
+      local tree
+      ble/string#split-words tree "${_ble_syntax_tree[_ble_edit_ind-1]}"
+      local wtype=${tree[0]} wlen=${tree[1]}
+      [[ $wtype && ! ${wtype//[0-9]} && wlen -ge 0 ]] &&
+        ble/array#push wbegins "$((_ble_edit_ind-wlen))"
+    elif local ret; ble/syntax/completion-context/.search-last-istat "$((_ble_edit_ind-1))"; then
+      local istat=$ret stat wlen
+      ble/string#split-words stat "${_ble_syntax_stat[istat]}"
+      if (((wlen=stat[1])>=0)); then
+        ble/array#push wbegins "$((istat-wlen))"
+      elif [[ ${_ble_syntax_bash_command_EndWtype[stat[0]]:-} ]]; then
+        # 単語の始まりの時 (_ble_syntax_bash_command_EndWtype で判定できるのかは実は非自明)
+        ble/array#push wbegins "$istat"
+      fi
+    fi
 
-  local -a stat nest tree
-  ble/string#split-words stat "${_ble_syntax_stat[iN]}"
-  local wlen tclen
-  if (((wlen=stat[1])>=0)); then
-    ble/array#push wbegins "$((iN-wlen))"
-  elif (((tclen=stat[4])>=0)); then
-    local wend=$((iN-tclen))
-    ble/string#split-words tree "${_ble_syntax_tree[wend-1]}"
-    local wtype=${tree[0]} wlen=${tree[1]}
-    [[ $wtype && ! ${wtype//[0-9]} && wlen -ge 0 ]] &&
-      ble/array#push wbegins "$((wend-wlen))"
+  else
+    # 閉じていない入れ子に対する列挙
+
+    local -a stat nest tree
+    ble/string#split-words stat "${_ble_syntax_stat[iN]}"
+    local wlen tclen
+    if (((wlen=stat[1])>=0)); then
+      ble/array#push wbegins "$((iN-wlen))"
+    elif (((tclen=stat[4])>=0)); then
+      local wend=$((iN-tclen))
+      ble/string#split-words tree "${_ble_syntax_tree[wend-1]}"
+      local wtype=${tree[0]} wlen=${tree[1]}
+      [[ $wtype && ! ${wtype//[0-9]} && wlen -ge 0 ]] &&
+        ble/array#push wbegins "$((wend-wlen))"
+    fi
+
+    local inest=$iN nlen=${stat[3]}
+    while ((nlen>0)); do
+      ((inest-=nlen))
+      ble/string#split-words nest "${_ble_syntax_nest[inest]}"
+      (((wlen=nest[1])>=0)) &&
+        ble/array#push wbegins "$((inest-wlen))"
+      nlen=${nest[3]}
+    done
   fi
-
-  local inest=$iN nlen=${stat[3]}
-  while ((nlen>0)); do
-    ((inest-=nlen))
-    ble/string#split-words nest "${_ble_syntax_nest[inest]}"
-    (((wlen=nest[1])>=0)) &&
-      ble/array#push wbegins "$((inest-wlen))"
-    nlen=${nest[3]}
-  done
+  ((${#wbegins[@]})) || return 1
 
   local -a sqls=()
 
   local i q=\' qq=\'\'
   for i in "${wbegins[@]}"; do
-    local word=${_ble_edit_str:i:iN-i}
+    local word=${_ble_edit_str:i:_ble_edit_ind-i}
     [[ $word ]] || continue
     local ret; ble/histdb/escape-for-sqlite-glob "$word"
     local pat=$ret?*
