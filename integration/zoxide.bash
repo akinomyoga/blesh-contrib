@@ -3,10 +3,10 @@
 function ble/contrib:integration/zoxide/_z.advice {
   if [[ ! $_ble_attached ]]; then
     ble/function#advice/do
-    return
+    return 0
   fi
 
-  [[ :$comp_type: == *:auto:* || :$comp_type: == *:[maA]:* ]] && return
+  [[ :$comp_type: == *:auto:* || :$comp_type: == *:[maA]:* ]] && return 0
   compopt -o noquote
 
   ble/term/leave-for-widget

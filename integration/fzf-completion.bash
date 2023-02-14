@@ -27,10 +27,10 @@ function _fzf_complete.advice {
     ble/function#push caller 'builtin caller ${1+"$(($1+6))"}'
     ble/function#advice/do
     ble/function#pop caller
-    return
+    return 0
   fi
 
-  [[ :$comp_type: == *:auto:* || :$comp_type: == *:[maA]:* ]] && return
+  [[ :$comp_type: == *:auto:* || :$comp_type: == *:[maA]:* ]] && return 0
   compopt -o ble/syntax-raw
   if [[ ! ${_fzf_contrib_comp_words_raw-} ]]; then
     local _fzf_contrib_comp_words_raw=1

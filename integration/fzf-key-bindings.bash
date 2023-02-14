@@ -46,7 +46,7 @@ ble/function#advice around __fzf_cd__      ble/contrib:integration/fzf-key-bindi
 function ble/contrib:integration/fzf-key-bindings.advice {
   if [[ ! $_ble_attached ]]; then
     ble/function#advice/do
-    return
+    return 0
   fi
   ble/term/leave-for-widget
   ble/function#advice/do
