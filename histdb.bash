@@ -79,6 +79,7 @@ _ble_histdb_fd_request=
 _ble_histdb_fd_response=
 _ble_histdb_bgpid=
 _ble_histdb_timeout=5000
+_ble_histdb_keepalive=1800 # sec
 
 function ble/histdb/escape-for-sqlite-glob {
   ret=$1
@@ -158,17 +159,43 @@ function ble/histdb/sqlite3.exec {
        <&"$_ble_histdb_fd_request" >&"$_ble_histdb_fd_response"
 }
 
+function ble/histdb/sqlite3.keepalive {
+  ble/util/idle.cancel ble/histdb/sqlite3.close
+  local lifetime_msec=$((_ble_histdb_keepalive*1000))
+  ((lifetime_msec>0)) &&
+    ble/util/idle.push --sleep="$lifetime_msec" ble/histdb/sqlite3.close
+}
+
+function ble/histdb/sqlite3.kill {
+  local i pid=$1
+  for ((i=0;i<60;i++)); do
+    kill -0 "$pid" 2>/dev/null || return 0
+    ble/util/msleep 1000
+  done
+  kill "$pid"
+  for ((i=0;i<10;i++)); do
+    kill -0 "$pid" 2>/dev/null || return 0
+    ble/util/msleep 1000
+  done
+  kill -9 "$pid"
+}
+
+
 ## @fn ble/histdb/sqlite3.open
 ##   @var[ref] _ble_histdb_file
 ##   @var[out] _ble_histdb_fd_request
 ##   @var[out] _ble_histdb_fd_response
 function ble/histdb/sqlite3.open {
   if [[ $_ble_histdb_file ]]; then
-    if [[ $_ble_histdb_bgpid ]] && ! kill -0 "$_ble_histdb_bgpid"; then
-      ble/util/print 'background sqlite3 is inactive.' >&2
-    else
+    [[ $_ble_histdb_bgpid ]] || return 0 # background process に依らないモードの時はOK
+
+    if kill -0 "$_ble_histdb_bgpid"; then
+      ble/histdb/sqlite3.keepalive
       return 0
     fi
+
+    # background process が死んでいる時は再度開き直す。
+    ble/util/print 'background sqlite3 is inactive.' >&2
   fi
 
   local ret; ble/histdb/.get-filename
@@ -193,22 +220,28 @@ function ble/histdb/sqlite3.open {
   # Note: mkfifo may fail in MSYS-1
   _ble_histdb_fd_request=
   _ble_histdb_fd_response=
-  if ble/bin/mkfifo "$fname_request" "$fname_response" 2>/dev/null; then
-    ble/fd#alloc _ble_histdb_fd_request '<> "$fname_request"'
+  if ble/bin/mkfifo "$fname_request" "$fname_response" 2>/dev/null &&
+    ble/fd#alloc _ble_histdb_fd_request '<> "$fname_request"' &&
     ble/fd#alloc _ble_histdb_fd_response '<> "$fname_response"'
+  then
     _ble_histdb_bgpid=$(ble/histdb/sqlite3.exec __ble_suppress_joblist__ >/dev/null & ble/util/print "$!")
-    if kill -0 "$_ble_histdb_bgpid"; then
+    if [[ $_ble_histdb_bgpid ]] && kill -0 "$_ble_histdb_bgpid"; then
       ble/util/print "$_ble_histdb_bgpid" >| "$_ble_base_run/$$.histdb.pid"
+      ble/histdb/sqlite3.keepalive
     else
       local msg='[ble histdb: background sqlite3 failed to start]'
       ble/util/print "${_ble_term_setaf[9]}$msg$_ble_term_sgr0" >&2
-      _ble_histdb_bgpid=
-
       ble/fd#close _ble_histdb_fd_request
       ble/fd#close _ble_histdb_fd_response
+      _ble_histdb_bgpid=
       _ble_histdb_fd_request=
       _ble_histdb_fd_response=
     fi
+  else
+    ble/fd#close _ble_histdb_fd_request
+    ble/fd#close _ble_histdb_fd_response
+    _ble_histdb_fd_request=
+    _ble_histdb_fd_response=
   fi
 
   local ret q=\' qq=\'\'
@@ -290,12 +323,13 @@ function ble/histdb/sqlite3.close {
       WHERE session_id = '${session_id//$q/$qq}';"
   ble/histdb/sqlite3.request ".exit"
 
-  if [[ $_ble_histdb_fd_request ]]; then
+  if [[ $_ble_histdb_bgpid ]]; then
     ble/fd#close _ble_histdb_fd_request
-    _ble_histdb_fd_request=
-  fi
-  if [[ $_ble_histdb_fd_response ]]; then
     ble/fd#close _ble_histdb_fd_response
+    builtin : >| "$_ble_base_run/$$.histdb.pid"
+    (ble/histdb/sqlite3.kill "$_ble_histdb_bgpid" </dev/null &>/dev/null & disown)
+    _ble_histdb_bgpid=
+    _ble_histdb_fd_request=
     _ble_histdb_fd_response=
   fi
   _ble_histdb_file=
