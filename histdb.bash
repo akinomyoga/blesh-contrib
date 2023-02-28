@@ -94,7 +94,7 @@ function ble/histdb/escape-for-sqlite-glob {
 function ble/histdb/sqlite3.flush {
   if [[ $_ble_histdb_fd_response && _ble_bash -ge 40000 ]]; then
     local line IFS=
-    builtin read -t 0.001 -r -d '' line <&"$_ble_histdb_fd_response"
+    ble/bash/read-timeout 0.001 -r -d '' line <&"$_ble_histdb_fd_response"
   fi
 }
 function ble/histdb/sqlite3.request {
@@ -111,10 +111,10 @@ function ble/histdb/sqlite3.request {
 function ble/histdb/read-single-value {
   local line nl=$'\n' q=\' qq=\'\' Q="'\''"
   local IFS= TMOUT=
-  if builtin read "${_ble_bash_tmout_wa[@]}" -r line && [[ $line == \'* ]]; then
+  if ble/bash/read line && [[ $line == \'* ]]; then
     local out=$line ext=0
     while ((ext==0)) && ! ble/string#match "$out" '^'"$q"'([^'\'']|'"$qq"')*'"$q"'$'; do
-      builtin read "${_ble_bash_tmout_wa[@]}" -r line; ext=$?
+      ble/bash/read line; ext=$?
       out=$out$nl$line
     done
     line=$out
@@ -246,7 +246,7 @@ function ble/histdb/sqlite3.open {
 
   local ret q=\' qq=\'\'
   ble/histdb/sqlite3.request-single-value "
-    BEGIN TRANSACTION;
+    BEGIN IMMEDIATE TRANSACTION;
     CREATE TABLE IF NOT EXISTS misc(key TEXT PRIMARY KEY, value INTEGER);
     INSERT OR IGNORE INTO misc values('version', $_ble_histdb_version);
     CREATE TABLE IF NOT EXISTS sessions(
@@ -424,7 +424,7 @@ function ble/histdb/exec_register.hook {
   local inode=$_ble_histdb_exec_cwd_inode
 
   ble/histdb/sqlite3.request "
-    BEGIN TRANSACTION;
+    BEGIN IMMEDIATE TRANSACTION;
     UPDATE sessions SET
       last_time = '${issue_time//$q/$qq}',
       last_wd = '${PWD//$q/$qq}'

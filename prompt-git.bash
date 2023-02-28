@@ -182,7 +182,7 @@ function ble/contrib/prompt-git/get-state {
   elif
     local todo= rest IFS=$_ble_term_IFS TMOUT= 2>/dev/null # #D1630 WA readonly TMOUT
     [[ -f $git_base_dir/sequencer/todo ]] &&
-      builtin read "${_ble_bash_tmout_wa[@]}" -r todo rest < "$git_base_dir/sequencer/todo"
+      ble/bash/read todo rest < "$git_base_dir/sequencer/todo"
     [[ $todo == p || $todo == pick ]]; then
     ret=CHERRY-PICKING
   elif [[ $todo == revert ]]; then
