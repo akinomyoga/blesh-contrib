@@ -32,8 +32,8 @@ function _fzf_complete.advice {
 
   [[ :$comp_type: == *:auto:* || :$comp_type: == *:[maA]:* ]] && return 0
   compopt -o ble/syntax-raw
-  if [[ ! ${_fzf_contrib_comp_words_raw-} ]]; then
-    local _fzf_contrib_comp_words_raw=1
+  if [[ ! ${_ble_contrib_fzf_comp_words_raw-} ]]; then
+    local _ble_contrib_fzf_comp_words_raw=1
     local COMP_WORDS; COMP_WORDS=("${comp_words[@]}")
     local COMP_CWORD=$comp_cword
     local COMP_LINE=$comp_line COMP_POINT=$comp_point

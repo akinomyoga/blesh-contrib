@@ -257,9 +257,9 @@ function ble/contrib/prompt-git/describe-head {
   # "master~23" 等の分かりにくい説明なのでこれは使わない
   # ble/util/assign-array ret 'git describe --contains --all 2>/dev/null'
   # if [[ $ret ]]; then
-  #   local DETACHED=$'\e[91mDETACHED\e[m'
+  #   local label_detached=$'\e[91mDETACHED\e[m'
   #   local sgr=$'\e[32m' sgr0=$'\e[m'
-  #   ret="($DETACHED at $sgr$ret$sgr0)"
+  #   ret="($label_detached at $sgr$ret$sgr0)"
   #   return 0
   # fi
 

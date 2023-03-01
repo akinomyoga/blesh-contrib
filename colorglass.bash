@@ -208,13 +208,13 @@ function ble/contrib/colorglass.filter {
     ((ofac=ofac*2<255?ofac*2:255))
     ((alpha=alpha*ofac/255))
     if ((alpha)); then
-      local C1=$((bleopt_colorglass_color))
-      local R1=$((0xFF&C1>>16))
-      local G1=$((0xFF&C1>>8))
-      local B1=$((0xFF&C1))
-      ((R=R1+(R-R1)*alpha/255))
-      ((G=G1+(G-G1)*alpha/255))
-      ((B=B1+(B-B1)*alpha/255))
+      local c1=$((bleopt_colorglass_color))
+      local r1=$((0xFF&c1>>16))
+      local g1=$((0xFF&c1>>8))
+      local b1=$((0xFF&c1))
+      ((R=r1+(R-r1)*alpha/255))
+      ((G=g1+(G-g1)*alpha/255))
+      ((B=b1+(B-b1)*alpha/255))
     fi
   fi
 

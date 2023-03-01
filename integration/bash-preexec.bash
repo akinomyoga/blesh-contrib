@@ -31,41 +31,41 @@ function ble/contrib:integration/bash-preexec/add-convenience-functions {
 }
 
 function ble/contrib:integration/bash-preexec/precmd.hook {
-  local __lastexit=$? __lastarg=$_
+  local _ble_local_lastexit=$? _ble_local_lastarg=$_
 
   # Emulate bash-preexec variables
-  __bp_last_ret_value=$__lastexit
+  __bp_last_ret_value=$_ble_local_lastexit
   BP_PIPESTATUS=("${BLE_PIPESTATUS[@]}")
 
   # local __bp_blesh_invoking_through_blesh=1 # XXX
   if ble/is-function __bp_precmd_invoke_functions; then
-    __bp_precmd_invoke_functions "$__lastexit" "$__lastarg"
+    __bp_precmd_invoke_functions "$_ble_local_lastexit" "$_ble_local_lastarg"
   else
     # For older bash-preexec.sh / without bash-preexec.sh
-    local __hook
-    for __hook in "${precmd_functions[@]}"; do
-      if builtin type -t "$__hook" &>/dev/null; then
-        ble/util/setexit "$__lastexit" "$__lastarg"
-        "$__hook"
+    local _ble_local_hook
+    for _ble_local_hook in "${precmd_functions[@]}"; do
+      if builtin type -t "$_ble_local_hook" &>/dev/null; then
+        ble/util/setexit "$_ble_local_lastexit" "$_ble_local_lastarg"
+        "$_ble_local_hook"
       fi
     done
   fi
 }
 
 function ble/contrib:integration/bash-preexec/preexec.hook {
-  local __lastexit=$? __lastarg=$_ __this_command=$1
-  __bp_last_argument_prev_command=$__lastarg
+  local _ble_local_lastexit=$? _ble_local_lastarg=$_ _ble_local_command=$1
+  __bp_last_argument_prev_command=$_ble_local_lastarg
 
   # local __bp_blesh_invoking_through_blesh=1 # XXX
   if ble/is-function __bp_preexec_invoke_functions; then
-    __bp_preexec_invoke_functions "$__lastexit" "$__lastarg"
+    __bp_preexec_invoke_functions "$_ble_local_lastexit" "$_ble_local_lastarg"
   else
     # For older bash-preexec.sh / without bash-preexec.sh
-    local __hook
-    for __hook in "${preexec_functions[@]}"; do
-      if builtin type -t "$__hook" &>/dev/null; then
-        ble/util/setexit "$__lastexit" "$__lastarg"
-        "$__hook" "$__this_command"
+    local _ble_local_hook
+    for _ble_local_hook in "${preexec_functions[@]}"; do
+      if builtin type -t "$_ble_local_hook" &>/dev/null; then
+        ble/util/setexit "$_ble_local_lastexit" "$_ble_local_lastarg"
+        "$_ble_local_hook" "$_ble_local_command"
       fi
     done
   fi
