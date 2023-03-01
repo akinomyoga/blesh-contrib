@@ -42,9 +42,9 @@ function _fzf_complete.advice {
   ble/function#push caller 'builtin caller ${1+"$(($1+6))"}'
   ble/term/leave-for-widget
   if [[ ${ADVICE_WORDS[0]} == _fzf_complete ]]; then
-    ble/function#advice/do >/dev/tty 2>&1
+    ble/function#advice/do >&"$_ble_util_fd_stdout" 2>&"$_ble_util_fd_stderr"
   else
-    ble/function#advice/do <> /dev/tty >&0 2>&0
+    ble/function#advice/do >&"$_ble_util_fd_stdout" 2>&"$_ble_util_fd_stderr" <&"$_ble_util_fd_stdin"
   fi
   ble/term/enter-for-widget
   ble/function#pop caller
