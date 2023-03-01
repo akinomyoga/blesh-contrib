@@ -39,7 +39,7 @@ function ble/prompt/backslash:contrib/histdb-remarks-git {
     ble/contrib/prompt-git/initialize || return 0
     ble/contrib/prompt-git/update-head-information
     local state; ble/contrib/prompt-git/get-state
-    local dirty_mark; ble/contrib/prompt-git/get-dirty-mark colored
+    local dirty_mark; ble/contrib/prompt-git/get-dirty-mark
 
     local path=${git_base%.git}
     path=${path%/}
@@ -159,7 +159,13 @@ function ble/histdb/sqlite3.exec {
        <&"$_ble_histdb_fd_request" >&"$_ble_histdb_fd_response"
 }
 
+_ble_histdb_keepalive_enabled=
+ble/is-function ble/util/idle.push &&
+  _ble_histdb_keepalive_enabled=1
+
 function ble/histdb/sqlite3.keepalive {
+  [[ $_ble_histdb_keepalive_enabled ]] || return 0
+
   ble/util/idle.cancel ble/histdb/sqlite3.close
   local lifetime_msec=$((_ble_histdb_keepalive*1000))
   ((lifetime_msec>0)) &&
@@ -227,6 +233,7 @@ function ble/histdb/sqlite3.open {
     _ble_histdb_bgpid=$(ble/histdb/sqlite3.exec __ble_suppress_joblist__ >/dev/null & ble/util/print "$!")
     if [[ $_ble_histdb_bgpid ]] && kill -0 "$_ble_histdb_bgpid"; then
       ble/util/print "$_ble_histdb_bgpid" >| "$_ble_base_run/$$.histdb.pid"
+      ble/util/print ".timeout $_ble_histdb_timeout" >&"$_ble_histdb_fd_request"
       ble/histdb/sqlite3.keepalive
     else
       local msg='[ble histdb: background sqlite3 failed to start]'
@@ -644,7 +651,8 @@ function ble/complete/auto-complete/source:histdb-word {
 ble/util/import/eval-after-load core-complete '
   ble/array#insert-before _ble_complete_auto_source history histdb-history
   ble/array#push _ble_complete_auto_source histdb-word'
-ble/function#try ble/util/idle.push ble/histdb/sqlite3.open
+[[ $_ble_histdb_keepalive_enabled ]] &&
+  ble/util/idle.push ble/histdb/sqlite3.open
 
 #------------------------------------------------------------------------------
 # ble histdb command
