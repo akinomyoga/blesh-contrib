@@ -1,7 +1,7 @@
 # ble/contrib/integration/zoxide.bash (C) 2022, akinomyoga
 
 function ble/contrib:integration/zoxide/completion.advice {
-  if [[ ! $_ble_attached ]]; then
+  if [[ ! ${_ble_attached-} ]]; then
     ble/function#advice/do
     return 0
   fi
@@ -24,7 +24,7 @@ function ble/contrib:integration/zoxide/completion.advice {
 }
 
 function ble/contrib:integration/zoxide/command.advice {
-  if [[ $_ble_attached && ${READLINE_MARK+set} ]]; then
+  if [[ ${_ble_attached-} && ${READLINE_MARK+set} ]]; then
     ble/bin/stty icanon
     ble/function#advice/do
     ble/bin/stty -icanon

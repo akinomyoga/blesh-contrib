@@ -23,7 +23,7 @@ ble/function#advice around __fzf_generic_path_completion _fzf_complete.advice
 ble/function#advice around _fzf_complete                 _fzf_complete.advice
 ble/function#advice around _fzf_complete_kill            _fzf_complete.advice
 function _fzf_complete.advice {
-  if [[ ! $_ble_attached ]]; then
+  if [[ ! ${_ble_attached-} ]]; then
     ble/function#push caller 'builtin caller ${1+"$(($1+6))"}'
     ble/function#advice/do
     ble/function#pop caller
