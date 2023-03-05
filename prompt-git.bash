@@ -127,13 +127,24 @@ function ble/contrib/prompt-git/update-head-information {
 
   if [[ $content == *'ref: refs/heads/'* ]]; then
     branch=${content#*refs/heads/}
+    content=
 
     local branch_file=$git_base_dir/refs/heads/$branch
-    [[ -s $branch_file ]] || return 0
-    local content; ble/util/mapfile content < "$branch_file"
+    if [[ -s $branch_file ]]; then
+      ble/util/mapfile content < "$branch_file"
+    elif local refs_file=$git_base_dir/info/refs; [[ -s $refs_file ]]; then
+      local lines line
+      ble/util/mapfile lines < "$refs_file"
+      for line in "${lines[@]}"; do
+        if [[ $line == *["$_ble_term_IFS"]refs/heads/"$branch" ]]; then
+          content=${line%%[$_ble_term_IFS]*}
+          break
+        fi
+      done
+    fi
   fi
 
-  [[ ! ${content//[0-9a-fA-F]} ]] && hash=$content
+  [[ $content && ! ${content//[0-9a-fA-F]} ]] && hash=$content
   return 0
 }
 ## @fn ble/contrib/prompt-git/get-tag-name
@@ -155,6 +166,17 @@ function ble/contrib/prompt-git/get-tag-name {
       return 0
     fi
   done
+
+  if local refs_file=$git_base_dir/info/refs; [[ -s $refs_file ]]; then
+    local lines line
+    ble/util/mapfile lines < "$refs_file"
+    for line in "${lines[@]}"; do
+      if [[ $line == "$hash"["$_ble_term_IFS"]refs/tags/* ]]; then
+        tag=${line##refs/tags/*}
+        return 0
+      fi
+    done
+  fi
 }
 
 ## @fn ble/contrib/prompt-git/get-state opts
