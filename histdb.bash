@@ -110,7 +110,7 @@ function ble/histdb/sqlite3.request {
 
 function ble/histdb/read-single-value {
   local line nl=$'\n' q=\' qq=\'\' Q="'\''"
-  local IFS= TMOUT=
+  local IFS=
   if ble/bash/read line && [[ $line == \'* ]]; then
     local out=$line ext=0
     while ((ext==0)) && ! ble/string#match "$out" '^'"$q"'([^'\'']|'"$qq"')*'"$q"'$'; do
@@ -333,7 +333,7 @@ function ble/histdb/sqlite3.close {
   if [[ $_ble_histdb_bgpid ]]; then
     ble/fd#close _ble_histdb_fd_request
     ble/fd#close _ble_histdb_fd_response
-    builtin : >| "$_ble_base_run/$$.histdb.pid"
+    >| "$_ble_base_run/$$.histdb.pid"
     (ble/histdb/sqlite3.kill "$_ble_histdb_bgpid" </dev/null &>/dev/null & disown)
     _ble_histdb_bgpid=
     _ble_histdb_fd_request=

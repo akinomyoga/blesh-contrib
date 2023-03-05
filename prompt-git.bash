@@ -180,7 +180,7 @@ function ble/contrib/prompt-git/get-state {
   elif [[ -f $git_base_dir/REVERT_HEAD ]]; then
     ret=REVERTING
   elif
-    local todo= rest IFS=$_ble_term_IFS TMOUT= 2>/dev/null # #D1630 WA readonly TMOUT
+    local todo= rest IFS=$_ble_term_IFS
     [[ -f $git_base_dir/sequencer/todo ]] &&
       ble/bash/read todo rest < "$git_base_dir/sequencer/todo"
     [[ $todo == p || $todo == pick ]]; then
