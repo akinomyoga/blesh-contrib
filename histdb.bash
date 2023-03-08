@@ -550,6 +550,12 @@ blehook EXIT!=ble/histdb/exit.hook
 # auto-complete
 
 function ble/complete/auto-complete/source:histdb-history {
+  local limit=$((bleopt_line_limit_length)) limit_condition=
+  if ((limit)); then
+    ((limit-=${#_ble_edit_str},limit>0)) || return 1
+    limit_condition=" AND length(command) <= $limit"
+  fi
+
   local ret
   ble/histdb/escape-for-sqlite-glob "$_ble_edit_str"; local pat=$ret?*
 
@@ -559,8 +565,8 @@ function ble/complete/auto-complete/source:histdb-history {
   local q=\' qq=\'\'
   ble/histdb/sqlite3.request-single-value "
     SELECT coalesce(
-      (SELECT command FROM (SELECT command, max(issue_time) FROM command_history WHERE command GLOB '${pat//$q/$qq}' AND cwd = '${PWD//$q/$qq}')),
-      ${inode:+(SELECT command FROM (SELECT command, max(issue_time) FROM command_history WHERE command GLOB '${pat//$q/$qq}' AND inode = $inode)),}
+      (SELECT command FROM (SELECT command, max(issue_time) FROM command_history WHERE command GLOB '${pat//$q/$qq}' AND cwd = '${PWD//$q/$qq}$limit_condition')),
+      ${inode:+(SELECT command FROM (SELECT command, max(issue_time) FROM command_history WHERE command GLOB '${pat//$q/$qq}' AND inode = $inode$limit_condition)),}
       '');"
   [[ $ret == "$_ble_edit_str"?* ]] || return 1
   ble/complete/auto-complete/enter h 0 "${ret:${#_ble_edit_str}}" '' "$ret"
@@ -569,6 +575,12 @@ function ble/complete/auto-complete/source:histdb-history {
 function ble/complete/auto-complete/source:histdb-word {
   local iN=${#_ble_edit_str}
   ((_ble_edit_ind>0)) || return 1
+
+  local limit=$((bleopt_line_limit_length)) limit_condition=
+  if ((limit)); then
+    ((limit-=iN,limit>0)) || return 1
+    limit_condition=" AND length(word) <= $limit"
+  fi
 
   local -a wbegins=()
   if ((_ble_edit_ind<iN)); then
@@ -625,7 +637,7 @@ function ble/complete/auto-complete/source:histdb-word {
     [[ $word ]] || continue
     local ret; ble/histdb/escape-for-sqlite-glob "$word"
     local pat=$ret?*
-    ble/array#push sqls "SELECT '$i:' || word FROM (SELECT word, max(mtime) FROM words WHERE word GLOB '${pat//$q/$qq}')"
+    ble/array#push sqls "SELECT '$i:' || word FROM (SELECT word, max(mtime) FROM words WHERE word GLOB '${pat//$q/$qq}'$limit_condition)"
   done
   ((${#sqls[@]})) || return 1
 
@@ -646,7 +658,6 @@ function ble/complete/auto-complete/source:histdb-word {
   else
     ble/complete/auto-complete/enter r "$index" " [$insert] " "$insert" "$insert" "$insert" ' '
   fi
-  return 0
 }
 ble/util/import/eval-after-load core-complete '
   ble/array#insert-before _ble_complete_auto_source history histdb-history
