@@ -6,6 +6,8 @@ if [[ ! -x $_ble_histdb_sqlite3 ]]; then
   return 1
 fi
 
+ble-import util.bgproc
+
 _ble_histdb_version=3
 
 #------------------------------------------------------------------------------
@@ -75,9 +77,11 @@ function ble/histdb/.get-time {
 
 ## @var _ble_histdb_file
 _ble_histdb_file=
-_ble_histdb_fd_request=
-_ble_histdb_fd_response=
-_ble_histdb_bgpid=
+
+## @arr _ble_histdb_bgproc=(fd_response fd_request - bgpid)
+##
+_ble_histdb_bgproc=()
+_ble_histdb_bgproc_fname=()
 _ble_histdb_timeout=5000
 _ble_histdb_keepalive=1800 # sec
 
@@ -92,16 +96,16 @@ function ble/histdb/escape-for-sqlite-glob {
 }
 
 function ble/histdb/sqlite3.flush {
-  if [[ $_ble_histdb_fd_response && _ble_bash -ge 40000 ]]; then
+  if [[ ${_ble_histdb_bgproc[0]} && _ble_bash -ge 40000 ]]; then
     local line IFS=
-    ble/bash/read-timeout 0.001 -r -d '' line <&"$_ble_histdb_fd_response"
+    ble/bash/read-timeout 0.001 -r -d '' line <&"${_ble_histdb_bgproc[0]}"
   fi
 }
 function ble/histdb/sqlite3.request {
   ble/histdb/sqlite3.open
-  if [[ $_ble_histdb_fd_request ]]; then
+  if [[ ${_ble_histdb_bgproc[1]} ]]; then
     ble/histdb/sqlite3.flush
-    ble/util/print "$1" >&"$_ble_histdb_fd_request"
+    ble/util/print "$1" >&"${_ble_histdb_bgproc[1]}"
   else
     [[ $1 == .exit ]] && return 0
     "$_ble_histdb_sqlite3" -quote "$_ble_histdb_file" ".timeout $_ble_histdb_timeout" "$1"
@@ -129,11 +133,11 @@ function ble/histdb/read-single-value {
 function ble/histdb/sqlite3.request-single-value {
   local query=$1 opts=$2
   ble/histdb/sqlite3.open
-  if [[ $_ble_histdb_fd_request && _ble_bash -ge 40000 ]]; then
+  if [[ ${_ble_histdb_bgproc[1]} && _ble_bash -ge 40000 ]]; then
     ble/histdb/sqlite3.flush
-    ble/util/print "$query" >&"$_ble_histdb_fd_request"
+    ble/util/print "$query" >&"${_ble_histdb_bgproc[1]}"
 
-    local sync_command='ble/histdb/read-single-value <&"$_ble_histdb_fd_response"'
+    local sync_command='ble/histdb/read-single-value <&"${_ble_histdb_bgproc[0]}"'
     local sync_condition='((sync_elapsed<200)) || ! ble/complete/check-cancel'
     local sync_opts=progressive-weight
     [[ :$opts: == *:auto:* && $bleopt_complete_timeout_auto ]] &&
@@ -151,57 +155,32 @@ function ble/histdb/sqlite3.request-single-value {
   fi
 }
 
-function ble/histdb/sqlite3.exec {
-  # Note: bash-3.0 では何故か function fname { } redirections の構文を使うと、
-  # ちゃんとリダイレクトしてくれない。なので、_ble_histdb_fd_{request,response}
-  # のリダイレクトは中の exec に対して直接実行する。
-  exec "$_ble_histdb_sqlite3" -quote -cmd "-- [ble: $BLE_SESSION_ID]" "$_ble_histdb_file" \
-       <&"$_ble_histdb_fd_request" >&"$_ble_histdb_fd_response"
+function ble/histdb/sqlite3.proc {
+  exec "$_ble_histdb_sqlite3" -quote -cmd "-- [ble: $BLE_SESSION_ID]" "$_ble_histdb_file"
 }
 
 _ble_histdb_keepalive_enabled=
 ble/is-function ble/util/idle.push &&
   _ble_histdb_keepalive_enabled=1
 
-function ble/histdb/sqlite3.keepalive {
-  [[ $_ble_histdb_keepalive_enabled ]] || return 0
-
-  ble/util/idle.cancel ble/histdb/sqlite3.close
-  local lifetime_msec=$((_ble_histdb_keepalive*1000))
-  ((lifetime_msec>0)) &&
-    ble/util/idle.push --sleep="$lifetime_msec" ble/histdb/sqlite3.close
-}
-
-function ble/histdb/sqlite3.kill {
-  local i pid=$1
-  for ((i=0;i<60;i++)); do
-    kill -0 "$pid" 2>/dev/null || return 0
-    ble/util/msleep 1000
-  done
-  kill "$pid"
-  for ((i=0;i<10;i++)); do
-    kill -0 "$pid" 2>/dev/null || return 0
-    ble/util/msleep 1000
-  done
-  kill -9 "$pid"
-}
-
-
 ## @fn ble/histdb/sqlite3.open
 ##   @var[ref] _ble_histdb_file
-##   @var[out] _ble_histdb_fd_request
-##   @var[out] _ble_histdb_fd_response
+##   @arr[out] _ble_histdb_bgproc
+##   @arr[out] _ble_histdb_bgproc_fname
 function ble/histdb/sqlite3.open {
   if [[ $_ble_histdb_file ]]; then
-    [[ $_ble_histdb_bgpid ]] || return 0 # background process に依らないモードの時はOK
+    # background process に依らないモードの時は OK
+    ble/util/bgproc#opened _ble_histdb || return 0
 
-    if kill -0 "$_ble_histdb_bgpid"; then
-      ble/histdb/sqlite3.keepalive
+    if ble/util/bgproc#alive _ble_histdb; then
+      ble/util/bgproc#keepalive _ble_histdb
       return 0
+    else
+      # background process が死んでいる時は再度開き直す。
+      ble/util/print 'histdb: background sqlite3 is inactive.' >&2
+      ble/util/bgproc#start _ble_histdb
+      return "$?"
     fi
-
-    # background process が死んでいる時は再度開き直す。
-    ble/util/print 'background sqlite3 is inactive.' >&2
   fi
 
   local ret; ble/histdb/.get-filename
@@ -218,37 +197,14 @@ function ble/histdb/sqlite3.open {
   [[ $STY ]] && screen_info="$STY $WINDOW"
   [[ $SSH_TTY ]] && ssh_info="$SSH_TTY $SSH_CONNECTION"
 
-  local fname_request=$_ble_base_run/$$.histdb.request.pipe
-  local fname_response=$_ble_base_run/$$.histdb.response.pipe
-  [[ -e $fname_request || -h $fname_request || -e $fname_response || -h $fname_response ]] &&
-    ble/bin/rm -f "$fname_request" "$fname_response"
-
-  # Note: mkfifo may fail in MSYS-1
-  _ble_histdb_fd_request=
-  _ble_histdb_fd_response=
-  if ble/bin/mkfifo "$fname_request" "$fname_response" 2>/dev/null &&
-    ble/fd#alloc _ble_histdb_fd_request '<> "$fname_request"' &&
-    ble/fd#alloc _ble_histdb_fd_response '<> "$fname_response"'
-  then
-    _ble_histdb_bgpid=$(ble/histdb/sqlite3.exec __ble_suppress_joblist__ >/dev/null & ble/util/print "$!")
-    if [[ $_ble_histdb_bgpid ]] && kill -0 "$_ble_histdb_bgpid"; then
-      ble/util/print "$_ble_histdb_bgpid" >| "$_ble_base_run/$$.histdb.pid"
-      ble/util/print ".timeout $_ble_histdb_timeout" >&"$_ble_histdb_fd_request"
-      ble/histdb/sqlite3.keepalive
-    else
-      local msg='[ble histdb: background sqlite3 failed to start]'
-      ble/util/print "${_ble_term_setaf[9]}$msg$_ble_term_sgr0" >&2
-      ble/fd#close _ble_histdb_fd_request
-      ble/fd#close _ble_histdb_fd_response
-      _ble_histdb_bgpid=
-      _ble_histdb_fd_request=
-      _ble_histdb_fd_response=
-    fi
-  else
-    ble/fd#close _ble_histdb_fd_request
-    ble/fd#close _ble_histdb_fd_response
-    _ble_histdb_fd_request=
-    _ble_histdb_fd_response=
+  local bgproc_opts=owner-close-on-unload:kill-timeout=60000
+  [[ $_ble_histdb_keepalive_enabled ]] &&
+    bgproc_opts=$bgproc_opts:timeout=$((_ble_histdb_keepalive*1000))
+  if ble/util/bgproc#open _ble_histdb ble/histdb/sqlite3.proc "$bgproc_opts"; (($?!=0&&$?!=3)); then
+    # Note: システムが元々サポートしていない場合 ($? == 3) はエラーメッセージは
+    # 出さない。
+    local msg='[ble histdb: background sqlite3 failed to start]'
+    ble/util/print "${_ble_term_setaf[9]}$msg$_ble_term_sgr0" >&2
   fi
 
   local ret q=\' qq=\'\'
@@ -319,6 +275,14 @@ function ble/histdb/sqlite3.open {
   fi
 }
 
+function ble/util/bgproc/onstart:_ble_histdb {
+  ble/util/bgproc#post _ble_histdb ".timeout $_ble_histdb_timeout"
+}
+
+function ble/util/bgproc/onstop:_ble_histdb {
+  ble/util/bgproc#post _ble_histdb '.exit'
+}
+
 function ble/histdb/sqlite3.close {
   [[ $_ble_histdb_file ]] || return 0
   local session_id=$_ble_base_session
@@ -328,17 +292,8 @@ function ble/histdb/sqlite3.close {
       last_time = '${time//$q/$qq}',
       last_wd = '${PWD//$q/$qq}'
       WHERE session_id = '${session_id//$q/$qq}';"
-  ble/histdb/sqlite3.request ".exit"
 
-  if [[ $_ble_histdb_bgpid ]]; then
-    ble/fd#close _ble_histdb_fd_request
-    ble/fd#close _ble_histdb_fd_response
-    >| "$_ble_base_run/$$.histdb.pid"
-    (ble/histdb/sqlite3.kill "$_ble_histdb_bgpid" </dev/null &>/dev/null & disown)
-    _ble_histdb_bgpid=
-    _ble_histdb_fd_request=
-    _ble_histdb_fd_response=
-  fi
+  ble/util/bgproc#close _ble_histdb
   _ble_histdb_file=
 }
 
@@ -524,7 +479,7 @@ function ble/histdb/backup {
     ble/bin/rm -f "$backup"
 }
 
-function ble/histdb/exit.hook {
+function ble/histdb/unload.hook {
   if [[ $_ble_histdb_file ]]; then
     local file=$_ble_histdb_file
     ble/histdb/sqlite3.close
@@ -544,7 +499,7 @@ function ble/histdb/exec_end.hook {
 blehook exec_register!=ble/histdb/exec_register.hook
 blehook POSTEXEC!=ble/histdb/postexec.hook
 blehook exec_end!=ble/histdb/exec_end.hook
-blehook EXIT!=ble/histdb/exit.hook
+blehook unload!=ble/histdb/unload.hook
 
 #------------------------------------------------------------------------------
 # auto-complete
@@ -669,7 +624,12 @@ ble/util/import/eval-after-load core-complete '
 # ble histdb command
 
 function ble-histdb {
-  local ret
-  ble/histdb/.get-filename
-  "$_ble_histdb_sqlite3" "$ret" '.timeout 1000' 'select command from command_history;'
+  case $1 in
+  (query)
+    local ret
+    ble/histdb/.get-filename; local histdb_file=$ret
+    "$_ble_histdb_sqlite3" "$histdb_file" '.timeout 1000' "${@:2}" ;;
+  (*)
+    ble-histdb query 'select command from command_history;' ;;
+  esac
 }
