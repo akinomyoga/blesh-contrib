@@ -9,6 +9,44 @@
 # ```
 #
 
+_ble_contrib_config_execmark_status_name=(
+  [0]=EXIT_SUCCESS
+  [1]=EXIT_FAILURE
+  [2]=usage_error
+
+  # Used by bash
+  [124]=progcomp_restart
+  [126]=permisson_denied
+  [127]=command_not_found
+
+  # From /usr/include/sysexits.h
+  [64]=EX_USAGE
+  [65]=EX_DATAERR
+  [66]=EX_NOINPUT
+  [67]=EX_NOUSER
+  [68]=EX_NOHOST
+  [69]=EX_UNAVAILABLE
+  [70]=EX_SOFTWARE
+  [71]=EX_OSERR
+  [72]=EX_OSFILE
+  [73]=EX_CANTCREAT
+  [74]=EX_IOERR
+  [75]=EX_TEMPFAIL
+  [76]=EX_PROTOCOL
+  [77]=EX_NOPERM
+  [78]=EX_CONFIG
+)
+function ble/contrib/config:execmark/.statusname {
+  name=
+  if [[ ${name:=${_ble_contrib_config_execmark_status_name[exit]}} ]]; then
+    return 0
+  elif ((128<=exit&&exit<=255)) && [[ ${name:=${_ble_builtin_trap_sig_name[exit&127]}} ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
 function ble/contrib/config:execmark/.getsec {
   local msec=$1 sec
   if ((msec==0)); then
@@ -36,7 +74,7 @@ function ble/contrib/config:execmark/postexec.hook {
     if ((_ble_edit_exec_lastexit)); then
       local sgrE=$'\e[;91m'
       local exit=$_ble_edit_exec_lastexit name=
-      if ((exit>=128)) && [[ ${name:=${_ble_builtin_trap_sig_name[exit&127]}} ]]; then
+      if ble/contrib/config:execmark/.statusname; then
         exit=$'\e[1m'"$name"$'\e[22m'" ($sgrN$exit$sgrE)"
       else
         exit="exit $sgrN$exit$sgrE"
