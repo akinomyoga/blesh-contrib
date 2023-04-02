@@ -134,7 +134,7 @@ function ble/contrib/prompt-defer/submit {
       fi
 
       : >| "$tmpfile"
-      ble/util/set "$rbgpid" "$(shopt -u huponexit; ble/contrib/prompt-defer/.worker $prefix < /dev/null &> /dev/null & ble/util/print $!)"
+      ble/util/set "$rbgpid" "$(ble/util/nohup 'ble/contrib/prompt-defer/.worker $prefix' print-bgpid)"
       ((opt_sync>0)) && ble/util/msleep "$opt_sync"
       if [[ -s $tmpfile ]]; then
         ble/contrib/prompt-defer/.finalize "$prefix"
