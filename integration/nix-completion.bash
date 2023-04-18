@@ -2,7 +2,7 @@
 
 [[ $- == *i* ]] || return 0
 
-function ble/contrib:integration/nix-completion/_complete_nix.advice {
+function ble/contrib/integration:nix-completion/_complete_nix.advice {
   if [[ ${_ble_attached-} && " ${FUNCNAME[*]} " == *" ble/complete/progcomp/.compgen "* && ${COMP_WORDS[0]-} != *[\'\"\\]* ]]; then
     local _ble_nix_cmd=${COMP_WORDS[0]-nix} ret
     ble/function#push "$_ble_nix_cmd" '
@@ -18,10 +18,10 @@ function ble/contrib:integration/nix-completion/_complete_nix.advice {
   fi
 }
 
-function ble/contrib:integration/nix-completion/adjust {
+function ble/contrib/integration:nix-completion/adjust {
   if ble/is-function _complete_nix; then
-    ble/function#advice around _complete_nix ble/contrib:integration/nix-completion/_complete_nix.advice
+    ble/function#advice around _complete_nix ble/contrib/integration:nix-completion/_complete_nix.advice
   fi
 }
 
-ble/contrib:integration/nix-completion/adjust
+ble/contrib/integration:nix-completion/adjust

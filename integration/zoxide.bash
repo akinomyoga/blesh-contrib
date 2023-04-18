@@ -1,6 +1,6 @@
 # ble/contrib/integration/zoxide.bash (C) 2022, akinomyoga
 
-function ble/contrib:integration/zoxide/completion.advice {
+function ble/contrib/integration:zoxide/completion.advice {
   if [[ ! ${_ble_attached-} ]]; then
     ble/function#advice/do
     return 0
@@ -23,7 +23,7 @@ function ble/contrib:integration/zoxide/completion.advice {
   fi
 }
 
-function ble/contrib:integration/zoxide/command.advice {
+function ble/contrib/integration:zoxide/command.advice {
   if [[ ${_ble_attached-} && ${READLINE_MARK+set} ]]; then
     ble/bin/stty icanon
     ble/function#advice/do
@@ -33,29 +33,29 @@ function ble/contrib:integration/zoxide/command.advice {
   fi
 }
 
-function ble/contrib:integration/zoxide/adjust {
+function ble/contrib/integration:zoxide/adjust {
   local found=
   if ble/is-function _z; then
-    ble/function#advice around _z ble/contrib:integration/zoxide/completion.advice
+    ble/function#advice around _z ble/contrib/integration:zoxide/completion.advice
     found=1
   fi
   if ble/is-function __zoxide_z_complete; then
-    ble/function#advice around __zoxide_z_complete ble/contrib:integration/zoxide/completion.advice
+    ble/function#advice around __zoxide_z_complete ble/contrib/integration:zoxide/completion.advice
     found=1
   fi
   if ble/is-function __zoxide_z; then
-    ble/function#advice around __zoxide_z ble/contrib:integration/zoxide/command.advice
+    ble/function#advice around __zoxide_z ble/contrib/integration:zoxide/command.advice
     found=1
   fi
   if ble/is-function __zoxide_zi; then
-    ble/function#advice around __zoxide_zi ble/contrib:integration/zoxide/command.advice
+    ble/function#advice around __zoxide_zi ble/contrib/integration:zoxide/command.advice
     found=1
   fi
   [[ $found ]]
 }
 
-if ! ble/contrib:integration/zoxide/adjust; then
+if ! ble/contrib/integration:zoxide/adjust; then
   ble/bin#has zoxide || return 1
   builtin eval -- "$(zoxide init bash)"
-  ble/contrib:integration/zoxide/adjust
+  ble/contrib/integration:zoxide/adjust
 fi

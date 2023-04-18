@@ -188,7 +188,7 @@ function ble/contrib/colorglass.filter {
     ((h1=h%1200,h2=1200-h1,
       x+=Range*(h2<600?h2:600)/600,
       y+=Range*(h1<600?h1:600)/600))
-    case "$((h/1200))" in
+    case $((h/1200)) in
     (0) R=$x G=$y B=$z ;;
     (1) R=$z G=$x B=$y ;;
     (2) R=$y G=$z B=$x ;;
