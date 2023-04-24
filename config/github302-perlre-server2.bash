@@ -3,8 +3,8 @@
 # Copyright 2023 Koichi Murase <myoga.murase@gmail.com>
 
 # This module implements an interface to a perl regex server (a background
-# process which waits to perform perform regex matches without the overhead
-# of starting a perl interpreter each time).
+# process which waits to perform regex matches without the overhead of
+# starting a perl interpreter each time).
 
 ble-import util.bgproc
 
