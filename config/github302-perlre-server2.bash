@@ -99,16 +99,8 @@ function ble/contrib/config:github302/perlre-match2 {
 
   ble/util/bgproc#use perlre_server2
 
-  {                               \
-    echo "$1"                     \
-    &&                            \
-    local tmp="${2//[!$'\n']/}"   \
-    &&                            \
-    echo $((${#tmp} + 1))         \
-    &&                            \
-    echo "$2";                    \
-  }                               \
-  >&"${perlre_server2_bgproc[1]}";
+  local tmp=${2//[!$'\n']}
+  ble/util/print-lines "$1" "$((${#tmp} + 1))" "$2" >&"${perlre_server2_bgproc[1]}"
 
   # We can read the resposnes from fd ${perlre_server2_bgproc[0]}.  We set a
   # timeout to `read' so that it doesn't lock forever in case that the expected
