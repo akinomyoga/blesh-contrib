@@ -14,7 +14,9 @@ function ble/contrib/config:github302/perlre-server2 {
 
 # restart so user can easily try again if they send a bad regex.
 # kill-timeout=0 because on some terminals ble.sh will end up exiting slowly
-# if we wait before sending SIGTERM
+# if we wait before sending SIGTERM.  FIXXME: using deferred here would
+# reduce the start-up time cost a tiny bit but then the startup message
+# could be disruptive, and I think they're more valuable at the moment
 if ble/util/bgproc#open perlre_server2 ble/contrib/config:github302/perlre-server2 restart:kill-timeout=0; then
   # The main shell can send a request to fd ${perlre_server2_bgproc[1]} and can
   # read from fd ${perlre_server2_bgproc[0]}.
@@ -42,9 +44,6 @@ fi
 ##   @exit 0 if REX successfully matches STR, or otherwise 1.
 ##
 function ble/contrib/config:github302/perlre-match2 {
-
-  # FIXXME: could use #post instead of #use followed by echo but I'm too lazy
-  # and scared to figure how to get all the lines through correctly right now
 
   ble/util/bgproc#use perlre_server2
 
