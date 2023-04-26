@@ -172,12 +172,15 @@ function ble/histdb/sqlite3.open {
     # background process に依らないモードの時は OK
     ble/util/bgproc#opened _ble_histdb || return 0
 
-    if ble/util/bgproc#alive _ble_histdb; then
+    ble/util/bgproc#alive _ble_histdb; local state=$?
+    if ((state==0)); then
       ble/util/bgproc#keepalive _ble_histdb
       return 0
     else
-      # background process が死んでいる時は再度開き直す。
-      ble/util/print 'histdb: background sqlite3 is inactive.' >&2
+      if ((state==3)); then
+        # background process が死んでいる時は再度開き直す。
+        ble/util/print 'histdb: background sqlite3 is inactive.' >&2
+      fi
       ble/util/bgproc#start _ble_histdb
       return "$?"
     fi
