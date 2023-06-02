@@ -173,13 +173,13 @@ function ble/widget/vi-command/forward-my-word-end.impl {
   [[ ! $flag && (($group_1_match!=0)) && ${_ble_edit_str:index:1} == [$IFS] ]] && ble/widget/.bell
   ble/widget/vi-command/inclusive-goto.impl "$index" "$flag" "$reg"
 }
-function ble/widget/my/vi-command/forward-my-vword {
+function ble/widget/vim-wordmotion-ish/forward-vword {
   local ARG FLAG REG; ble/keymap:vi/get-arg 1
   ble/widget/my/vi-command/forward-my-word.impl "$ARG" "$FLAG" "$REG" "$_ble_contrib_vim_wordmotion_ish_PREX_WORD"
 }
-ble-bind -m 'vi_nmap' -f 'w' 'my/vi-command/forward-my-vword'
-ble-bind -m 'vi_omap' -f 'w' 'my/vi-command/forward-my-vword'
-ble-bind -m 'vi_xmap' -f 'w' 'my/vi-command/forward-my-vword'
+ble-bind -m 'vi_nmap' -f 'w' 'vim-wordmotion-ish/forward-vword'
+ble-bind -m 'vi_omap' -f 'w' 'vim-wordmotion-ish/forward-vword'
+ble-bind -m 'vi_xmap' -f 'w' 'vim-wordmotion-ish/forward-vword'
 
 function ble/widget/my/vi-command/forward-my-vword-end {
   local ARG FLAG REG; ble/keymap:vi/get-arg 1
