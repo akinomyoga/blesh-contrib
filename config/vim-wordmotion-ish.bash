@@ -98,11 +98,11 @@ function ble/contrib/config:vim-wordmotion-ish/.wobfbob {
   ret='((('$w')'"$n?|$b+$n?|$n)($b+$n)*$b*)"
 }
 
-function ble/widget/vim-wordmotion-ish/forward-my-word.impl {
+function ble/widget/vim-wordmotion-ish/forward-word.impl {
   local arg=$1 flag=$2 reg=$3 prex_word=$4
   local ifs=$_ble_term_IFS
   if [[ $flag == c && ${_ble_edit_str:_ble_edit_ind:1} != [$ifs] ]]; then
-    ble/widget/vi-command/forward-my-word-end.impl "$arg" "$flag" "$reg" "$prex_word" allow_here
+    ble/widget/vim-wordmotion-ish/forward-word-end.impl "$arg" "$flag" "$reg" "$prex_word" allow_here
     return "$?"
   fi
   ble/contrib/config:vim-wordmotion-ish/.wobfbob "$prex_word"
@@ -144,7 +144,7 @@ function ble/widget/vim-wordmotion-ish/forward-my-word.impl {
   fi
   ble/widget/vi-command/exclusive-goto.impl "$index" "$flag" "$reg"
 }
-function ble/widget/vi-command/forward-my-word-end.impl {
+function ble/widget/vim-wordmotion-ish/forward-word-end.impl {
   local arg=$1 flag=$2 reg=$3 prex_word=$4 opts=$5
   local IFS=$_ble_term_IFS
   # FIXXME: because I don't know how to xlate arbitrary chars to perlre.  This
@@ -175,21 +175,21 @@ function ble/widget/vi-command/forward-my-word-end.impl {
 }
 function ble/widget/vim-wordmotion-ish/forward-vword {
   local ARG FLAG REG; ble/keymap:vi/get-arg 1
-  ble/widget/vim-wordmotion-ish/forward-my-word.impl "$ARG" "$FLAG" "$REG" "$_ble_contrib_vim_wordmotion_ish_PREX_WORD"
+  ble/widget/vim-wordmotion-ish/forward-word.impl "$ARG" "$FLAG" "$REG" "$_ble_contrib_vim_wordmotion_ish_PREX_WORD"
 }
 ble-bind -m 'vi_nmap' -f 'w' 'vim-wordmotion-ish/forward-vword'
 ble-bind -m 'vi_omap' -f 'w' 'vim-wordmotion-ish/forward-vword'
 ble-bind -m 'vi_xmap' -f 'w' 'vim-wordmotion-ish/forward-vword'
 
-function ble/widget/my/vi-command/forward-my-vword-end {
+function ble/widget/vim-wordmotion-ish/forward-vword-end {
   local ARG FLAG REG; ble/keymap:vi/get-arg 1
-  ble/widget/vi-command/forward-my-word-end.impl "$ARG" "$FLAG" "$REG" "$_ble_contrib_vim_wordmotion_ish_PREX_WORD"
+  ble/widget/vim-wordmotion-ish/forward-word-end.impl "$ARG" "$FLAG" "$REG" "$_ble_contrib_vim_wordmotion_ish_PREX_WORD"
 }
-ble-bind -m 'vi_nmap' -f 'e' 'my/vi-command/forward-my-vword-end'
-ble-bind -m 'vi_omap' -f 'e' 'my/vi-command/forward-my-vword-end'
-ble-bind -m 'vi_xmap' -f 'e' 'my/vi-command/forward-my-vword-end'
+ble-bind -m 'vi_nmap' -f 'e' 'vim-wordmotion-ish/forward-vword-end'
+ble-bind -m 'vi_omap' -f 'e' 'vim-wordmotion-ish/forward-vword-end'
+ble-bind -m 'vi_xmap' -f 'e' 'vim-wordmotion-ish/forward-vword-end'
 
-function ble/widget/my/vi-command/backward-my-word.impl { # {{{3
+function ble/widget/vim-wordmotion-ish/backward-word.impl { # {{{3
   local arg=$1 flag=$2 reg=$3 prex_word=$4
   ble/contrib/config:vim-wordmotion-ish/.wobfbob "$prex_word"
   local wobfbob="$ret"
@@ -226,13 +226,13 @@ function ble/widget/my/vi-command/backward-my-word.impl { # {{{3
 
   ble/widget/vi-command/exclusive-goto.impl "$index" "$flag" "$reg"
 } # }}}3
-function ble/widget/my/vi-command/backward-my-vword { # {{{3
+function ble/widget/vim-wordmotion-ish/backward-vword { # {{{3
   local ARG FLAG REG; ble/keymap:vi/get-arg 1
-  ble/widget/my/vi-command/backward-my-word.impl "$ARG" "$FLAG" "$REG" "$_ble_contrib_vim_wordmotion_ish_PREX_WORD"
+  ble/widget/vim-wordmotion-ish/backward-word.impl "$ARG" "$FLAG" "$REG" "$_ble_contrib_vim_wordmotion_ish_PREX_WORD"
 } # }}}3
-ble-bind -m 'vi_nmap' -f 'b' 'my/vi-command/backward-my-vword'
-ble-bind -m 'vi_omap' -f 'b' 'my/vi-command/backward-my-vword'
-ble-bind -m 'vi_xmap' -f 'b' 'my/vi-command/backward-my-vword'
+ble-bind -m 'vi_nmap' -f 'b' 'vim-wordmotion-ish/backward-vword'
+ble-bind -m 'vi_omap' -f 'b' 'vim-wordmotion-ish/backward-vword'
+ble-bind -m 'vi_xmap' -f 'b' 'vim-wordmotion-ish/backward-vword'
 
 # The real changes to achieve wordmotion-style visual select,
 # operator-pending, etc. are in these:
@@ -275,7 +275,7 @@ function my/ble/keymap:vi/text-object/word.extend-forward { # {{{3
         local group_1_cap=${str:group_1_idx:group_1_len}
 
         # See the comment and FIXXME in
-        # ble/widget/my/vi-command/backward-my-word.impl about the need
+        # ble/widget/vim-wordmotion-ish/backward-word.impl about the need
         # to handle both sides of the current position because our word
         # definition depends on context.
         local current_char=${_ble_edit_str:_ble_edit_ind:1}
@@ -349,7 +349,7 @@ function my/ble/keymap:vi/text-object/word.extend-backward { # {{{3
     local group_1_len="$ret"
 
     # See the comment and FIXXME in
-    # ble/widget/my/vi-command/backward-my-word.impl about the need to handle
+    # ble/widget/vim-wordmotion-ish/backward-word.impl about the need to handle
     # both sides of the current position because our word definition depends
     # on context.
     local current_char=${_ble_edit_str:_ble_edit_ind:1}
@@ -468,7 +468,7 @@ function my/ble/keymap:vi/.check-text-object { # {{{3
   _ble_decode_key__hook=my/ble/keymap:vi/text-object.hook
   return 0
 } # }}}3
-function ble/widget/my/vi-command/text-object { # {{{3
+function ble/widget/vim-wordmotion-ish/text-object { # {{{3
   my/ble/keymap:vi/.check-text-object && return 0
   ble/widget/vi-command/bell
   return 1
@@ -507,21 +507,21 @@ function my/check_deltas_vs_some_upstream_word_funcs { # {{{3
   &&                                    \
   return 3
 
-  check_exactly_one_line_changed            \
-       ble/widget/vi-command/text-object    \
-       ble/widget/my/vi-command/text-object \
-  ||                                        \
-  ble/util/print "$warnMsg" >&2             \
-  &&                                        \
+  check_exactly_one_line_changed                 \
+       ble/widget/vi-command/text-object         \
+       ble/widget/vim-wordmotion-ish/text-object \
+  ||                                             \
+  ble/util/print "$warnMsg" >&2                  \
+  &&                                             \
   return 4
 
 } # }}}3
 blehook/eval-after-load keymap_vi my/check_deltas_vs_some_upstream_word_funcs
 
-ble-bind -m 'vi_omap' -f 'a' 'my/vi-command/text-object'
-ble-bind -m 'vi_omap' -f 'i' 'my/vi-command/text-object'
-ble-bind -m 'vi_xmap' -f 'a' 'my/vi-command/text-object'
-ble-bind -m 'vi_xmap' -f 'i' 'my/vi-command/text-object'
+ble-bind -m 'vi_omap' -f 'a' 'vim-wordmotion-ish/text-object'
+ble-bind -m 'vi_omap' -f 'i' 'vim-wordmotion-ish/text-object'
+ble-bind -m 'vi_xmap' -f 'a' 'vim-wordmotion-ish/text-object'
+ble-bind -m 'vi_xmap' -f 'i' 'vim-wordmotion-ish/text-object'
 
 ble-bind -m 'vi_nmap' -f 'W' 'vi-command/forward-vword'
 ble-bind -m 'vi_omap' -f 'W' 'vi-command/forward-vword'
