@@ -1,5 +1,5 @@
 
-# Emulation the default behavior of https://github.com/chaoren/vim-wordmotion,
+# Emulate the default behavior of https://github.com/chaoren/vim-wordmotion,
 # almost.  This module differs from the above in these respects:
 #
 #   * It doesn't support g:wordmotion_spaces or g:wordmotion_uppercase_spaces
@@ -8,58 +8,70 @@
 #     behavior of vim-wordmotion with respect to - is pretty weird without
 #     this IMO.
 #
-#   * It also remaps the uppercase motion and text object slect keys to instead
-#     perform the functions previously performed by the original lower-case
-#     motion and text object selction keys.  In essense the lower case keys now
-#     operate on english-language words, and the upper case ones on the
+#   * It remaps the uppercase motion and text object select keys to instead
+#     perform the functions previously performed by the original lower case
+#     motion and text object selction keys.  In essense the lower case keys
+#     now operate on english-language words, and the upper case ones on the
 #     original syntax-oriented words.
 #
 
 # Perl regexes are needed for zero-width look-ahead and look-behind assertions
 ble-import config/github302-perlre-server2.bash
 
-# FIXME: all below here needs namespace attention or something
+# FIXME: all below here needs namespace attention or something (in progress,
+# did a couple funcs as sort of prototype, continue while referencing
+# https://github.com/akinomyoga/ble.sh/blob/style/docs/CONTRIBUTING.md#coding-styles
 
-# Perl Regex Server and Bash Interface {{{1
+# Perl Regex Server Interface {{{1
 
-function queryPerlRegexServer {
-  local ret
-  ble/contrib/config:github302/perlre-match2 "$1" "${*:2}"
-  echo "$ret"
+function ble/contrib/config:vim-wordmotion-ish/match-perl-regex
+{
+  ble/contrib/config:github302/perlre-match2 "$1" "$2"
 }
 
-# Get Regex Query Response Group/Field value (single int) from format
-# returned by perlRegexServer
-function gRQRGF {
-  local mg="$1" group=$2 field="$3"   # Matched Groups, group, field
+# Given a (successful) match result as returned by
+# ble/contrib/config:vim-wordmotion-ish/match-perl-regex return the given
+# field of group, where group is 1-indexed and group 1 is the entire match,
+# group 2 the first parenthesized subgroup, etc.
+function ble/contrib/config:vim-wordmotion-ish/match-result#group-field
+{
+  local self="$1" group="$2" field="$3"   # Matched Groups, group, field
 
-  [ -n "$mg" ] || return 1
-  [ -n "$2" ] || return 2
-  [ -n "$3" ] || return 3
+  # Sanity check arguments
+  [[ "$self" ]]  || return 1
+  [[ "$group" ]] || return 2
+  [[ "$field" ]] || return 3
 
-  local mga=($mg)   # Matched Groups Array
+  # Note that we intend spaces in $self to delineate array elements here
+  local self_as_array; self_as_array=($self)
 
-  ((${#mga[@]} > 0 )) || return 4
-  ((${#mga[@]} % 3 == 0)) || return 5
-  ((${#mga[@]} / 3 >= $2)) || return 6
+  # Sanity check size of self
+  ((${#self_as_array[@]} > 0 ))          || return 4
+  ((${#self_as_array[@]} % 3 == 0))      || return 5
+  ((${#self_as_array[@]} / 3 >= $group)) || return 6
 
-  echo ${mga[((($2 - 1) * 3 + $3 - 1))]}
+  ret="${self_as_array[((($group - 1) * 3 + $field - 1))]}"
 }
 
 # }}}1
 
 # Declare a site broken with a message and non-zero return.  This is the
 # widget to use in general to get a ble.sh message to the terminal
-function brokenHere { ble/widget/print "$*"; return 1; }
+function ble/contrib/config:vim-wordmotion-ish/broken-here
+{
+  ble/widget/print "$*"; return 1;
+}
 
-# Snake-Camel-Hyphen Word Regex.  Whitespace is removed so we can use a
-# pretty layout here and pass it in a single line to our perlRegexServer.
-schwr=$(echo '
+# Our modified version of _ble_keymap_vi_REX_WORD from blesh/keymap/vi.sh.
+# Ours honors Snake-Camel-Hyphen-Acronym words and is a perl regex.
+# Whitespace is removed just so we can use a readable layout here and pass
+# it in a single line to our perl regex server.
+_ble_contrib_vim_wordmotion_ish_PREX_WORD='
   ((?<![A-Z])[a-z]+)
   |
   ([A-Z][a-z]+)
   |
-  ([A-Z][A-Z]+(?![a-z0-9]))
+  ([A-Z][A-Z]+(?![a-z]))
   |
   ([0-9]+)
   |
@@ -68,21 +80,22 @@ schwr=$(echo '
   ([\!-\/\:-\@\[-\`\{-\~]+)
   |
   ([^\s\t\na-zA-Z0-9\!-\/\:-\@\[-\`\{-\~]+)
-' | tr -d " \t\n")
+'
+_ble_contrib_vim_wordmotion_ish_PREX_WORD=${_ble_contrib_vim_wordmotion_ish_PREX_WORD// /}
+_ble_contrib_vim_wordmotion_ish_PREX_WORD=${_ble_contrib_vim_wordmotion_ish_PREX_WORD//$'\t'/}
+_ble_contrib_vim_wordmotion_ish_PREX_WORD=${_ble_contrib_vim_wordmotion_ish_PREX_WORD//$'\n'/}
 
-# Our modified version of _ble_keymap_vi_REX_WORD from blesh/keymap/vi.sh.
-# Ours honors Snake-Camel-Hyphen-Acronym words and is a perl rexeg.
-_my_ble_keymap_vi_PREX_WORD="$schwr"
+# Commonly used Blank/Newline definitions: here [-_] are blanks, newline isn't
+_ble_contrib_vim_wordmotion_ish_b='[-_\s\t]'
+_ble_contrib_vim_wordmotion_ish_n='\n'
 
-# My Blank/Newline (newlines aren't blanks in this definition)
-my_b='[-_\s\t]'
-my_n='\n'
-
-# Snake-Camel-Hyphen Word Blank Regex (a thing ble.sh commonly does with it's
-# word regex).
-function wbr {
-  local wr="$1";
-  echo -n '((('$wr')'"$my_n?|$my_b+$my_n?|$my_n)($my_b+$my_n)*$my_b*)"
+# (Given) Word Or Blank Followed By Optional Blanks (a thing ble.sh commonly
+# does with it's word regex).  Pronounced "wobfubob" :)
+function ble/contrib/config:vim-wordmotion-ish/.wobfbob {
+  local w=$1
+  local b=$_ble_contrib_vim_wordmotion_ish_b
+  local n=$_ble_contrib_vim_wordmotion_ish_n
+  ret='((('$w')'"$n?|$b+$n?|$n)($b+$n)*$b*)"
 }
 
 function ble/widget/my/vi-command/forward-my-word.impl {
@@ -92,22 +105,34 @@ function ble/widget/my/vi-command/forward-my-word.impl {
     ble/widget/vi-command/forward-my-word-end.impl "$arg" "$flag" "$reg" "$prex_word" allow_here
     return "$?"
   fi
-  local prex='(^('$(wbr "$prex_word")'){0,'$arg'})'
+  ble/contrib/config:vim-wordmotion-ish/.wobfbob "$prex_word"
+  local wobfbob="$ret"
+  local prex='(^('"$wobfbob"'){0,'$arg'})'
   local str="${_ble_edit_str:_ble_edit_ind}"
-  local match_groups=$(queryPerlRegexServer "$prex" "$str")
+  ble/contrib/config:vim-wordmotion-ish/match-perl-regex "$prex" "$str"
+  local match_groups="$ret"
   if [ -n "$match_groups" ]; then
-    local group_1_length=$(gRQRGF "$match_groups" 2 3)
+    ble/contrib/config:vim-wordmotion-ish/match-result#group-field "$match_groups" 2 3
+    local group_1_length="$ret"
+
     index=$((_ble_edit_ind+group_1_length))
     if [[ $flag ]]; then
-      local group_2_idx=$(gRQRGF "$match_groups" 3 2)
-      local group_2_len=$(gRQRGF "$match_groups" 3 3)
+      ble/contrib/config:vim-wordmotion-ish/match-result#group-field "$match_groups" 3 2
+      local group_2_idx="$ret"
+      ble/contrib/config:vim-wordmotion-ish/match-result#group-field "$match_groups" 3 3
+      local group_2_len="$ret"
       local group2=${str:group_2_idx:group_2_len}
-      local rrex="($my_n$my_b*\$)"
-      local group2_groups=$(queryPerlRegexServer "$rrex" "$group2")
+      local b=$_ble_contrib_vim_wordmotion_ish_b
+      local n=$_ble_contrib_vim_wordmotion_ish_n
+      local rrex="($n$b*\$)"
+      ble/contrib/config:vim-wordmotion-ish/match-perl-regex "$rrex" "$group2"
+      local group2_groups="$ret"
       if [ -n "$group2_groups" ]; then
-        local group2_group_1_match=$(gRQRGF "$group2_groups" 2 1)
+        ble/contrib/config:vim-wordmotion-ish/match-result#group-field "$group2_groups" 2 1
+        local group2_group_1_match="$ret"
         if [ $group2_group_1_match -ne 0 ]; then
-          local suffix_len=$(gRQRGF "$group2_groups" 2 3)
+          ble/contrib/config:vim-wordmotion-ish/match-result#group-field "$group2_groups" 2 3
+          local suffix_len="$ret"
           if (( suffix_len < ${#group2} )); then
             (( index -= suffix_len ))
           fi
@@ -124,8 +149,8 @@ function ble/widget/vi-command/forward-my-word-end.impl {
   local IFS=$_ble_term_IFS
   # FIXXME: because I don't know how to xlate arbitrary chars to perlre.  This
   # arguably isn't an issue at all because we're doing or own word thin anyway.
-  [ "$IFS" == $' \t\n' ] || brokenHere "\$IFS is not \s\t\n" || return 1
-  # FIXXME: this exciting goop makes his work like our vim setup
+  [ "$IFS" == $' \t\n' ] || ble/contrib/config:vim-wordmotion-ish/broken-here "\$IFS is not \s\t\n" || return 1
+  # FIXXME: this exciting goop makes this work like our vim setup
   # (with out iskeyword+=- setting) for e over: 'foo-BarBaz', 'foo- BarBaz',
   # 'foo -BarBaz', 'foo - BarBaz' and similar with _ instead of -.  Should this
   # exciting goop be happening elsewhere also?  There is no "start-of-word" to
@@ -135,10 +160,13 @@ function ble/widget/vi-command/forward-my-word-end.impl {
   local offset=1; [[ :$opts: == *:allow_here:* ]] && offset=0
 
   local str="${_ble_edit_str:_ble_edit_ind+offset}"
-  local match_groups=$(queryPerlRegexServer "$prex" "$str")
+  ble/contrib/config:vim-wordmotion-ish/match-perl-regex "$prex" "$str"
+  local match_groups="$ret"
 
-  local group_1_match=$(gRQRGF "$match_groups" 2 1)
-  local group_1_length=$(gRQRGF "$match_groups" 2 3)
+  ble/contrib/config:vim-wordmotion-ish/match-result#group-field "$match_groups" 2 1
+  local group_1_match="$ret"
+  ble/contrib/config:vim-wordmotion-ish/match-result#group-field "$match_groups" 2 3
+  local group_1_length="$ret"
   local index=$((_ble_edit_ind+offset+group_1_length-1))
 
   ((index<_ble_edit_ind&&(index=_ble_edit_ind)))
@@ -147,7 +175,7 @@ function ble/widget/vi-command/forward-my-word-end.impl {
 }
 function ble/widget/my/vi-command/forward-my-vword {
   local ARG FLAG REG; ble/keymap:vi/get-arg 1
-  ble/widget/my/vi-command/forward-my-word.impl "$ARG" "$FLAG" "$REG" "$_my_ble_keymap_vi_PREX_WORD"
+  ble/widget/my/vi-command/forward-my-word.impl "$ARG" "$FLAG" "$REG" "$_ble_contrib_vim_wordmotion_ish_PREX_WORD"
 }
 ble-bind -m 'vi_nmap' -f 'w' 'my/vi-command/forward-my-vword'
 ble-bind -m 'vi_omap' -f 'w' 'my/vi-command/forward-my-vword'
@@ -155,7 +183,7 @@ ble-bind -m 'vi_xmap' -f 'w' 'my/vi-command/forward-my-vword'
 
 function ble/widget/my/vi-command/forward-my-vword-end {
   local ARG FLAG REG; ble/keymap:vi/get-arg 1
-  ble/widget/vi-command/forward-my-word-end.impl "$ARG" "$FLAG" "$REG" "$_my_ble_keymap_vi_PREX_WORD"
+  ble/widget/vi-command/forward-my-word-end.impl "$ARG" "$FLAG" "$REG" "$_ble_contrib_vim_wordmotion_ish_PREX_WORD"
 }
 ble-bind -m 'vi_nmap' -f 'e' 'my/vi-command/forward-my-vword-end'
 ble-bind -m 'vi_omap' -f 'e' 'my/vi-command/forward-my-vword-end'
@@ -163,20 +191,44 @@ ble-bind -m 'vi_xmap' -f 'e' 'my/vi-command/forward-my-vword-end'
 
 function ble/widget/my/vi-command/backward-my-word.impl { # {{{3
   local arg=$1 flag=$2 reg=$3 prex_word=$4
-  local prex='(('$(wbr "$prex_word")'){0,'$arg'}$)'
+  ble/contrib/config:vim-wordmotion-ish/.wobfbob "$prex_word"
+  local wobfbob="$ret"
+  local prex='(('"$wobfbob"'){0,'$arg'}$)'
   local str="${_ble_edit_str::_ble_edit_ind}"
-  local match_groups=$(queryPerlRegexServer "$prex" "$str")
+  ble/contrib/config:vim-wordmotion-ish/match-perl-regex "$prex" "$str"
+  local match_groups="$ret"
   local index;
+
   if [ -n "$match_groups" ]; then
-    index=$((_ble_edit_ind - $(gRQRGF "$match_groups" 2 3)))
+
+    # If the letter before is upper case and current is lower always go back
+    # just 1.  We have to detect this here to avoid going all the way back
+    # to the start of a possible sequence of preceeding capitol letter (the
+    # regex can't handle this because it doesn't look at the current char).
+    # FIXXME: the right fix for this would be to parse the entire big word
+    # (space-delimited or somthing) since the presence of context in our
+    # word boundry criteria means splitting the line at an arbitrary point
+    # can't entirely work.  But that would be a lot more work than patching
+    # things up after the fact as we do here.
+    local current_char=${_ble_edit_str:_ble_edit_ind:1}
+    local previous_char=${_ble_edit_str:((_ble_edit_ind - 1)):1}
+    if [[ "$current_char" =~ [a-z]  ]] && [[ "$previous_char" =~ [A-Z] ]] ; then
+      index=$((_ble_edit_ind - 1))
+    else
+      ble/contrib/config:vim-wordmotion-ish/match-result#group-field "$match_groups" 2 3
+      local group_2_length="$ret"
+      index=$((_ble_edit_ind - $group_2_length))
+    fi
+
   else
     index=$_ble_edit_ind
   fi
+
   ble/widget/vi-command/exclusive-goto.impl "$index" "$flag" "$reg"
 } # }}}3
 function ble/widget/my/vi-command/backward-my-vword { # {{{3
   local ARG FLAG REG; ble/keymap:vi/get-arg 1
-  ble/widget/my/vi-command/backward-my-word.impl "$ARG" "$FLAG" "$REG" "$_my_ble_keymap_vi_PREX_WORD"
+  ble/widget/my/vi-command/backward-my-word.impl "$ARG" "$FLAG" "$REG" "$_ble_contrib_vim_wordmotion_ish_PREX_WORD"
 } # }}}3
 ble-bind -m 'vi_nmap' -f 'b' 'my/vi-command/backward-my-vword'
 ble-bind -m 'vi_omap' -f 'b' 'my/vi-command/backward-my-vword'
@@ -195,10 +247,12 @@ function my/ble/keymap:vi/text-object/word.extend-forward { # {{{3
   fi
   local rex_unit
   local W='('$prex_word')' b='['$space']' n=$nl
+  local b=$_ble_contrib_vim_wordmotion_ish_b
+  local n=$_ble_contrib_vim_wordmotion_ish_n
   if [[ $type == i* ]]; then
-    rex_unit='(^'$W'|^'$my_b'+|^'$my_n')'
+    rex_unit='(^'$W'|^'$b'+|^'$n')'
   elif [[ $type == a* ]]; then
-    rex_unit='(^'$W$my_b'*|^'$my_b'+'$W'|^'$my_b'*'$my_n'('$my_b'+'$my_n')*('$my_n'|'$my_b'*'$W'))'
+    rex_unit='(^'$W$b'*|^'$b'+'$W'|^'$b'*'$n'('$b'+'$n')*('$n'|'$b'*'$W'))'
   else
     return 1
   fi
@@ -206,29 +260,48 @@ function my/ble/keymap:vi/text-object/word.extend-forward { # {{{3
   for ((i=0;i<arg;i++)); do
     if ((i==0)) && [[ $flags == *I* ]]; then
       # FIXXME: because I don't know how to xlate arbitrary chars to perlre:
-      [ "$IFS" == $' \t\n' ] || brokenHere "\$IFS is not \s\t\n" || return 1
+      [ "$IFS" == $' \t\n' ] || ble/contrib/config:vim-wordmotion-ish/broken-here "\$IFS is not \s\t\n" || return 1
       local pifs='\s\t\n'
-      local prex='(('$prex_word')$|'$my_b'*['$pifs']$)'
+      local b=$_ble_contrib_vim_wordmotion_ish_b
+      local prex='(('$prex_word')$|'$b'*['$pifs']$)'
       local str=${_ble_edit_str::beg+1}
-      local match_groups=$(queryPerlRegexServer "$prex" "$str")
+      ble/contrib/config:vim-wordmotion-ish/match-perl-regex "$prex" "$str"
+      local match_groups="$ret"
       if [ -n "$match_groups" ]; then
-        local group_1_idx=$(gRQRGF "$match_groups" 2 2)
-        local group_1_len=$(gRQRGF "$match_groups" 2 3)
+        ble/contrib/config:vim-wordmotion-ish/match-result#group-field "$match_groups" 2 2
+        local group_1_idx="$ret"
+        ble/contrib/config:vim-wordmotion-ish/match-result#group-field "$match_groups" 2 3
+        local group_1_len="$ret"
         local group_1_cap=${str:group_1_idx:group_1_len}
-        ((beg-=$group_1_len-1,end=beg))
+
+        # See the comment and FIXXME in
+        # ble/widget/my/vi-command/backward-my-word.impl about the need
+        # to handle both sides of the current position because our word
+        # definition depends on context.
+        local current_char=${_ble_edit_str:_ble_edit_ind:1}
+        local next_char=${_ble_edit_str:((_ble_edit_ind + 1)):1}
+        if [[ "$current_char" =~ [A-Z]  ]] && [[ "$next_char" =~ [a-z] ]] ; then
+          :
+        else
+          ((beg-=$group_1_len-1,end=beg))
+        fi
+
       fi
     else
       [[ ${_ble_edit_str:end:1} == $'\n' ]] && ((end++))
     fi
 
-    local str=${_ble_edit_str:end}
-    local match2_groups=$(queryPerlRegexServer "$rex_unit" "$str")
+    local str=${_ble_edit_str:((end+1))}
+    ble/contrib/config:vim-wordmotion-ish/match-perl-regex "$rex_unit" "$str"
+    local match2_groups="$ret"
     [ -n "$match2_groups" ] || return 1
-    local match2_group_1_idx=$(gRQRGF "$match2_groups" 2 2)
-    local match2_group_1_len=$(gRQRGF "$match2_groups" 2 3)
+    ble/contrib/config:vim-wordmotion-ish/match-result#group-field "$match2_groups" 2 2
+    local match_2_group_1_idx="$ret"
+    ble/contrib/config:vim-wordmotion-ish/match-result#group-field "$match2_groups" 2 3
+    local match2_group_1_len="$ret"
     local match2_group_1_cap=${str:match2_group_1_idx:match2_group_1_len}
     rematch="$match2_group_1_cap"
-    ((end+=${#rematch}))
+    ((end+=${#rematch}+1))
 
     [[ $type == a* && $rematch == *$'\n\n' ]] && ((end--))
     if ((i==0)) && [[ $flags == *I* ]] || ((i==arg-1)); then
@@ -252,33 +325,52 @@ function my/ble/keymap:vi/text-object/word.extend-forward { # {{{3
 function my/ble/keymap:vi/text-object/word.extend-backward { # {{{3
   local rex_unit=
   local W='('$prex_word')' b='['$space']' n=$nl
+  local b=$_ble_contrib_vim_wordmotion_ish_b
+  local n=$_ble_contrib_vim_wordmotion_ish_n
   if [[ $type == i* ]]; then
-    rex_unit='(('$W'|'$my_b'+)'$my_n'?$|'$my_n'$)'
+    rex_unit='(('$W'|'$b'+)'$n'?$|'$n'$)'
   elif [[ $type == a* ]]; then
-    rex_unit='('$my_b'*'$W$my_n'?$|'$W'?'$my_b'*('$my_n'('$my_b'+'$my_n')*'$my_b'*)?('$my_b$my_n'?|'$my_n')$)'
+    rex_unit='('$b'*'$W$n'?$|'$W'?'$b'*('$n'('$b'+'$n')*'$b'*)?('$b$n'?|'$n')$)'
   else
     return 1
   fi
   local count=$arg
+
   while ((count--)); do
 
     local str=${_ble_edit_str::beg}
-    local match_groups=$(queryPerlRegexServer "$rex_unit" "$str")
+    ble/contrib/config:vim-wordmotion-ish/match-perl-regex "$rex_unit" "$str"
+    local match_groups="$ret"
     [ -n "$match_groups" ] || return 1
 
-    local group_1_idx=$(gRQRGF "$match_groups" 2 2)
-    local group_1_len=$(gRQRGF "$match_groups" 2 3)
-    (( beg -= $group_1_len ))
+    ble/contrib/config:vim-wordmotion-ish/match-result#group-field "$match_groups" 2 2
+    local group_1_idx="$ret"
+    ble/contrib/config:vim-wordmotion-ish/match-result#group-field "$match_groups" 2 3
+    local group_1_len="$ret"
+
+    # See the comment and FIXXME in
+    # ble/widget/my/vi-command/backward-my-word.impl about the need to handle
+    # both sides of the current position because our word definition depends
+    # on context.
+    local current_char=${_ble_edit_str:_ble_edit_ind:1}
+    local prev_char=${_ble_edit_str:((_ble_edit_ind - 1)):1}
+    if [[ "$current_char" =~ [a-z]  ]] && [[ "$prev_char" =~ [A-Z] ]] ; then
+      (( beg -= 1 ))
+    else
+      (( beg -= $group_1_len ))
+    fi
 
     local group_1_capture=${str:group_1_idx:group_1_len}
     local match=${group_1_capture%"$nl"}
 
     if ((beg==0&&${#match}>=2)); then
-      echo
+      # FIXXME: should either or both of the below tests againt $match use our
+      # more expansive "white" space def?  I think since this is inter-line
+      # stuff it would likely be counter-intuitive even if technically
+      # correct but it would be nice to know for sure what's going on here.
       if [[ $type == i* ]]; then
         [[ $match == ["$space"]* ]] && beg=1
       elif [[ $type == a* ]]; then
-        # FIXME: this should probably use our more expansive "white" space def.
         [[ $match == *[!"$ifs"] ]] && beg=1
       fi
     fi
@@ -291,14 +383,13 @@ function my/ble/keymap:vi/text-object/word.impl { # {{{3
   local space=$' \t' nl=$'\n' ifs=$_ble_term_IFS
   ((arg==0)) && return 0
   local prex_word
-  echo "type: $type" >>/tmp/mlf
   if [[ $type == ?W ]]; then
     # We want large W to do old small w, so change $type and call original
     type=${type/%W/w}
     ble/keymap:vi/text-object/word.impl "$arg" "$flag" "$reg" "$type"
     return
   else
-    prex_word=$_my_ble_keymap_vi_PREX_WORD
+    prex_word=$_ble_contrib_vim_wordmotion_ish_PREX_WORD
   fi
   local index=$_ble_edit_ind
   if [[ $_ble_decode_keymap == vi_[xs]map ]]; then
