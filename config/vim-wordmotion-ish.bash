@@ -98,7 +98,7 @@ function ble/contrib/config:vim-wordmotion-ish/.wobfbob {
   ret='((('$w')'"$n?|$b+$n?|$n)($b+$n)*$b*)"
 }
 
-function ble/widget/my/vi-command/forward-my-word.impl {
+function ble/widget/vim-wordmotion-ish/forward-my-word.impl {
   local arg=$1 flag=$2 reg=$3 prex_word=$4
   local ifs=$_ble_term_IFS
   if [[ $flag == c && ${_ble_edit_str:_ble_edit_ind:1} != [$ifs] ]]; then
@@ -175,7 +175,7 @@ function ble/widget/vi-command/forward-my-word-end.impl {
 }
 function ble/widget/vim-wordmotion-ish/forward-vword {
   local ARG FLAG REG; ble/keymap:vi/get-arg 1
-  ble/widget/my/vi-command/forward-my-word.impl "$ARG" "$FLAG" "$REG" "$_ble_contrib_vim_wordmotion_ish_PREX_WORD"
+  ble/widget/vim-wordmotion-ish/forward-my-word.impl "$ARG" "$FLAG" "$REG" "$_ble_contrib_vim_wordmotion_ish_PREX_WORD"
 }
 ble-bind -m 'vi_nmap' -f 'w' 'vim-wordmotion-ish/forward-vword'
 ble-bind -m 'vi_omap' -f 'w' 'vim-wordmotion-ish/forward-vword'
