@@ -234,9 +234,13 @@ ble-bind -m 'vi_nmap' -f 'b' 'vim-wordmotion-ish/backward-vword'
 ble-bind -m 'vi_omap' -f 'b' 'vim-wordmotion-ish/backward-vword'
 ble-bind -m 'vi_xmap' -f 'b' 'vim-wordmotion-ish/backward-vword'
 
+# FIXME: WORK POINT: rename these keymap functions now.  They are private so
+# in theory should get the full treatment from style guide hmm I dunno maybe
+# ask author
+
 # The real changes to achieve wordmotion-style visual select,
 # operator-pending, etc. are in these:
-function my/ble/keymap:vi/text-object/word.extend-forward { # {{{3
+function ble/contrib/config:vim-wordmotion-ish/text-object/word.extend-forward { # {{{3
   local rex
   flags=
   [[ ${_ble_edit_str:beg:1} == ["$ifs"] ]] && flags=${flags}A
@@ -322,7 +326,7 @@ function my/ble/keymap:vi/text-object/word.extend-forward { # {{{3
 
   return 0
 } # }}}3
-function my/ble/keymap:vi/text-object/word.extend-backward { # {{{3
+function ble/contrib/config:vim-wordmotion-ish/text-object/word.extend-backward { # {{{3
   local rex_unit=
   local W='('$prex_word')' b='['$space']' n=$nl
   local b=$_ble_contrib_vim_wordmotion_ish_b
@@ -378,12 +382,23 @@ function my/ble/keymap:vi/text-object/word.extend-backward { # {{{3
 
   return 0
 } # }}}3
-function my/ble/keymap:vi/text-object/word.impl { # {{{3
+function ble/contrib/config:vim-wordmotion-ish/text-object/word.impl { # {{{3
   local arg=$1 flag=$2 reg=$3 type=$4
   local space=$' \t' nl=$'\n' ifs=$_ble_term_IFS
   ((arg==0)) && return 0
   local prex_word
   if [[ $type == ?W ]]; then
+    # FIXME: I think this inflicts our turning W into w on users if they use
+    # any of these bindings:
+    #   ble-bind -m 'vi_omap' -f 'a' 'vim-wordmotion-ish/text-object'
+    #   ble-bind -m 'vi_omap' -f 'i' 'vim-wordmotion-ish/text-object'
+    #   ble-bind -m 'vi_xmap' -f 'a' 'vim-wordmotion-ish/text-object'
+    #   ble-bind -m 'vi_xmap' -f 'i' 'vim-wordmotion-ish/text-object'
+    # even if they deliberately *don't* use the bindings for W E B to the old
+    # word movement widgets that we provide (currently at the end of this
+    # file).  Of course they want these text-object bindings to make w work.
+    # This is a confusing mess for casual users that must at least be
+    # documented.
     # We want large W to do old small w, so change $type and call original
     type=${type/%W/w}
     ble/keymap:vi/text-object/word.impl "$arg" "$flag" "$reg" "$type"
@@ -395,7 +410,7 @@ function my/ble/keymap:vi/text-object/word.impl { # {{{3
   if [[ $_ble_decode_keymap == vi_[xs]map ]]; then
     if ((index<_ble_edit_mark)); then
       local beg=$index
-      if my/ble/keymap:vi/text-object/word.extend-backward; then
+      if ble/contrib/config:vim-wordmotion-ish/text-object/word.extend-backward; then
         _ble_edit_ind=$beg
       else
         _ble_edit_ind=0
@@ -406,7 +421,7 @@ function my/ble/keymap:vi/text-object/word.impl { # {{{3
     fi
   fi
   local beg=$index end=$index flags=
-  if ! my/ble/keymap:vi/text-object/word.extend-forward; then
+  if ! ble/contrib/config:vim-wordmotion-ish/text-object/word.extend-forward; then
     index=${#_ble_edit_str}
     ble-edit/content/nonbol-eolp "$index" && ((index--))
     _ble_edit_ind=$index
@@ -428,11 +443,11 @@ function my/ble/keymap:vi/text-object/word.impl { # {{{3
 } # }}}3
 
 # These functions vary from the stock versions in ble.sh only by call of
-# of of the above or each other instead:
-function my/ble/keymap:vi/text-object.impl { # {{{3
+# one of the above or each other instead:
+function ble/contrib/config:vim-wordmotion-ish/text-object.impl { # {{{3
   local arg=$1 flag=$2 reg=$3 type=$4
   case "$type" in
-  ([ia][wW]) my/ble/keymap:vi/text-object/word.impl "$arg" "$flag" "$reg" "$type" ;;
+  ([ia][wW]) ble/contrib/config:vim-wordmotion-ish/text-object/word.impl "$arg" "$flag" "$reg" "$type" ;;
   ([ia][\"\'\`]) ble/keymap:vi/text-object/quote.impl "$arg" "$flag" "$reg" "$type" ;;
   ([ia]['b()']) ble/keymap:vi/text-object/block.impl "$arg" "$flag" "$reg" "${type::1}()" ;;
   ([ia]['B{}']) ble/keymap:vi/text-object/block.impl "$arg" "$flag" "$reg" "${type::1}{}" ;;
@@ -446,7 +461,7 @@ function my/ble/keymap:vi/text-object.impl { # {{{3
     return 1;;
   esac
 } # }}}3
-function my/ble/keymap:vi/text-object.hook { # {{{3
+function ble/contrib/config:vim-wordmotion-ish/text-object.hook { # {{{3
   local key=$1
   local ARG FLAG REG; ble/keymap:vi/get-arg 1
   if ! ble-decode-key/ischar "$key"; then
@@ -455,21 +470,21 @@ function my/ble/keymap:vi/text-object.hook { # {{{3
   fi
   local ret; ble/util/c2s "$key"
   local type=$_ble_keymap_vi_text_object$ret
-  my/ble/keymap:vi/text-object.impl "$ARG" "$FLAG" "$REG" "$type"
+  ble/contrib/config:vim-wordmotion-ish/text-object.impl "$ARG" "$FLAG" "$REG" "$type"
   return 0
 } # }}}3
-function my/ble/keymap:vi/.check-text-object { # {{{3
+function ble/contrib/config:vim-wordmotion-ish/.check-text-object { # {{{3
   local n=${#KEYS[@]}; ((n&&n--))
   ble-decode-key/ischar "${KEYS[n]}" || return 1
   local ret; ble/util/c2s "${KEYS[n]}"; local c=$ret
   [[ $c == [ia] ]] || return 1
   [[ $_ble_keymap_vi_opfunc || $_ble_decode_keymap == vi_[xs]map ]] || return 1
   _ble_keymap_vi_text_object=$c
-  _ble_decode_key__hook=my/ble/keymap:vi/text-object.hook
+  _ble_decode_key__hook=ble/contrib/config:vim-wordmotion-ish/text-object.hook
   return 0
 } # }}}3
 function ble/widget/vim-wordmotion-ish/text-object { # {{{3
-  my/ble/keymap:vi/.check-text-object && return 0
+  ble/contrib/config:vim-wordmotion-ish/.check-text-object && return 0
   ble/widget/vi-command/bell
   return 1
 } # }}}3
@@ -479,32 +494,32 @@ function check_exactly_one_line_changed { # {{{3
   local emc=3   # Expected Modification Count (note 2 are due to name change)
   [ $(diff <(type $func_a) <(type $func_b) -u | diffstat -m -t | tail -n 1 | cut -d , -f 3) -eq $emc ]
 } # }}}3
-function my/check_deltas_vs_some_upstream_word_funcs { # {{{3
+function ble/contrib/config:vim-wordmotion-ish/check_deltas_vs_some_upstream_word_funcs { # {{{3
 
   local warnMsg='unexpectedly large delta vs. stock ble.sh function'
 
-  check_exactly_one_line_changed      \
-       ble/keymap:vi/text-object.impl \
-    my/ble/keymap:vi/text-object.impl \
-  ||                                  \
-  ble/util/print "$warnMsg" >&2       \
-  &&                                  \
+  check_exactly_one_line_changed                           \
+    ble/keymap:vi/text-object.impl                         \
+    ble/contrib/config:vim-wordmotion-ish/text-object.impl \
+  ||                                                       \
+  ble/util/print "$warnMsg" >&2                            \
+  &&                                                       \
   return 1
 
-  check_exactly_one_line_changed      \
-       ble/keymap:vi/text-object.hook \
-    my/ble/keymap:vi/text-object.hook \
-  ||                                  \
-  ble/util/print "$warnMsg" >&2       \
-  &&                                  \
+  check_exactly_one_line_changed                           \
+    ble/keymap:vi/text-object.hook                         \
+    ble/contrib/config:vim-wordmotion-ish/text-object.hook \
+  ||                                                       \
+  ble/util/print "$warnMsg" >&2                            \
+  &&                                                       \
   return 2
 
-  check_exactly_one_line_changed        \
-       ble/keymap:vi/.check-text-object \
-    my/ble/keymap:vi/.check-text-object \
-  ||                                    \
-  ble/util/print "$warnMsg" >&2         \
-  &&                                    \
+  check_exactly_one_line_changed                             \
+    ble/keymap:vi/.check-text-object                         \
+    ble/contrib/config:vim-wordmotion-ish/.check-text-object \
+  ||                                                         \
+  ble/util/print "$warnMsg" >&2                              \
+  &&                                                         \
   return 3
 
   check_exactly_one_line_changed                 \
@@ -516,7 +531,7 @@ function my/check_deltas_vs_some_upstream_word_funcs { # {{{3
   return 4
 
 } # }}}3
-blehook/eval-after-load keymap_vi my/check_deltas_vs_some_upstream_word_funcs
+blehook/eval-after-load keymap_vi ble/contrib/config:vim-wordmotion-ish/check_deltas_vs_some_upstream_word_funcs
 
 ble-bind -m 'vi_omap' -f 'a' 'vim-wordmotion-ish/text-object'
 ble-bind -m 'vi_omap' -f 'i' 'vim-wordmotion-ish/text-object'
