@@ -53,6 +53,7 @@ function _fzf_complete.advice {
 
   # 単一候補生成の場合は他の候補 (sabbrev 等) を消去して単一確定させる
   if ((ADVICE_EXIT==0&&${#COMPREPLY[@]}==1)); then
+    compopt -o ble/no-default
     ble/complete/candidates/clear
     [[ $old_cand_count ]] &&
       ! ble/variable#is-global old_cand_count &&
