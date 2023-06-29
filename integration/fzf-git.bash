@@ -84,11 +84,12 @@ if [[ :$_ble_contrib_fzf_git_config: == *:original:* ]]; then
   # bind '"\C-g\C-s": "$(_gs)\M-\C-e\M-\C-l"'
 fi
 
+function ble/widget/fzf-git {
+  ble/widget/insert-string "$(_$1)"
+  ble/textarea#invalidate
+}
+
 if [[ :$_ble_contrib_fzf_git_config: == *:key-binding:* ]]; then
-  function ble/widget/fzf-git {
-    ble/widget/insert-string "$(_$1)"
-    ble/textarea#invalidate
-  }
   ble-bind -f 'C-g C-f' 'fzf-git gf'
   ble-bind -f 'C-g C-b' 'fzf-git gb'
   ble-bind -f 'C-g C-t' 'fzf-git gt'
