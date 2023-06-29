@@ -1,5 +1,9 @@
+# Copyright (c) 2016, 2022 Junegunn Choi
 # ble/contrib/integration/fzf-git.bash (C) 2020, 2023, akinomyoga
-# Ported from https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d40f17236 (Revision 2022-08-16)
+#
+# 2020-04-16 https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d40f17236 (Revision 2019-03-14)
+# 2023-06-30 https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d40f17236 (Revision 2022-08-16)
+# 2023-06-30 https://github.com/junegunn/fzf-git.sh/commit/4bc0323b4822b3426989863996cc266c52c7f25a
 
 ble-import contrib/integration/fzf-initialize
 
@@ -8,58 +12,75 @@ ble-import contrib/integration/fzf-initialize
 # GIT heart FZF
 # -------------
 
-is_in_git_repo() {
+# Redefine this function to change the options
+_fzf_git_fzf() {
+  fzf-tmux -p80%,60% --layout=reverse --multi --height 50% --min-height 20 --border --bind ctrl-/:toggle-preview "$@"
+}
+
+_fzf_git_check() {
   git rev-parse HEAD > /dev/null 2>&1
 }
 
-fzf-down() {
-  fzf --height 50% --min-height 20 --border --bind ctrl-/:toggle-preview "$@"
+# Sometimes bat is installed as batcat
+export _fzf_git_cat=cat
+if command -v batcat > /dev/null; then
+  _fzf_git_cat="batcat --style='${BAT_STYLE:-numbers}' --color=always --pager=never"
+elif command -v bat > /dev/null; then
+  _fzf_git_cat="bat --style='${BAT_STYLE:-numbers}' --color=always --pager=never"
+fi
+
+_fzf_git_files() {
+  _fzf_git_check || return
+  (git -c color.status=always status --short
+   git ls-files | grep -vf <(git status -s | grep '^[^?]' | cut -c4-) | sed 's/^/   /') |
+  _fzf_git_fzf -m --ansi --nth 2..,.. \
+    --prompt 'Git Files> ' \
+    --preview "git diff --color=always -- {-1} | sed 1,4d; $_fzf_git_cat {-1}" |
+  cut -c4- | sed 's/.* -> //'
 }
 
-_gf() {
-  is_in_git_repo || return 1
-  git -c color.status=always status --short |
-    fzf-down -m --ansi --nth 2..,.. \
-             --preview '(git diff --color=always -- {-1} | sed 1,4d; cat {-1})' |
-    cut -c4- | sed 's/.* -> //'
-}
-
-_gb() {
-  is_in_git_repo || return 1
+_fzf_git_branches() {
+  _fzf_git_check || return
   git branch -a --color=always | grep -v '/HEAD\s' | sort |
-    fzf-down --ansi --multi --tac --preview-window right:70% \
-             --preview 'git log --oneline --graph --date=short --color=always --pretty="format:%C(auto)%cd %h%d %s" $(sed s/^..// <<< {} | cut -d" " -f1) | head -'$LINES |
-    sed 's/^..//' | cut -d' ' -f1 |
-    sed 's#^remotes/##'
+  _fzf_git_fzf --ansi --tac --preview-window right,70% \
+    --prompt 'Git Branches> ' \
+    --preview 'git log --oneline --graph --date=short --color=always --pretty="format:%C(auto)%cd %h%d %s" $(sed s/^..// <<< {} | cut -d" " -f1)' |
+  sed 's/^..//' | cut -d' ' -f1 |
+  sed 's#^remotes/##'
 }
 
-_gt() {
-  is_in_git_repo || return 1
+_fzf_git_tags() {
+  _fzf_git_check || return
   git tag --sort -version:refname |
-    fzf-down --multi --preview-window right:70% \
-             --preview 'git show --color=always {}'
+  _fzf_git_fzf --preview-window right,70% \
+    --prompt 'Git Tags> ' \
+    --preview 'git show --color=always {}'
 }
 
-_gh() {
-  is_in_git_repo || return 1
+_fzf_git_hashes() {
+  _fzf_git_check || return
   git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" --graph --color=always |
-    fzf-down --ansi --no-sort --reverse --multi --bind 'ctrl-s:toggle-sort' \
-             --header 'Press CTRL-S to toggle sort' \
-             --preview 'grep -o "[a-f0-9]\{7,\}" <<< {} | xargs git show --color=always' |
-    grep -o "[a-f0-9]\{7,\}"
+  _fzf_git_fzf --ansi --no-sort --bind 'ctrl-s:toggle-sort' \
+    --prompt 'Git Hashes> ' \
+    --header 'Press CTRL-S to toggle sort' \
+    --preview 'grep -o "[a-f0-9]\{7,\}" <<< {} | xargs git show --color=always' |
+  grep -o "[a-f0-9]\{7,\}"
 }
 
-_gr() {
-  is_in_git_repo || return 1
+_fzf_git_remotes() {
+  _fzf_git_check || return
   git remote -v | awk '{print $1 "\t" $2}' | uniq |
-    fzf-down --tac \
-             --preview 'git log --oneline --graph --date=short --pretty="format:%C(auto)%cd %h%d %s" {1}' |
-    cut -d$'\t' -f1
+  _fzf_git_fzf --tac \
+    --prompt 'Git Remotes> ' \
+    --preview 'git log --oneline --graph --date=short --color=always --pretty="format:%C(auto)%cd %h%d %s" {1}/"$(git rev-parse --abbrev-ref HEAD)"' |
+  cut -d$'\t' -f1
 }
 
-_gs() {
-  is_in_git_repo || return
-  git stash list | fzf-down --reverse -d: --preview 'git show --color=always {1}' |
+_fzf_git_stashes() {
+  _fzf_git_check || return
+  git stash list | _fzf_git_fzf \
+    --prompt 'Git Stashes> ' \
+    -d: --preview 'git show --color=always {1}' |
   cut -d: -f1
 }
 
@@ -67,56 +88,70 @@ _gs() {
 
 : "${_ble_contrib_fzf_git_config=key-binding}"
 
-if [[ :$_ble_contrib_fzf_git_config: == *:original:* ]]; then
+# original
+function ble/contrib:integration/fzf-git/type:original/init {
   bind '"\er": redraw-current-line'
-  bind '"\C-g\C-f": "$(_gf)\e\C-e\er"'
-  bind '"\C-g\C-b": "$(_gb)\e\C-e\er"'
-  bind '"\C-g\C-t": "$(_gt)\e\C-e\er"'
-  bind '"\C-g\C-h": "$(_gh)\e\C-e\er"'
-  bind '"\C-g\C-r": "$(_gr)\e\C-e\er"'
-  bind '"\C-g\C-s": "$(_gs)\e\C-e\er"'
-
-  # bind '"\C-g\C-f": "$(_gf)\M-\C-e\M-\C-l"'
-  # bind '"\C-g\C-b": "$(_gb)\M-\C-e\M-\C-l"'
-  # bind '"\C-g\C-t": "$(_gt)\M-\C-e\M-\C-l"'
-  # bind '"\C-g\C-h": "$(_gh)\M-\C-e\M-\C-l"'
-  # bind '"\C-g\C-r": "$(_gr)\M-\C-e\M-\C-l"'
-  # bind '"\C-g\C-s": "$(_gs)\M-\C-e\M-\C-l"'
-fi
+}
+function ble/contrib:integration/fzf-git/type:original {
+  local binding='"\C-g\C-'$1'": "$(_fzf_git_'$2')\e\C-e\er"'
+  bind "$binding"
+}
+# function ble/contrib:integration/fzf-git/type:original {
+#   local binding='"\C-g\C-'$1'": "$(_fzf_git_'$2')\M-\C-e\M-\C-l"'
+#   bind "$binding"
+# }
 
 function ble/widget/fzf-git {
-  ble/widget/insert-string "$(_$1)"
+  ble/widget/insert-string "$(_fzf_git_$1)"
   ble/textarea#invalidate
 }
 
-if [[ :$_ble_contrib_fzf_git_config: == *:key-binding:* ]]; then
-  ble-bind -f 'C-g C-f' 'fzf-git gf'
-  ble-bind -f 'C-g C-b' 'fzf-git gb'
-  ble-bind -f 'C-g C-t' 'fzf-git gt'
-  ble-bind -f 'C-g C-h' 'fzf-git gh'
-  ble-bind -f 'C-g C-r' 'fzf-git gr'
-  ble-bind -f 'C-g C-s' 'fzf-git gs'
-fi
+# key-binding
+function ble/contrib:integration/fzf-git/type:key-binding {
+  ble-bind -f "C-g C-$1" "fzf-git $2"
+}
 
-if [[ :$_ble_contrib_fzf_git_config: == *:sabbrev:* ]]; then
+# sabbrev
+function ble/contrib:integration/fzf-git/type:sabbrev/init {
   function fzf-git.sabbrev {
-    COMPREPLY=$(_$1)
+    COMPREPLY=$(_fzf_git_$1)
     ble/textarea#invalidate
   }
-  ble-sabbrev -m gf='fzf-git.sabbrev gf'
-  ble-sabbrev -m gb='fzf-git.sabbrev gb'
-  ble-sabbrev -m gt='fzf-git.sabbrev gt'
-  ble-sabbrev -m gh='fzf-git.sabbrev gh'
-  ble-sabbrev -m gr='fzf-git.sabbrev gr'
-  ble-sabbrev -m gs='fzf-git.sabbrev gs'
-fi
+}
+function ble/contrib:integration/fzf-git/type:sabbrev {
+  ble-sabbrev -m "g$1"="fzf-git.sabbrev $2"
+}
 
-if [[ :$_ble_contrib_fzf_git_config: == *:arpeggio:* ]]; then
+# arpeggio
+function ble/contrib:integration/fzf-git/type:arpeggio/init {
   ble-import 'lib/vim-arpeggio.sh'
-  ble/lib/vim-arpeggio.sh/bind -f 'gf' 'fzf-git gf'
-  ble/lib/vim-arpeggio.sh/bind -f 'gb' 'fzf-git gb'
-  ble/lib/vim-arpeggio.sh/bind -f 'gt' 'fzf-git gt'
-  ble/lib/vim-arpeggio.sh/bind -f 'gh' 'fzf-git gh'
-  ble/lib/vim-arpeggio.sh/bind -f 'gr' 'fzf-git gr'
-  ble/lib/vim-arpeggio.sh/bind -f 'gs' 'fzf-git gs'
-fi
+}
+function ble/contrib:integration/fzf-git/type:arpeggio {
+  ble/lib/vim-arpeggio.sh/bind -f "g$1" "fzf-git $2"
+}
+
+# old-functions
+function ble/contrib:integration/fzf-git/type:old-functions/init {
+  function is_in_git_repo { _fzf_git_fzf "$@"; }
+  function fzf-down { _fzf_git_check "$@"; }
+}
+function ble/contrib:integration/fzf-git/type:old-functions {
+  builtin eval "function g$1 { _fzf_git_$2 \"\$@\"; }"
+}
+
+function ble/contrib:integration/fzf-git/initialize {
+  local type
+  for type in original key-binding sabbrev arpeggio old-functions; do
+    [[ :$_ble_contrib_fzf_git_config: == *:"$type":* ]] || continue
+
+    ble/function#try ble/contrib:integration/fzf-git/type:"$type"/init
+    ble/contrib:integration/fzf-git/type:"$type" f files
+    ble/contrib:integration/fzf-git/type:"$type" b branches
+    ble/contrib:integration/fzf-git/type:"$type" t tags
+    ble/contrib:integration/fzf-git/type:"$type" h hashes
+    ble/contrib:integration/fzf-git/type:"$type" r remotes
+    ble/contrib:integration/fzf-git/type:"$type" s stashes
+  done
+  unset -f "$FUNCNAME"
+}
+ble/contrib:integration/fzf-git/initialize

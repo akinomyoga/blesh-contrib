@@ -90,7 +90,7 @@ ble-import -d integration/fzf-key-bindings
 
 ## :pencil: `integration/fzf-git`
 
-Source: [`fzf-git.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/fzf-git.bash)
+Source: [`fzf-git.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/integration/fzf-git.bash)
 
 You can use [fzf-git](https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d40f17236) settings for `ble.sh` with the following settings.
 
@@ -118,9 +118,10 @@ ble-import -d integration/fzf-git
 ```
 
 The shell variable `_ble_contrib_fzf_git_config` is a colon-separated list of the enabled types of bindings.
-The value `key-binding` enables the key bindings of the form <kbd>C-g C-f</kbd>, <kbd>C-g C-b</kbd>, <kbd>C-g C-t</kbd>, <kbd>C-g C-h</kbd> and <kbd>C-g C-r</kbd>.
-The value `sabbrev` enables the sabbrev expansion for the words `gf`, `gb`, `gt`, `gh` and `gr`.
-The value `arpeggio` enables the simultaneous key combinations of <kbd>g f</kbd>, <kbd>g b</kbd>, <kbd>g t</kbd>, <kbd>g h</kbd> and <kbd>g r</kbd>.
+The value `key-binding` enables the key bindings of the form <kbd>C-g C-f</kbd>, <kbd>C-g C-b</kbd>, <kbd>C-g C-t</kbd>, <kbd>C-g C-h</kbd>, <kbd>C-g C-r</kbd> and <kbd>C-g C-s</kbd>.
+The value `sabbrev` enables the sabbrev expansion for the words `gf`, `gb`, `gt`, `gh`, `gr`, and `gs`.
+The value `arpeggio` enables the simultaneous key combinations of <kbd>g f</kbd>, <kbd>g b</kbd>, <kbd>g t</kbd>, <kbd>g h</kbd>, <kbd>g r</kbd> and <kbd>g s</kbd>.
+The value `old-functions` enables old function names: `is_in_git_repo`, `fzf-down`, `gh`, `gb`, `gt`, `gh`, `gr`, and `gs`.
 
 # &#x2699; Prompt sequences
 
