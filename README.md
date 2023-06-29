@@ -92,7 +92,7 @@ ble-import -d integration/fzf-key-bindings
 
 Source: [`fzf-git.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/integration/fzf-git.bash)
 
-You can use [fzf-git](https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d40f17236) settings for `ble.sh` with the following settings.
+You can use the [`junegunn/fzf-git.sh`](https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d40f17236) settings for `ble.sh` with the following setup.
 
 ```bash
 # bashrc / fzf.bash
