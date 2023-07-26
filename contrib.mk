@@ -9,7 +9,7 @@ contrib-outfiles := $(contrib-srcfiles:contrib/%=$(OUTDIR)/contrib/%)
 outdirs += $(contrib-outdirs)
 outfiles += $(contrib-outfiles)
 $(OUTDIR)/contrib/%.bash: contrib/%.bash | $(contrib-outdirs)
-	cp -p $< $@
+	$(CP) $< $@
 
 define LinkOldIngteration
 outfiles += $$(OUTDIR)/contrib/$1.bash
@@ -32,6 +32,6 @@ outfiles-doc += $(OUTDIR)/doc/contrib/README.md
 # を記述していたが make-3.81 に於いて正しく適用されない事が分かった。仕方がない
 # ので LICENSE と %.md の二つの規則に分けて書く事にする。
 $(OUTDIR)/doc/contrib/LICENSE: contrib/LICENSE | $(OUTDIR)/doc/contrib
-	cp -p $< $@
+	$(CP) $< $@
 $(OUTDIR)/doc/contrib/%.md: contrib/%.md | $(OUTDIR)/doc/contrib
-	cp -p $< $@
+	$(CP) $< $@
