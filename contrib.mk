@@ -24,9 +24,9 @@ $(eval $(call LinkOldIngteration,fzf-key-bindings))
 
 # docs
 outdirs += $(OUTDIR)/doc/contrib
-outfiles-doc += $(OUTDIR)/doc/contrib/LICENSE
 outfiles-doc += $(OUTDIR)/doc/contrib/README-ja.md
 outfiles-doc += $(OUTDIR)/doc/contrib/README.md
+outfiles-license += $(OUTDIR)/doc/contrib/LICENSE
 
 # Note (workaround for make-3.81): 当初 $(OUTDIR)/doc/contrib/% に対してルール
 # を記述していたが make-3.81 に於いて正しく適用されない事が分かった。仕方がない
