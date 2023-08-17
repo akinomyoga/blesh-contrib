@@ -11,16 +11,16 @@ outfiles += $(contrib-outfiles)
 $(OUTDIR)/contrib/%.bash: contrib/%.bash | $(contrib-outdirs)
 	$(CP) $< $@
 
-define LinkOldIngteration
+define LinkOldIntegration
 outfiles += $$(OUTDIR)/contrib/$1.bash
 $$(OUTDIR)/contrib/$1.bash: contrib/integration/$1.bash
 	ln -sf integration/$1.bash $$@
 endef
-$(eval $(call LinkOldIngteration,bash-preexec))
-$(eval $(call LinkOldIngteration,fzf-completion))
-$(eval $(call LinkOldIngteration,fzf-git))
-$(eval $(call LinkOldIngteration,fzf-initialize))
-$(eval $(call LinkOldIngteration,fzf-key-bindings))
+$(eval $(call LinkOldIntegration,bash-preexec))
+$(eval $(call LinkOldIntegration,fzf-completion))
+$(eval $(call LinkOldIntegration,fzf-git))
+$(eval $(call LinkOldIntegration,fzf-initialize))
+$(eval $(call LinkOldIntegration,fzf-key-bindings))
 
 # docs
 outdirs += $(OUTDIR)/doc/contrib
