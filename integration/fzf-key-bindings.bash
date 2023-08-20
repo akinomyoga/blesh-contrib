@@ -12,7 +12,7 @@ elif [[ -f $_ble_contrib_fzf_base/shell/key-bindings.bash ]]; then
 fi
 ble/function#pop bind
 
-function ble/contrib:integration/fzf-key-bindings/is-fzf-above-7c447bbd {
+function ble/contrib/integration:fzf-key-bindings/is-fzf-above-7c447bbd {
   local def; ble/function#getdef __fzf_history__ 
   [[ $def == *READLINE_LINE=* ]]
 }
@@ -31,7 +31,7 @@ function fzf-history-widget {
   READLINE_POINT=${#READLINE_LINE}
 }
 ((_ble_bash>=40000)) &&
-  ble/contrib:integration/fzf-key-bindings/is-fzf-above-7c447bbd &&
+  ble/contrib/integration:fzf-key-bindings/is-fzf-above-7c447bbd &&
   function fzf-history-widget { __fzf_history__; }
 
 # ALT-C - cd into the selected directory

@@ -459,7 +459,7 @@ function ble/histdb/postexec.hook {
 
 function ble/histdb/backup {
   local file=$1
-  ble/bin/.freeze-utility-path -n gzip || return 1
+  ble/bin#freeze-utility-path -n gzip || return 1
 
   local backup=${file%.sqlite3}.backup.sqlite3 q=\' qq=\'\'
   if [[ -s $backup.gz ]]; then
