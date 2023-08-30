@@ -446,7 +446,7 @@ function ble/contrib/config:vim-wordmotion-ish/text-object/word.impl { # {{{3
 # one of the above or each other instead:
 function ble/contrib/config:vim-wordmotion-ish/text-object.impl { # {{{3
   local arg=$1 flag=$2 reg=$3 type=$4
-  case "$type" in
+  case $type in
   ([ia][wW]) ble/contrib/config:vim-wordmotion-ish/text-object/word.impl "$arg" "$flag" "$reg" "$type" ;;
   ([ia][\"\'\`]) ble/keymap:vi/text-object/quote.impl "$arg" "$flag" "$reg" "$type" ;;
   ([ia]['b()']) ble/keymap:vi/text-object/block.impl "$arg" "$flag" "$reg" "${type::1}()" ;;
