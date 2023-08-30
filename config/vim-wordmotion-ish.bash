@@ -494,41 +494,29 @@ function check_exactly_one_line_changed { # {{{3
   local emc=3   # Expected Modification Count (note 2 are due to name change)
   [ $(diff <(type $func_a) <(type $func_b) -u | diffstat -m -t | tail -n 1 | cut -d , -f 3) -eq $emc ]
 } # }}}3
+function check_exactly_one_line_changed_maybe_warn { # {{{3
+  local warnMsgPrefix='unexpectedly large delta between stock ble.sh function'
+  check_exactly_one_line_changed "$1" "$2"                         \
+    ||  ble/util/print "$warnMsgPrefix $1 and modified version $2"
+
+} # }}}3
 function ble/contrib/config:vim-wordmotion-ish/check_deltas_vs_some_upstream_word_funcs { # {{{3
 
-  local warnMsg='unexpectedly large delta vs. stock ble.sh function'
-
-  check_exactly_one_line_changed                           \
+  check_exactly_one_line_changed_maybe_warn                \
     ble/keymap:vi/text-object.impl                         \
-    ble/contrib/config:vim-wordmotion-ish/text-object.impl \
-  ||                                                       \
-  ble/util/print "$warnMsg" >&2                            \
-  &&                                                       \
-  return 1
+    ble/contrib/config:vim-wordmotion-ish/text-object.impl
 
-  check_exactly_one_line_changed                           \
+  check_exactly_one_line_changed_maybe_warn                \
     ble/keymap:vi/text-object.hook                         \
-    ble/contrib/config:vim-wordmotion-ish/text-object.hook \
-  ||                                                       \
-  ble/util/print "$warnMsg" >&2                            \
-  &&                                                       \
-  return 2
+    ble/contrib/config:vim-wordmotion-ish/text-object.hook
 
-  check_exactly_one_line_changed                             \
+  check_exactly_one_line_changed_maybe_warn                  \
     ble/keymap:vi/.check-text-object                         \
-    ble/contrib/config:vim-wordmotion-ish/.check-text-object \
-  ||                                                         \
-  ble/util/print "$warnMsg" >&2                              \
-  &&                                                         \
-  return 3
+    ble/contrib/config:vim-wordmotion-ish/.check-text-object
 
-  check_exactly_one_line_changed                 \
+  check_exactly_one_line_changed_maybe_warn      \
        ble/widget/vi-command/text-object         \
-       ble/widget/vim-wordmotion-ish/text-object \
-  ||                                             \
-  ble/util/print "$warnMsg" >&2                  \
-  &&                                             \
-  return 4
+       ble/widget/vim-wordmotion-ish/text-object
 
 } # }}}3
 blehook/eval-after-load keymap_vi ble/contrib/config:vim-wordmotion-ish/check_deltas_vs_some_upstream_word_funcs
