@@ -25,7 +25,7 @@ _fzf_git_fzf() {
 }
 
 _fzf_git_check() {
-  git rev-parse HEAD > /dev/null 2>&1 && return
+  git rev-parse HEAD > /dev/null 2>&1 && return 0
 
   [[ -n $TMUX ]] && tmux display-message "Not in a git repository"
   return 1
@@ -46,7 +46,7 @@ if [[ -z $_fzf_git_cat ]]; then
 fi
 
 _fzf_git_files() {
-  _fzf_git_check || return
+  _fzf_git_check || return "$?"
   (git -c color.status=always status --short --no-branch
    git ls-files | grep -vxFf <(git status -s | grep '^[^?]' | cut -c4-; echo :) | sed 's/^/   /') |
   _fzf_git_fzf -m --ansi --nth 2..,.. \
@@ -59,7 +59,7 @@ _fzf_git_files() {
 }
 
 _fzf_git_branches() {
-  _fzf_git_check || return
+  _fzf_git_check || return "$?"
   bash "$__fzf_git" branches |
   _fzf_git_fzf --ansi \
     --border-label '🌲 Branches' \
@@ -76,7 +76,7 @@ _fzf_git_branches() {
 }
 
 _fzf_git_tags() {
-  _fzf_git_check || return
+  _fzf_git_check || return "$?"
   git tag --sort -version:refname |
   _fzf_git_fzf --preview-window right,70% \
     --border-label '📛 Tags' \
@@ -86,7 +86,7 @@ _fzf_git_tags() {
 }
 
 _fzf_git_hashes() {
-  _fzf_git_check || return
+  _fzf_git_check || return "$?"
   git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" --graph --color=always |
   _fzf_git_fzf --ansi --no-sort --bind 'ctrl-s:toggle-sort' \
     --border-label '🍡 Hashes' \
@@ -99,7 +99,7 @@ _fzf_git_hashes() {
 }
 
 _fzf_git_remotes() {
-  _fzf_git_check || return
+  _fzf_git_check || return "$?"
   git remote -v | awk '{print $1 "\t" $2}' | uniq |
   _fzf_git_fzf --tac \
     --border-label '📡 Remotes' \
@@ -111,7 +111,7 @@ _fzf_git_remotes() {
 }
 
 _fzf_git_stashes() {
-  _fzf_git_check || return
+  _fzf_git_check || return "$?"
   git stash list | _fzf_git_fzf \
     --border-label '🥡 Stashes' \
     --header $'CTRL-X (drop stash)\n\n' \
@@ -121,7 +121,7 @@ _fzf_git_stashes() {
 }
 
 _fzf_git_each_ref() {
-  _fzf_git_check || return
+  _fzf_git_check || return "$?"
   bash "$__fzf_git" refs | _fzf_git_fzf --ansi \
     --nth 2,2.. \
     --tiebreak begin \
@@ -208,6 +208,6 @@ function ble/contrib:integration/fzf-git/initialize {
     ble/contrib:integration/fzf-git/type:"$type" s stashes
     ble/contrib:integration/fzf-git/type:"$type" s each_ref
   done
-  unset -f "$FUNCNAME"
+  builtin unset -f "$FUNCNAME"
 }
 ble/contrib:integration/fzf-git/initialize
