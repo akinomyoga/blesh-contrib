@@ -5,10 +5,21 @@
 # 2023-06-30 https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d40f17236 (Revision 2022-08-16)
 # 2023-06-30 https://github.com/junegunn/fzf-git.sh/commit/4bc0323b4822b3426989863996cc266c52c7f25a
 # 2023-06-30 https://github.com/junegunn/fzf-git.sh/commit/b6192ec86609afea761c7d3954f9b539a512dc80
+# 2023-11-09 https://github.com/junegunn/fzf-git.sh/blob/aacab4ae557657e0f9de288d688f312a28b86d21/fzf-git.sh
 
 ble-import contrib/integration/fzf-initialize
 
 [[ $- == *i* ]] || return 0
+
+## @fn ble/contrib/integration:fzf-git/initialize bash_source
+##   @param[in] bash_source
+##   @var[out] __fzf_git
+function ble/contrib/integration:fzf-git/initialize {
+  local ret
+  ble/util/readlink "$1"
+  __fzf_git=$ret
+}
+ble/contrib/integration:fzf-git/initialize "${BASH_SOURCE[0]:-}"
 
 # GIT heart FZF
 # -------------
@@ -30,9 +41,6 @@ _fzf_git_check() {
   [[ -n $TMUX ]] && tmux display-message "Not in a git repository"
   return 1
 }
-
-__fzf_git=${BASH_SOURCE[0]:-${(%):-%x}}
-__fzf_git=$(readlink -f "$__fzf_git" 2> /dev/null || /usr/bin/ruby --disable-gems -e 'puts File.expand_path(ARGV.first)' "$__fzf_git" 2> /dev/null)
 
 if [[ -z $_fzf_git_cat ]]; then
   # Sometimes bat is installed as batcat
@@ -118,6 +126,14 @@ _fzf_git_stashes() {
     --bind 'ctrl-x:execute-silent(git stash drop {1})+reload(git stash list)' \
     -d: --preview 'git show --color=always {1}' "$@" |
   cut -d: -f1
+}
+
+_fzf_git_lreflogs() {
+  _fzf_git_check || return
+  git reflog --color=always --format="%C(blue)%gD %C(yellow)%h%C(auto)%d %gs" | _fzf_git_fzf --ansi \
+    --border-label '📒 Reflogs' \
+    --preview 'git show --color=always {1}' "$@" |
+  awk '{print $1}'
 }
 
 _fzf_git_each_ref() {
@@ -206,7 +222,8 @@ function ble/contrib:integration/fzf-git/initialize {
     ble/contrib:integration/fzf-git/type:"$type" h hashes
     ble/contrib:integration/fzf-git/type:"$type" r remotes
     ble/contrib:integration/fzf-git/type:"$type" s stashes
-    ble/contrib:integration/fzf-git/type:"$type" s each_ref
+    ble/contrib:integration/fzf-git/type:"$type" l lreflogs
+    ble/contrib:integration/fzf-git/type:"$type" e each_ref
   done
   builtin unset -f "$FUNCNAME"
 }
