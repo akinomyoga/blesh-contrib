@@ -210,7 +210,7 @@ _fzf_git_stashes() {
 }
 
 _fzf_git_lreflogs() {
-  _fzf_git_check || return
+  _fzf_git_check || return "$?"
   git reflog --color=always --format="%C(blue)%gD %C(yellow)%h%C(auto)%d %gs" | _fzf_git_fzf --ansi \
     --border-label '📒 Reflogs' \
     --preview 'git show --color=always {1}' "$@" |
