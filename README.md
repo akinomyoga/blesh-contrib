@@ -3,7 +3,7 @@
 # blesh-contrib
 Settings for [akinomyoga/ble.sh](https://github.com/akinomyoga/ble.sh)
 
-Unless otherwise specified, files in this repository is licensed by [BSD 3-clause license](LICENSE).
+Unless otherwise specified, files in this repository are licensed by [BSD 3-clause license](LICENSE).
 The files in `airline` are licensed by the MIT License.
 
 ## :pencil: fzf integration
@@ -63,7 +63,7 @@ fi
 ### Option 2: Setup in `~/.blerc`
 
 Or, you can directly write settings in your `blerc` as follows.
-In this case do not source `.fzf.bash` in your `.bashrc`.
+In this case, do not source `.fzf.bash` in your `.bashrc`.
 
 ```bash
 # blerc
@@ -118,9 +118,9 @@ ble-import -d integration/fzf-git
 ```
 
 The shell variable `_ble_contrib_fzf_git_config` is a colon-separated list of the enabled types of bindings.
-The value `key-binding` enables the key bindings of the form <kbd>C-g C-f</kbd>, <kbd>C-g C-b</kbd>, <kbd>C-g C-t</kbd>, <kbd>C-g C-h</kbd>, <kbd>C-g C-r</kbd> and <kbd>C-g C-s</kbd>.
+The value `key-binding` enables the key bindings of the form <kbd>C-g C-f</kbd>, <kbd>C-g C-b</kbd>, <kbd>C-g C-t</kbd>, <kbd>C-g C-h</kbd>, <kbd>C-g C-r</kbd>, and <kbd>C-g C-s</kbd>.
 The value `sabbrev` enables the sabbrev expansion for the words `gf`, `gb`, `gt`, `gh`, `gr`, and `gs`.
-The value `arpeggio` enables the simultaneous key combinations of <kbd>g f</kbd>, <kbd>g b</kbd>, <kbd>g t</kbd>, <kbd>g h</kbd>, <kbd>g r</kbd> and <kbd>g s</kbd>.
+The value `arpeggio` enables the simultaneous key combinations of <kbd>g f</kbd>, <kbd>g b</kbd>, <kbd>g t</kbd>, <kbd>g h</kbd>, <kbd>g r</kbd>, and <kbd>g s</kbd>.
 The value `old-functions` enables old function names: `is_in_git_repo`, `fzf-down`, `gh`, `gb`, `gt`, `gh`, `gr`, and `gs`.
 
 # &#x2699; Prompt sequences
