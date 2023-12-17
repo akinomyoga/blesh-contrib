@@ -88,6 +88,26 @@ ble-import -d integration/fzf-completion
 ble-import -d integration/fzf-key-bindings
 ```
 
+Note: the option `-d` for `ble-import` means the asynchronous loading of the
+modules.  If you need to immediately load the module, please drop the option
+`-d`.  For example, if the user needs to call a function defined in a module,
+the module can be loaded immediately, so that the user can use the function.
+
+```bash
+ble-import integration/fzf-completion
+_fzf_setup_completion foo bar
+```
+
+However, in most cases, the user would probably want to reserve the execution
+of the commands relying on the module by using the `-C callback` option.  In
+this way, the reserved command is evaluated when the module is successfully
+loaded.
+
+```bash
+ble-import -d integration/fzf-completion \
+  -C '_fzf_setup_completion foo bar'
+```
+
 ## :pencil: `integration/fzf-git`
 
 Source: [`fzf-git.bash`](https://github.com/akinomyoga/blesh-contrib/blob/master/integration/fzf-git.bash)
