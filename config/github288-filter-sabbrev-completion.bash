@@ -33,9 +33,7 @@ function ble/contrib/config:github288/filter-sabbrev-completion.advice {
       # If the command word is simple enough, we evaluate the command word to
       # resolve quoting and parameter expansions.
       local cmd=${comp_words[0]} ret
-      ble/syntax:bash/simple-word/is-simple "$cmd" &&
-        ble/syntax:bash/simple-word/eval "$cmd" &&
-        cmd=$ret
+      ble/syntax:bash/simple-word/safe-eval "$cmd" nonull && cmd=$ret
 
       # If the command name matches any pattern of the ignored list, we return
       # the function without calling the original function.
