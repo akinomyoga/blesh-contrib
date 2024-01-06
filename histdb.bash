@@ -265,7 +265,7 @@ function ble/histdb/sqlite3.open {
         '${_ble_prompt_const_l//$q/$qq}');
     COMMIT;
     SELECT VALUE FROM misc WHERE key = 'version';"
-  version=$ret
+  local version=$ret
 
   if [[ $version ]] && ((version<_ble_histdb_version)); then
     local query=
