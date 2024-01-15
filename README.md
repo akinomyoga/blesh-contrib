@@ -3,7 +3,7 @@
 # blesh-contrib
 Settings for [akinomyoga/ble.sh](https://github.com/akinomyoga/ble.sh)
 
-Unless otherwise specified, files in this repository is licensed by [BSD 3-clause license](LICENSE).
+Unless otherwise specified, files in this repository are licensed by [BSD 3-clause license](LICENSE).
 The files in `airline` are licensed by the MIT License.
 
 ## :pencil: fzf integration
@@ -63,7 +63,7 @@ fi
 ### Option 2: Setup in `~/.blerc`
 
 Or, you can directly write settings in your `blerc` as follows.
-In this case do not source `.fzf.bash` in your `.bashrc`.
+In this case, do not source `.fzf.bash` in your `.bashrc`.
 
 ```bash
 # blerc
@@ -86,6 +86,26 @@ In this case do not source `.fzf.bash` in your `.bashrc`.
 # Setup fzf
 ble-import -d integration/fzf-completion
 ble-import -d integration/fzf-key-bindings
+```
+
+Note: the option `-d` for `ble-import` means the asynchronous loading of the
+modules.  If you need to immediately load the module, please drop the option
+`-d`.  For example, if the user needs to call a function defined in a module,
+the module can be loaded immediately, so that the user can use the function.
+
+```bash
+ble-import integration/fzf-completion
+_fzf_setup_completion foo bar
+```
+
+However, in most cases, the user would probably want to reserve the execution
+of the commands relying on the module by using the `-C callback` option.  In
+this way, the reserved command is evaluated when the module is successfully
+loaded.
+
+```bash
+ble-import -d integration/fzf-completion \
+  -C '_fzf_setup_completion foo bar'
 ```
 
 ## :pencil: `integration/fzf-git`
@@ -118,9 +138,9 @@ ble-import -d integration/fzf-git
 ```
 
 The shell variable `_ble_contrib_fzf_git_config` is a colon-separated list of the enabled types of bindings.
-The value `key-binding` enables the key bindings of the form <kbd>C-g C-f</kbd>, <kbd>C-g C-b</kbd>, <kbd>C-g C-t</kbd>, <kbd>C-g C-h</kbd>, <kbd>C-g C-r</kbd> and <kbd>C-g C-s</kbd>.
+The value `key-binding` enables the key bindings of the form <kbd>C-g C-f</kbd>, <kbd>C-g C-b</kbd>, <kbd>C-g C-t</kbd>, <kbd>C-g C-h</kbd>, <kbd>C-g C-r</kbd>, and <kbd>C-g C-s</kbd>.
 The value `sabbrev` enables the sabbrev expansion for the words `gf`, `gb`, `gt`, `gh`, `gr`, and `gs`.
-The value `arpeggio` enables the simultaneous key combinations of <kbd>g f</kbd>, <kbd>g b</kbd>, <kbd>g t</kbd>, <kbd>g h</kbd>, <kbd>g r</kbd> and <kbd>g s</kbd>.
+The value `arpeggio` enables the simultaneous key combinations of <kbd>g f</kbd>, <kbd>g b</kbd>, <kbd>g t</kbd>, <kbd>g h</kbd>, <kbd>g r</kbd>, and <kbd>g s</kbd>.
 The value `old-functions` enables old function names: `is_in_git_repo`, `fzf-down`, `gh`, `gb`, `gt`, `gh`, `gr`, and `gs`.
 
 # &#x2699; Prompt sequences
@@ -209,8 +229,8 @@ This expands to the average cpu usage.
 
 ## :pencil: colorglass
 
-If your terminal supports the 24-bit color, you can adjust the theme colors by specifying gamma, contrast, hue rotation, etc.
-This also works for the terminals without the 24-bit color if `bleopt term_true_colors` is properly set up, but the resulting colors would be reduced to a smaller number of colors.
+If your terminal supports 24-bit color, you can adjust the theme colors by specifying gamma, contrast, hue rotation, etc.
+This also works for the terminals without the 24-bit color support if `bleopt term_index_colors` is properly set up, but the resulting colors would be reduced to a smaller number of colors.
 
 ```bash
 ble-import contrib/colorglass
@@ -250,7 +270,7 @@ bleopt colorglass_rotate=0
 
 ### Blopet colorglass_saturation
 
-This option specifies the change of saturation in the range -100..100..
+This option specifies the change of saturation in the range -100..100.
 
 ```bash
 # default
@@ -259,7 +279,7 @@ bleopt colorglass_saturation=0
 
 ### Blopet colorglass_brightness
 
-This option specifies the change of brightness in the range -100..100..
+This option specifies the change of brightness in the range -100..100.
 
 ```bash
 # default

@@ -13,13 +13,13 @@ function ble/contrib/integration:fzf-completion/initialize {
       export PATH="${PATH:+${PATH}:}$_ble_contrib_fzf_base/bin"
     fi
     if ! type fzf &>/dev/null; then
-      echo 'ble/contrib/integration:fzf-initialize: "fzf" not found.' >&2
+      ble/util/print 'ble/contrib/integration:fzf-initialize: "fzf" not found.' >&2
       return 1
     fi
   else
     local ret
     if ! ble/util/assign ret 'type -p fzf 2>/dev/null'; then
-      echo 'ble/contrib/integration:fzf: "fzf" not found.' >&2
+      ble/util/print 'ble/contrib/integration:fzf: "fzf" not found.' >&2
       return 1
     fi
     ble/util/readlink "$ret"
@@ -42,7 +42,7 @@ function ble/contrib/integration:fzf-completion/initialize {
       # Ubuntu fzf package (https://github.com/akinomyoga/blesh-contrib/pull/5#issuecomment-1019394821)
       _ble_contrib_fzf_base=/usr/share/doc/fzf/examples
     else
-      echo 'ble/contrib/integration:fzf: failed to find "fzf" base directory' >&2
+      ble/util/print 'ble/contrib/integration:fzf: failed to find "fzf" base directory' >&2
       return 1
     fi
   fi

@@ -1,6 +1,6 @@
 # -*- mode: makefile-gmake -*-
 
-contrib-subdirs := airline config integration
+contrib-subdirs := airline config integration layer
 contrib-outdirs := $(OUTDIR)/contrib $(contrib-subdirs:%=$(OUTDIR)/contrib/%)
 # FIXME: I belive the ble.sh author encouraged me to put the perl-re-server2 in
 # it's own file, but for it to get correctly installed it would have to get

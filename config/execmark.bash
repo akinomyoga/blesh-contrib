@@ -149,5 +149,6 @@ function ble/contrib/config:execmark/postexec.hook {
     ble/util/buffer.print "$ret"
   fi
 }
-bleopt exec_@_mark=
+bleopt exec_errexit_mark=
+bleopt exec_elapsed_mark=
 blehook POSTEXEC!=ble/contrib/config:execmark/postexec.hook

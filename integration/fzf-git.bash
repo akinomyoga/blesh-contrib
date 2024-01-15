@@ -5,10 +5,102 @@
 # 2023-06-30 https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d40f17236 (Revision 2022-08-16)
 # 2023-06-30 https://github.com/junegunn/fzf-git.sh/commit/4bc0323b4822b3426989863996cc266c52c7f25a
 # 2023-06-30 https://github.com/junegunn/fzf-git.sh/commit/b6192ec86609afea761c7d3954f9b539a512dc80
+# 2023-11-09 https://github.com/junegunn/fzf-git.sh/blob/aacab4ae557657e0f9de288d688f312a28b86d21/fzf-git.sh
+
+if [[ $- != *i* ]]; then
+  if (($# == 1)); then
+    function ble/contrib/integration:fzf-git/sub:branches {
+      git branch "$@" --sort=-committerdate --sort=-HEAD --format=$'%(HEAD) %(color:yellow)%(refname:short) %(color:green)(%(committerdate:relative))\t%(color:blue)%(subject)%(color:reset)' --color=always | column -ts$'\t'
+    }
+    function ble/contrib/integration:fzf-git/sub:refs {
+      git for-each-ref --sort=-creatordate --sort=-HEAD --color=always --format=$'%(refname) %(color:green)(%(creatordate:relative))\t%(color:blue)%(subject)%(color:reset)' |
+        eval "$1" |
+        sed 's#^refs/remotes/#\x1b[95mremote-branch\t\x1b[33m#; s#^refs/heads/#\x1b[92mbranch\t\x1b[33m#; s#^refs/tags/#\x1b[96mtag\t\x1b[33m#; s#refs/stash#\x1b[91mstash\t\x1b[33mrefs/stash#' |
+        column -ts$'\t'
+    }
+    case $1 in
+    (branches)
+      echo $'CTRL-O (open in browser) ╱ ALT-A (show all branches)\n'
+      ble/contrib/integration:fzf-git/sub:branches
+      ;;
+    (all-branches)
+      echo $'CTRL-O (open in browser)\n'
+      ble/contrib/integration:fzf-git/sub:branches -a
+      ;;
+    (refs)
+      echo $'CTRL-O (open in browser) ╱ ALT-E (examine in editor) ╱ ALT-A (show all refs)\n'
+      ble/contrib/integration:fzf-git/sub:refs 'grep -v ^refs/remotes'
+      ;;
+    (all-refs)
+      echo $'CTRL-O (open in browser) ╱ ALT-E (examine in editor)\n'
+      ble/contrib/integration:fzf-git/sub:refs 'cat'
+      ;;
+    (nobeep) ;;
+    (*) exit 1 ;;
+    esac
+  elif (($# > 1)); then
+    set -e
+
+    branch=$(git rev-parse --abbrev-ref HEAD 2> /dev/null)
+    if [[ $branch = HEAD ]]; then
+      branch=$(git describe --exact-match --tags 2> /dev/null || git rev-parse --short HEAD)
+    fi
+
+    # Only supports GitHub for now
+    case $1 in
+    (commit)
+      hash=$(grep -o "[a-f0-9]\{7,\}" <<< "$2")
+      path=/commit/$hash
+      ;;
+    (branch|remote-branch)
+      branch=$(sed 's/^[* ]*//' <<< "$2" | cut -d' ' -f1)
+      remote=$(git config branch."${branch}".remote || echo 'origin')
+      branch=${branch#$remote/}
+      path=/tree/$branch
+      ;;
+    (remote)
+      remote=$2
+      path=/tree/$branch
+      ;;
+    (file) path=/blob/$branch/$(git rev-parse --show-prefix)$2 ;;
+    (tag)  path=/releases/tag/$2 ;;
+    (*)    exit 1 ;;
+    esac
+
+    remote=${remote:-$(git config branch."${branch}".remote || echo 'origin')}
+    remote_url=$(git remote get-url "$remote" 2> /dev/null || echo "$remote")
+
+    if [[ $remote_url =~ ^git@ ]]; then
+      url=${remote_url%.git}
+      url=${url#git@}
+      url=https://${url/://}
+    elif [[ $remote_url =~ ^http ]]; then
+      url=${remote_url%.git}
+    fi
+
+    case $(uname -s) in
+    (Darwin) open "$url$path"     ;;
+    (*)      xdg-open "$url$path" ;;
+    esac
+  fi
+  exit 0
+fi
+
+#------------------------------------------------------------------------------
 
 ble-import contrib/integration/fzf-initialize
 
 [[ $- == *i* ]] || return 0
+
+## @fn ble/contrib/integration:fzf-git/initialize bash_source
+##   @param[in] bash_source
+##   @var[out] __fzf_git
+function ble/contrib/integration:fzf-git/initialize {
+  local ret
+  ble/util/readlink "$1"
+  __fzf_git=$ret
+}
+ble/contrib/integration:fzf-git/initialize "${BASH_SOURCE[0]:-}"
 
 # GIT heart FZF
 # -------------
@@ -25,14 +117,11 @@ _fzf_git_fzf() {
 }
 
 _fzf_git_check() {
-  git rev-parse HEAD > /dev/null 2>&1 && return
+  git rev-parse HEAD > /dev/null 2>&1 && return 0
 
   [[ -n $TMUX ]] && tmux display-message "Not in a git repository"
   return 1
 }
-
-__fzf_git=${BASH_SOURCE[0]:-${(%):-%x}}
-__fzf_git=$(readlink -f "$__fzf_git" 2> /dev/null || /usr/bin/ruby --disable-gems -e 'puts File.expand_path(ARGV.first)' "$__fzf_git" 2> /dev/null)
 
 if [[ -z $_fzf_git_cat ]]; then
   # Sometimes bat is installed as batcat
@@ -46,7 +135,7 @@ if [[ -z $_fzf_git_cat ]]; then
 fi
 
 _fzf_git_files() {
-  _fzf_git_check || return
+  _fzf_git_check || return "$?"
   (git -c color.status=always status --short --no-branch
    git ls-files | grep -vxFf <(git status -s | grep '^[^?]' | cut -c4-; echo :) | sed 's/^/   /') |
   _fzf_git_fzf -m --ansi --nth 2..,.. \
@@ -59,7 +148,7 @@ _fzf_git_files() {
 }
 
 _fzf_git_branches() {
-  _fzf_git_check || return
+  _fzf_git_check || return "$?"
   bash "$__fzf_git" branches |
   _fzf_git_fzf --ansi \
     --border-label '🌲 Branches' \
@@ -76,7 +165,7 @@ _fzf_git_branches() {
 }
 
 _fzf_git_tags() {
-  _fzf_git_check || return
+  _fzf_git_check || return "$?"
   git tag --sort -version:refname |
   _fzf_git_fzf --preview-window right,70% \
     --border-label '📛 Tags' \
@@ -86,7 +175,7 @@ _fzf_git_tags() {
 }
 
 _fzf_git_hashes() {
-  _fzf_git_check || return
+  _fzf_git_check || return "$?"
   git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" --graph --color=always |
   _fzf_git_fzf --ansi --no-sort --bind 'ctrl-s:toggle-sort' \
     --border-label '🍡 Hashes' \
@@ -99,7 +188,7 @@ _fzf_git_hashes() {
 }
 
 _fzf_git_remotes() {
-  _fzf_git_check || return
+  _fzf_git_check || return "$?"
   git remote -v | awk '{print $1 "\t" $2}' | uniq |
   _fzf_git_fzf --tac \
     --border-label '📡 Remotes' \
@@ -111,7 +200,7 @@ _fzf_git_remotes() {
 }
 
 _fzf_git_stashes() {
-  _fzf_git_check || return
+  _fzf_git_check || return "$?"
   git stash list | _fzf_git_fzf \
     --border-label '🥡 Stashes' \
     --header $'CTRL-X (drop stash)\n\n' \
@@ -120,8 +209,16 @@ _fzf_git_stashes() {
   cut -d: -f1
 }
 
+_fzf_git_lreflogs() {
+  _fzf_git_check || return "$?"
+  git reflog --color=always --format="%C(blue)%gD %C(yellow)%h%C(auto)%d %gs" | _fzf_git_fzf --ansi \
+    --border-label '📒 Reflogs' \
+    --preview 'git show --color=always {1}' "$@" |
+  awk '{print $1}'
+}
+
 _fzf_git_each_ref() {
-  _fzf_git_check || return
+  _fzf_git_check || return "$?"
   bash "$__fzf_git" refs | _fzf_git_fzf --ansi \
     --nth 2,2.. \
     --tiebreak begin \
@@ -206,8 +303,9 @@ function ble/contrib:integration/fzf-git/initialize {
     ble/contrib:integration/fzf-git/type:"$type" h hashes
     ble/contrib:integration/fzf-git/type:"$type" r remotes
     ble/contrib:integration/fzf-git/type:"$type" s stashes
-    ble/contrib:integration/fzf-git/type:"$type" s each_ref
+    ble/contrib:integration/fzf-git/type:"$type" l lreflogs
+    ble/contrib:integration/fzf-git/type:"$type" e each_ref
   done
-  unset -f "$FUNCNAME"
+  builtin unset -f "$FUNCNAME"
 }
 ble/contrib:integration/fzf-git/initialize
