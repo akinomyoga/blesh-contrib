@@ -234,8 +234,8 @@ ble-bind -m 'vi_nmap' -f 'b' 'vim-wordmotion-ish/backward-vword'
 ble-bind -m 'vi_omap' -f 'b' 'vim-wordmotion-ish/backward-vword'
 ble-bind -m 'vi_xmap' -f 'b' 'vim-wordmotion-ish/backward-vword'
 
-# FIXME: WORK POINT: rename these keymap functions now.  They are private so
-# in theory should get the full treatment from style guide hmm I dunno maybe
+# FIXME: These keymap functions need to be renamed.  They are private so in
+# theory should get the full treatment from style guide hmm I dunno maybe
 # ask author
 
 # The real changes to achieve wordmotion-style visual select,
@@ -295,7 +295,11 @@ function ble/contrib/config:vim-wordmotion-ish/text-object/word.extend-forward {
       [[ ${_ble_edit_str:end:1} == $'\n' ]] && ((end++))
     fi
 
-    local str=${_ble_edit_str:((end+1))}
+    local str=${_ble_edit_str:end}
+    # Previous line used to have ((end+1)) instead of end and a similar change
+    # to the line with rematch noted below and I thought it fixed something,
+    # but I'm not sure what.  And it seems to make other things more broken
+    #local str=${_ble_edit_str:((end+1))}
     ble/contrib/config:vim-wordmotion-ish/match-perl-regex "$rex_unit" "$str"
     local match2_groups="$ret"
     [ -n "$match2_groups" ] || return 1
@@ -305,7 +309,9 @@ function ble/contrib/config:vim-wordmotion-ish/text-object/word.extend-forward {
     local match2_group_1_len="$ret"
     local match2_group_1_cap=${str:match2_group_1_idx:match2_group_1_len}
     rematch="$match2_group_1_cap"
-    ((end+=${#rematch}+1))
+    ((end+=${#rematch}))
+    # Previous line used to have this +1 as noted above.
+    #((end+=${#rematch}+1))
 
     [[ $type == a* && $rematch == *$'\n\n' ]] && ((end--))
     if ((i==0)) && [[ $flags == *I* ]] || ((i==arg-1)); then
@@ -327,6 +333,17 @@ function ble/contrib/config:vim-wordmotion-ish/text-object/word.extend-forward {
   return 0
 } # }}}3
 function ble/contrib/config:vim-wordmotion-ish/text-object/word.extend-backward { # {{{3
+
+  # FIXXME: there's some slight bug in here still st e.g. vaw when on a letter
+  # in foo in ' fooBar' will select the leading space, which is different
+  # the the vim wordmotion and different than the corresponding behavior in
+  # native vanilla vim for ' foo bar'.  But native vanilla vim itself selects
+  # different things for vaw when on a in bar in 'foo bar' vs 'foo bar '
+  # (former selects the space before bar while latter selects only the space
+  # after bar) which seems pretty nonsensical so it's safe to conclude that
+  # around space-delimited word is just not something we're going to want
+  # to use (around is for e.g. va" on f or o or or in "foo" really).
+
   local rex_unit=
   local W='('$prex_word')' b='['$space']' n=$nl
   local b=$_ble_contrib_vim_wordmotion_ish_b
