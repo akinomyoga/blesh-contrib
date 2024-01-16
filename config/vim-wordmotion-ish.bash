@@ -511,11 +511,9 @@ function ble/widget/vim-wordmotion-ish/text-object { # {{{3
   return 1
 } # }}}3
 function ble/widget/vim-wordmotion-ish/text-object-outer { # {{{3
-  echo "in text-object-outer" >>/tmp/mlf
   ble/widget/vim-wordmotion-ish/text-object a
 }
 function ble/widget/vim-wordmotion-ish/text-object-inner { # {{{3
-  echo "in text-object-inner" >> /tmp/mlf
   ble/widget/vim-wordmotion-ish/text-object i
 } # }}}3
 
