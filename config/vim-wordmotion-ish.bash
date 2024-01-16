@@ -407,10 +407,10 @@ function ble/contrib/config:vim-wordmotion-ish/text-object/word.impl { # {{{3
   if [[ $type == ?W ]]; then
     # FIXME: I think this inflicts our turning W into w on users if they use
     # any of these bindings:
-    #   ble-bind -m 'vi_omap' -f 'a' 'vim-wordmotion-ish/text-object'
-    #   ble-bind -m 'vi_omap' -f 'i' 'vim-wordmotion-ish/text-object'
-    #   ble-bind -m 'vi_xmap' -f 'a' 'vim-wordmotion-ish/text-object'
-    #   ble-bind -m 'vi_xmap' -f 'i' 'vim-wordmotion-ish/text-object'
+    #   ble-bind -m 'vi_omap' -f 'a' 'vim-wordmotion-ish/text-object-outer'
+    #   ble-bind -m 'vi_omap' -f 'i' 'vim-wordmotion-ish/text-object-inner'
+    #   ble-bind -m 'vi_xmap' -f 'a' 'vim-wordmotion-ish/text-object-outer'
+    #   ble-bind -m 'vi_xmap' -f 'i' 'vim-wordmotion-ish/text-object-inner'
     # even if they deliberately *don't* use the bindings for W E B to the old
     # word movement widgets that we provide (currently at the end of this
     # file).  Of course they want these text-object bindings to make w work.
@@ -490,10 +490,15 @@ function ble/contrib/config:vim-wordmotion-ish/text-object.hook { # {{{3
   ble/contrib/config:vim-wordmotion-ish/text-object.impl "$ARG" "$FLAG" "$REG" "$type"
   return 0
 } # }}}3
-function ble/contrib/config:vim-wordmotion-ish/.check-text-object { # {{{3
-  local n=${#KEYS[@]}; ((n&&n--))
-  ble-decode-key/ischar "${KEYS[n]}" || return 1
-  local ret; ble/util/c2s "${KEYS[n]}"; local c=$ret
+function ble/contrib/config:vim-wordmotion-ish/.attempt-text-object { # {{{3
+  local c=${1:-}
+  if [[ ! $c ]]; then
+    # If the type is not specified, it is determined from the last key the user
+    # input (i or a). This is for the backward compatibility.
+    local n=${#KEYS[@]}; ((n&&n--))
+    ble-decode-key/ischar "${KEYS[n]}" || return 1
+    local ret; ble/util/c2s "${KEYS[n]}"; c=$ret
+  fi
   [[ $c == [ia] ]] || return 1
   [[ $_ble_keymap_vi_opfunc || $_ble_decode_keymap == vi_[xs]map ]] || return 1
   _ble_keymap_vi_text_object=$c
@@ -501,18 +506,37 @@ function ble/contrib/config:vim-wordmotion-ish/.check-text-object { # {{{3
   return 0
 } # }}}3
 function ble/widget/vim-wordmotion-ish/text-object { # {{{3
-  ble/contrib/config:vim-wordmotion-ish/.check-text-object && return 0
+  ble/contrib/config:vim-wordmotion-ish/.attempt-text-object "$@" && return 147
   ble/widget/vi-command/bell
   return 1
 } # }}}3
+function ble/widget/vim-wordmotion-ish/text-object-outer { # {{{3
+  echo "in text-object-outer" >>/tmp/mlf
+  ble/widget/vim-wordmotion-ish/text-object a
+}
+function ble/widget/vim-wordmotion-ish/text-object-inner { # {{{3
+  echo "in text-object-inner" >> /tmp/mlf
+  ble/widget/vim-wordmotion-ish/text-object i
+} # }}}3
+
 # Let's schedule a quick check so try to stay in sync with ble.sh:
 function check_exactly_one_line_changed { # {{{3
+  # FIXXME: Hmm maybe this should really be called about_one_word_changed
+  # or something I'm not sure how the diffstat behaves if the changed line
+  # is totally different
   local func_a=$1 func_b=$2
+  # diffstat Output
+  local dso=$(diff <(type $func_a) <(type $func_b) -u | diffstat -m -t | tail -n 1)
+  local eic=0   # Expected Insertion Count
+  [ $(echo $dso | cut -d , -f 1) -eq $eic ] || return 1
+  local edc=0   # Expected Deletion Cound
+  [ $(echo $dso | cut -d , -f 2) -eq $edc ] || return 2
   local emc=3   # Expected Modification Count (note 2 are due to name change)
-  [ $(diff <(type $func_a) <(type $func_b) -u | diffstat -m -t | tail -n 1 | cut -d , -f 3) -eq $emc ]
+  [ $(echo $dso | cut -d , -f 3) -eq $emc ] || return 3
+  return 0
 } # }}}3
 function check_exactly_one_line_changed_maybe_warn { # {{{3
-  local warnMsgPrefix='unexpectedly large delta between stock ble.sh function'
+  local warnMsgPrefix='unexpected diff | diffstat between stock ble.sh function'
   check_exactly_one_line_changed "$1" "$2"                         \
     ||  ble/util/print "$warnMsgPrefix $1 and modified version $2"
 
@@ -527,21 +551,29 @@ function ble/contrib/config:vim-wordmotion-ish/check_deltas_vs_some_upstream_wor
     ble/keymap:vi/text-object.hook                         \
     ble/contrib/config:vim-wordmotion-ish/text-object.hook
 
-  check_exactly_one_line_changed_maybe_warn                  \
-    ble/keymap:vi/.check-text-object                         \
-    ble/contrib/config:vim-wordmotion-ish/.check-text-object
+  check_exactly_one_line_changed_maybe_warn                    \
+    ble/keymap:vi/.attempt-text-object                         \
+    ble/contrib/config:vim-wordmotion-ish/.attempt-text-object
 
-  check_exactly_one_line_changed_maybe_warn      \
-       ble/widget/vi-command/text-object         \
-       ble/widget/vim-wordmotion-ish/text-object
+  check_exactly_one_line_changed_maybe_warn   \
+    ble/widget/vi-command/text-object         \
+    ble/widget/vim-wordmotion-ish/text-object
+
+  check_exactly_one_line_changed_maybe_warn         \
+    ble/widget/vi-command/text-object-outer         \
+    ble/widget/vim-wordmotion-ish/text-object-outer
+
+  check_exactly_one_line_changed_maybe_warn         \
+    ble/widget/vi-command/text-object-inner         \
+    ble/widget/vim-wordmotion-ish/text-object-inner
 
 } # }}}3
 blehook/eval-after-load keymap_vi ble/contrib/config:vim-wordmotion-ish/check_deltas_vs_some_upstream_word_funcs
 
-ble-bind -m 'vi_omap' -f 'a' 'vim-wordmotion-ish/text-object'
-ble-bind -m 'vi_omap' -f 'i' 'vim-wordmotion-ish/text-object'
-ble-bind -m 'vi_xmap' -f 'a' 'vim-wordmotion-ish/text-object'
-ble-bind -m 'vi_xmap' -f 'i' 'vim-wordmotion-ish/text-object'
+ble-bind -m 'vi_omap' -f 'a' 'vim-wordmotion-ish/text-object-outer'
+ble-bind -m 'vi_omap' -f 'i' 'vim-wordmotion-ish/text-object-inner'
+ble-bind -m 'vi_xmap' -f 'a' 'vim-wordmotion-ish/text-object-outer'
+ble-bind -m 'vi_xmap' -f 'i' 'vim-wordmotion-ish/text-object-inner'
 
 ble-bind -m 'vi_nmap' -f 'W' 'vi-command/forward-vword'
 ble-bind -m 'vi_omap' -f 'W' 'vi-command/forward-vword'
