@@ -103,14 +103,24 @@ function ble/contrib/integration:bash-preexec/attach.hook {
     fi
 
     # Remove precmd hook from PROMPT_COMMAND
-    PROMPT_COMMAND=${PROMPT_COMMAND/#$BP_PROMPT_COMMAND_PREFIX$'\n'/$'\n'}
-    PROMPT_COMMAND=${PROMPT_COMMAND%$'\n'$BP_PROMPT_COMMAND_SUFFIX}
-    PROMPT_COMMAND=${PROMPT_COMMAND#$'\n'}
+    local i prompt_command
+    for i in "${!PROMPT_COMMAND[@]}"; do
+      prompt_command=${PROMPT_COMMAND[i]}
+      case $prompt_command in
+      ("$BP_PROMPT_COMMAND_PREFIX"|"$BP_PROMPT_COMMAND_SUFFIX")
+        prompt_command= ;;
+      (*)
+        prompt_command=${prompt_command/#"$BP_PROMPT_COMMAND_PREFIX"$'\n'/$'\n'}
+        prompt_command=${prompt_command%$'\n'"$BP_PROMPT_COMMAND_SUFFIX"}
+        prompt_command=${prompt_command#$'\n'}
+      esac
+      PROMPT_COMMAND[i]=$prompt_command
+    done
 
     # Remove preexec hook in the DEBUG trap
     local q="'" Q="'\''" trap_string
     ble/util/assign trap_string 'trap -p DEBUG'
-    if [[ $trap_string == "trap -- '${__bp_trapdebug_string//$q/$Q}' DEBUG" ]]; then
+    if [[ $trap_string == "trap -- '${BP_TRAPDEBUG_STRING//$q/$Q}' DEBUG" ]]; then
       if [[ ${__bp_trap_string-} ]]; then
         eval -- "$__bp_trap_string"
       else
@@ -119,6 +129,7 @@ function ble/contrib/integration:bash-preexec/attach.hook {
     fi
   fi
 }
+ble/function#trace ble/contrib/integration:bash-preexec/attach.hook
 
 ## @fn ble/contrib/integration:bash-preexec/detach.hook
 function ble/contrib/integration:bash-preexec/detach.hook {
@@ -140,9 +151,15 @@ blehook PRECMD!=ble/contrib/integration:bash-preexec/precmd.hook
 blehook PREEXEC!=ble/contrib/integration:bash-preexec/preexec.hook
 blehook ATTACH!=ble/contrib/integration:bash-preexec/attach.hook
 blehook DETACH!=ble/contrib/integration:bash-preexec/detach.hook
-if [[ ${bp_imported-${__bp_imported-}} ]]; then
+if [[ ${bash_preexec_imported-${__bp_imported-}} ]]; then
   ble/contrib/integration:bash-preexec/attach.hook
 fi
+
+# prevent bash-preexec.sh to be loaded
+blehook ATTACH-=ble/contrib/integration:bash-preexec/loader
+blehook POSTEXEC-=ble/contrib/integration:bash-preexec/loader
+bash_preexec_imported=defined
+__bp_imported=defined
 
 # XXX: 以下は uninstall で削除しきれなかった時の為の保険。今の所不要に思われる。
 # __bp_blesh_check() {
