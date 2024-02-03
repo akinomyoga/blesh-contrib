@@ -65,15 +65,6 @@ function ble/histdb/.get-filename {
   hostname=${hostname//'/'/'%'} # filename cannot contian /
   ret=${basename:-$_ble_base_state/history}${hostname:+@$hostname}.sqlite3
 }
-function ble/histdb/.get-time {
-  if ((_ble_bash>=50000)); then
-    time=$EPOCHSECONDS
-  elif ((_ble_bash>=40200)); then
-    printf -v time '%(%s)T' -1
-  else
-    ((time=${_ble_base_session%%[./]*}+SECONDS))
-  fi
-}
 
 ## @var _ble_histdb_file
 _ble_histdb_file=
@@ -288,8 +279,8 @@ function ble/util/bgproc/onstop:_ble_histdb {
 
 function ble/histdb/sqlite3.close {
   [[ $_ble_histdb_file ]] || return 0
-  local session_id=$_ble_base_session
-  local time; ble/histdb/.get-time
+  local session_id=$_ble_base_session ret
+  ble/util/time; local time=$ret
   ble/histdb/sqlite3.request "
     UPDATE sessions SET
       last_time = '${time//$q/$qq}',
@@ -360,8 +351,8 @@ function ble/histdb/exec_register.hook {
   builtin unset -v '_ble_histdb_exec_ignore[command_id]'
 
   local q=\' qq=\'\'
-  local session_id=$_ble_base_session
-  local time; ble/histdb/.get-time; local issue_time=$time
+  local session_id=$_ble_base_session ret
+  ble/util/time; local issue_time=$ret
 
   # @var history_index ... history index: The current command might not be
   # registered to the command history, but we always pick up the index of the
@@ -419,7 +410,7 @@ function ble/histdb/postexec.hook {
     return 0
   fi
 
-  local time; ble/histdb/.get-time; local last_time=$time
+  ble/util/time; local last_time=$ret
 
   IFS=, builtin eval 'local pipestatus="${_ble_edit_exec_PIPESTATUS[*]}"'
   local lastarg=$_ble_edit_exec_lastarg
@@ -465,8 +456,8 @@ function ble/histdb/backup {
   if [[ -s $backup.gz ]]; then
     # If there is already an up-to-date backup file, we skip the backup.
     local ret now
+    ble/util/time; now=$ret
     ble/file#mtime "$backup.gz" || return 1
-    ble/util/strftime -v now %s
     ((now>ret+24*3600)) || return 1
   fi
 
