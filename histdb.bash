@@ -619,12 +619,41 @@ ble/util/import/eval-after-load core-complete '
 # ble histdb command
 
 function ble-histdb {
-  case $1 in
-  (query)
-    local ret
-    ble/histdb/.get-filename; local histdb_file=$ret
-    "$_ble_histdb_sqlite3" "$histdb_file" '.timeout 1000' "${@:2}" ;;
-  (*)
-    ble-histdb query 'select command from command_history;' ;;
-  esac
+  if (($#==0)); then
+    ble/histdb/sub:query 'select command from command_history;'
+  elif ble/is-function "ble/histdb/sub:$1"; then
+    "ble/histdb/sub:$@"
+  else
+    builtin printf 'ble-histdb: unknown command "%s"\n' "$1"
+    return 2
+  fi
+}
+
+# 一般的な補完のフレームワークを作っても良いのではないかという気がしてきたが、
+# それは後で。
+function ble/cmdinfo/complete:ble-histdb {
+  if ((comp_cword==1)); then
+    local ret sub
+    ble/util/assign-array ret 'compgen -A function -- ble/histdb/sub:'
+    ((${#ret[@]})) || return 0
+
+    local cands
+    for sub in "${ret[@]#ble/histdb/sub:}"; do
+      if [[ $sub != */* && $sub == "$COMPV"* ]]; then
+        ble/array#push cands "$sub"
+      fi
+    done
+
+    if ((${#cands[@]})); then
+      local "${_ble_complete_yield_varnames[@]/%/=}" # disable=#D1570
+      ble/complete/cand/yield.initialize word
+      ble/complete/cand/yield.batch word
+    fi
+  fi
+}
+
+function ble/histdb/sub:query {
+  local ret
+  ble/histdb/.get-filename; local histdb_file=$ret
+  "$_ble_histdb_sqlite3" "$histdb_file" '.timeout 1000' "$@"
 }
