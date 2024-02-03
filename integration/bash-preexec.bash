@@ -122,7 +122,7 @@ function ble/contrib/integration:bash-preexec/attach.hook {
     ble/util/assign trap_string 'trap -p DEBUG'
     if [[ $trap_string == "trap -- '${BP_TRAPDEBUG_STRING//$q/$Q}' DEBUG" ]]; then
       if [[ ${__bp_trap_string-} ]]; then
-        eval -- "$__bp_trap_string"
+        builtin eval -- "$__bp_trap_string"
       else
         trap - DEBUG
       fi

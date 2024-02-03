@@ -16,7 +16,7 @@ if ! ble/is-function _fzf_complete; then
 fi
 
 # clear blesh completer for cd
-blehook/eval-after-load complete 'unset -f ble/cmdinfo/complete:cd'
+blehook/eval-after-load complete 'builtin unset -f ble/cmdinfo/complete:cd'
 
 # patch fzf functions
 ble/function#advice around __fzf_generic_path_completion _fzf_complete.advice
