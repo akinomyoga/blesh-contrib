@@ -9,7 +9,7 @@ function ble/contrib/integration:nix-completion/_complete_nix.advice {
       local IFS=$_ble_term_IFS
       local -a args; args=("$@")
       ble/util/conditional-sync "exec $_ble_nix_cmd \"\${args[@]}\"" \
-        "! ble/complete/check-cancel <&$_ble_util_fd_stdin" 128 progressive-weight:killall'
+        "! ble/complete/check-cancel <&$_ble_util_fd_tui_stdin" 128 progressive-weight:killall'
     ble/function#advice/do
     ble/function#pop "$_ble_nix_cmd"
   else

@@ -42,9 +42,9 @@ function _fzf_complete.advice {
   ble/function#push caller 'builtin caller ${1+"$(($1+6))"}'
   ble/term/leave-for-widget
   if [[ ${ADVICE_WORDS[0]} == _fzf_complete ]]; then
-    ble/function#advice/do >&"$_ble_util_fd_stdout" 2>&"$_ble_util_fd_stderr"
+    ble/function#advice/do >&"${_ble_util_fd_tty_stdout:-1}" 2>&"${_ble_util_fd_tty_stderr:-2}"
   else
-    ble/function#advice/do >&"$_ble_util_fd_stdout" 2>&"$_ble_util_fd_stderr" <&"$_ble_util_fd_stdin"
+    ble/function#advice/do >&"${_ble_util_fd_tty_stdout:-1}" 2>&"${_ble_util_fd_tty_stderr:-2}" <&"${_ble_util_fd_tty_stdin:-0}"
   fi
   ble/term/enter-for-widget
   ble/function#pop caller
