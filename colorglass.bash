@@ -256,7 +256,8 @@ function ble/fixed-point#tostr {
 
 function ble/fixed-point#round {
   local x=$1
-  ((ret=(x+_ble_fixed_unit/2)/_ble_fixed_unit*_ble_fixed_unit))
+  ((x+=x>=0?_ble_fixed_unit/2:-_ble_fixed_unit/2,
+    ret=x/_ble_fixed_unit*_ble_fixed_unit))
 }
 
 function ble/fixed-point#mul {
