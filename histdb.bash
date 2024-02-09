@@ -466,7 +466,7 @@ function ble/histdb/backup {
     "PRAGMA quick_check;" \
     ".backup '${backup//$q/$qq}'" \
     "ATTACH DATABASE '${backup//$q/$qq}' AS backup;
-    PRAGMA backup.quick_check;" &&
+    PRAGMA backup.quick_check;" >/dev/null &&
     ble/bin/gzip -c "$backup" >| "$backup.gz.part" &&
     [[ -s $backup.gz.part ]] &&
     ble/bin/mv -f "$backup.gz.part" "$backup.gz" &&
