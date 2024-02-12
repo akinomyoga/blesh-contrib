@@ -410,6 +410,7 @@ function ble/histdb/postexec.hook {
     return 0
   fi
 
+  local ret
   ble/util/time; local last_time=$ret
 
   IFS=, builtin eval 'local pipestatus="${_ble_edit_exec_PIPESTATUS[*]}"'
