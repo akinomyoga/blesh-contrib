@@ -657,3 +657,867 @@ function ble/histdb/sub:query {
   ble/histdb/.get-filename; local histdb_file=$ret
   "$_ble_histdb_sqlite3" "$histdb_file" '.timeout 1000' "$@"
 }
+
+#------------------------------------------------------------------------------
+
+function ble/histdb/count2si {
+  local si
+  si=('' k M G T P E Z Y R Q)
+
+  local count=$1 i
+  for ((i=0;i<${#si[@]}-1;i++,count/=1000)); do
+    if ((count<1000)); then
+      ret=$count${si[i]}
+      return 0
+    elif ((count<100000)); then
+      count=${count%???}.${count:${#count}-3}
+      ret=${count::4}${si[i+1]}
+      return 0
+    fi
+  done
+  ret=$count${si[${#si[@]}-1]}
+}
+
+# modified ble/contrib/prompt-elapsed/output-sec.ps
+function ble/histdb/usec2s {
+  local usec=${1:-0}
+  if ((usec<1000)); then
+    ret=${usec}us
+  elif ((usec<100000)); then
+    usec=${usec%???}.${usec:${#usec}-3}
+    ret=${usec::4}ms
+  else
+    ble/histdb/msec2s "$((usec/1000))"
+  fi
+}
+
+function ble/histdb/msec2s {
+  local msec=${1:-0}
+  if ((msec<1000)); then
+    ret=${msec}ms
+  elif ((msec<100000)); then
+    msec=${msec%???}.${msec:${#msec}-3}
+    ret=${msec::4}s
+  else
+    ble/histdb/sec2s "$((msec/1000))"
+  fi
+}
+
+function ble/histdb/sec2s {
+  local sec=${1:-0} min
+  ((min=sec/60,sec%=60))
+  if ((min<100)); then
+    ret=${min}m${sec}s
+    return 0
+  fi
+
+  local hour; ((hour=min/60,min%=60))
+  if ((hour<100)); then
+    ret="${hour}h:${min}m:${sec}s"
+    return 0
+  fi
+
+  local day; ((day=hour/24,hour%=24))
+  if ((day<365)); then
+    ret="${day}d-${hour}h:${min}m"
+    return 0
+  fi
+
+  local year; ((year=day/365,day%=365))
+  ret="${year}y-${day}d-${hour}h"
+  return 0
+}
+
+#------------------------------------------------------------------------------
+# usage: ble histdb stats
+
+bleopt/declare -v histdb_stats_items 'commands unique-commands successful-commands exec-time exec-cpu-time words sessions directories'
+
+function ble/histdb/sub:stats/get-user-name {
+  ble/bin#has git && ble/util/assign ret '
+    git config user.name 2>/dev/null
+  ' && [[ $ret ]] && return 0
+
+  ble/bin#has getenv && ble/util/assign ret '
+    getent passwd 2>/dev/null | ble/bin/awk -F : -v UID="$UID" '\''
+      $3==UID {
+        sub(/[[:space:]]*[<>].*$/, "", $5);
+        print $5;
+      }
+    '\''
+  ' && [[ $ret ]] && return 0
+
+  ret=${USER:-$_ble_base_env_USER}@${HOSTNAME:-$_ble_base_env_HOSTNAME}
+}
+
+## @fn ble/histdb/sub:stats/where.check condition
+##   @param[in] condition
+##   @var[ref] where
+function ble/histdb/sub:stats/where.check {
+  where="${where:- WHERE}${where:+ AND} $1"
+}
+## @fn ble/histdb/sub:stats/where.check-datetime column
+##   @param[in] column
+##   @var[in] time_beg time_end
+##   @var[ref] where
+function ble/histdb/sub:stats/where.check-datetime {
+  [[ $time_beg ]] && ble/histdb/sub:stats/where.check "$1 >= $time_beg"
+  [[ $time_end ]] && ble/histdb/sub:stats/where.check "$1 < $time_end"
+}
+
+function ble/histdb/sub:stats/item:commands {
+  case $1 in
+  (init)
+    local where=
+    ble/histdb/sub:stats/where.check-datetime issue_time
+    ble/array#push queries "SELECT count(*) FROM command_history$where;" ;;
+  (get)
+    ble/array#push names  'Total commands'
+    local ret
+    ble/histdb/count2si "$2"
+    ble/array#push values "$ret" ;;
+  esac
+}
+
+function ble/histdb/sub:stats/item:unique-commands {
+  case $1 in
+  (init)
+    local where=
+    ble/histdb/sub:stats/where.check-datetime issue_time
+    ble/array#push queries "SELECT count(*) FROM (SELECT DISTINCT command FROM command_history$where);" ;;
+  (get)
+    ble/array#push names  'Total unique commands'
+    local ret
+    ble/histdb/count2si "$2"
+    ble/array#push values "$ret" ;;
+  esac
+}
+
+function ble/histdb/sub:stats/item:successful-commands {
+  case $1 in
+  (init)
+    local where=
+    ble/histdb/sub:stats/where.check 'status == 0'
+    ble/histdb/sub:stats/where.check-datetime issue_time
+    ble/array#push queries "SELECT count(*) FROM (SELECT command FROM command_history$where);" ;;
+  (get)
+    ble/array#push names  'Total successful commands'
+    local ret
+    ble/histdb/count2si "$2"
+    ble/array#push values "$ret" ;;
+  esac
+}
+
+function ble/histdb/sub:stats/item:sessions {
+  case $1 in
+  (init)
+    local where=
+    if [[ $time_end ]]; then
+      ble/histdb/sub:stats/where.check-datetime start_time
+    else
+      ble/histdb/sub:stats/where.check-datetime last_time
+    fi
+    ble/array#push queries "SELECT count(*) FROM sessions$where;" ;;
+  (get)
+    ble/array#push names  'Total sessions'
+    local ret
+    ble/histdb/count2si "$2"
+    ble/array#push values "$ret" ;;
+  esac
+}
+
+function ble/histdb/sub:stats/item:words {
+  case $1 in
+  (init)
+    local where=
+    if [[ $time_end ]]; then
+      ble/histdb/sub:stats/where.check-datetime ctime
+    else
+      ble/histdb/sub:stats/where.check-datetime mtime
+    fi
+    ble/array#push queries "SELECT count(*) FROM words$where;" ;;
+  (get)
+    ble/array#push names  'Total distinct words'
+    local ret
+    ble/histdb/count2si "$2"
+    ble/array#push values "$ret" ;;
+  esac
+}
+
+function ble/histdb/sub:stats/item:directories {
+  case $1 in
+  (init)
+    local where=
+    ble/histdb/sub:stats/where.check-datetime issue_time
+    ble/array#push queries "SELECT count(*) FROM (SELECT DISTINCT cwd FROM command_history$where);" ;;
+  (get)
+    ble/array#push names  'Total directories'
+    local ret
+    ble/histdb/count2si "$2"
+    ble/array#push values "$ret" ;;
+  esac
+}
+
+function ble/histdb/sub:stats/item:exec-time {
+  case $1 in
+  (init)
+    local where=
+    ble/histdb/sub:stats/where.check-datetime issue_time
+    ble/array#push queries "SELECT sum(exec_time) FROM command_history$where;" ;;
+  (get)
+    ble/array#push names  'Total execution time'
+    local ret
+    ble/histdb/usec2s "$2"
+    ble/array#push values "$ret" ;;
+  esac
+}
+
+function ble/histdb/sub:stats/item:exec-cpu-time {
+  case $1 in
+  (init)
+    local where=
+    ble/histdb/sub:stats/where.check-datetime issue_time
+    ble/array#push queries "SELECT sum(exec_time_usr + exec_time_sys) FROM command_history$where;" ;;
+  (get)
+    ble/array#push names  'Total CPU time'
+    local ret
+    ble/histdb/msec2s "$2"
+    ble/array#push values "$ret" ;;
+  esac
+}
+
+function ble/histdb/sub:stats {
+  local period=${1-}
+
+  local time_beg= time_end=
+
+  if [[ $period ]]; then
+    local ret
+    if ble/string#match "$period" '^([0-9]+)([smhdMy])$'; then
+      local delta=${BASH_REMATCH[1]}
+      case ${BASH_REMATCH[2]} in
+      (m) ((delta*=60)) ;;
+      (h) ((delta*=3600)) ;;
+      (d) ((delta*=3600*24)) ;;
+      (M) ((delta*=3600*24*30)) ;;
+      (y) ((delta*=3600*24*365)) ;;
+      esac
+      ble/util/time
+      ((time_beg=ret-delta))
+    elif ble/string#match "$period" '^2[0-9]{3}(-(0[1-9]|1[0-2])(-(0[1-9]|[12][0-9]|3[01]))?)?$'; then
+      local y=${period::4} m=${BASH_REMATCH[2]-} d=${BASH_REMATCH[4]-}
+      if [[ $d ]]; then
+        m=${m#0} d=${d#0}
+        ble/util/mktime "$y-$m-$d 00:00:00"
+        time_beg=$ret
+        # Note: we here assume that 01-32 is equivalent to 02-01, etc.
+        ble/util/mktime "$y-$m-$((d+1)) 00:00:00"
+        time_end=$ret
+      elif [[ $m ]]; then
+        m=${m#0}
+        ble/util/mktime "$y-$m-01 00:00:00"
+        time_beg=$ret
+        ble/util/mktime "$((y+m/12))-$((m%12+1))-01 00:00:00"
+        time_end=$ret
+      else
+        ble/util/mktime "$y-01-01 00:00:00"
+        time_beg=$ret
+        ble/util/mktime "$((y+1))-01-01 00:00:00"
+        time_end=$ret
+      fi
+    else
+      ble/util/print "ble-histdb-stats: unrecognized argument '$period'" 2>/dev/null
+      return 2
+    fi
+  fi
+
+  local -a queries=()
+  local items item
+  ble/string#split-words items "$bleopt_histdb_stats_items"
+  for item in "${items[@]}"; do
+    ble/histdb/sub:stats/item:"$item" init
+  done
+
+  local IFS=$_ble_term_IFS
+  ble/histdb/sub:query -separator ' ' "${queries[*]}" | {
+    local result
+    ble/util/mapfile result
+
+    local ret sgr0=$_ble_term_sgr0
+    ble/color/gspec2sgr 'fg=27,bold'; local sgr1=$ret
+    ble/histdb/sub:stats/get-user-name
+    ble/util/print "$sgr1$ret's Shell Stats${period:+ ($period)}$sgr0"
+
+    local -a names=() values=()
+    local i=0
+    for item in "${items[@]}"; do
+      ble/histdb/sub:stats/item:"$item" get "${result[i++]}"
+    done
+
+    local name max_name_width=0
+    for name in "${names[@]}"; do
+      local w=$((${#name}+1))
+      ((max_name_width<w)) && ((max_name_width=w))
+    done
+
+    ble/color/gspec2sgr 'bold'; local sgr2=$ret
+    for i in "${!names[@]}"; do
+      builtin printf '  %s%-*s    %s%s\n' "$sgr2" "$max_name_width" "${names[i]}:" "${values[i]}" "$sgr0"
+    done
+  }
+}
+
+#------------------------------------------------------------------------------
+# usage: ble-histdb calendar
+# usage: ble-histdb week
+
+## @fn ble/getopts/scan-definition type script
+##   @param[in] type
+##     Specify the type of
+##
+##     @fn[opt] ble/getopts/scan-definition:TYPE/label
+##     @fn[opt] ble/getopts/scan-definition:TYPE/flag
+##     @fn[opt] ble/getopts/scan-definition:TYPE/option
+##
+##   @param[in] script
+##     Define the command-line interface by calling label:, flag:, and option:
+##
+_ble_getopts_definition_headers=(label flag option arguments)
+function ble/getopts/scan-definition {
+  local type=$1 def=$2 header fn
+  for header in "${_ble_getopts_definition_headers[@]}"; do
+    fn=ble/getopts/scan-definition:$type/$header
+    if ble/is-function "$fn"; then
+      ble/function#push "$header" "$fn \"\$@\""
+    else
+      ble/function#push "$header" '((1))'
+    fi
+    ble/function#push "$header" "$fn \"\$@\""
+  done
+  builtin eval -- "$def"
+  for header in "${_ble_getopts_definition_headers[@]}"; do
+    ble/function#pop "$header"
+  done
+}
+
+function ble/getopts/scan-definition:parser/label {
+  getopts_label=$1
+}
+
+# todo array
+function ble/getopts/scan-definition:parser/option {
+  local var=$1 opt=$2 q=\' Q="'\''"
+
+  if [[ $opt == --* ]]; then
+    ble/util/print NYI >&2
+  elif [[ $opt == -? ]]; then
+    opt=${opt:1}
+    getopts_short_options=$getopts_short_options'('\'${opt//$q/$Q}\'')
+      if [[ ${arg:1} ]]; then
+        '$var'=${arg:1} arg=
+      elif (($#)); then
+        '$var'=$1
+        shift
+      else
+        ble/util/print "$_getopts_label: missing option argument for '\''-$arg'\''" >&2
+        flags=E$flags
+      fi ;;
+    '
+  fi
+}
+function ble/getopts/scan-definition:parser/arguments {
+  local var=${1:-args}
+  getopts_arguments=$getopts_arguments'
+    ble/array#push '$var' "$arg"
+  '
+}
+
+function ble/getopts/generate-parser {
+  local getopts_finalize=
+  local getopts_initialize=
+  local getopts_label=
+  local getopts_long_options=
+  local getopts_short_options=
+  local getopts_arguments=
+
+  ble/getopts/scan-definition parser "$2"
+
+  if [[ ! $getopts_arguments ]]; then
+    getopts_arguments='
+      ble/util/print "$_getopt_label: unrecognized argument '\''$arg'\''" >&2
+      flags=E$flags
+    '
+  fi
+
+  local getopts_script='
+    local _ble_local_set _ble_local_shopt
+    ble/base/.adjust-bash-options _ble_local_set _ble_local_shopt
+    local LC_ALL= LC_COLLATE=C 2>/dev/null
+
+    local _getopts_label='$q${getopts_label//$q/$Q}$q'
+
+    flags=
+    '$getopts_initialize'
+    while (($#)); do
+      local arg=$1; shift
+      if [[ $arg == -?* && $flags != *-* ]]; then
+        if [[ $arg == --* ]]; then
+          case $arg in
+          (--) flags=-$flags ;;
+          '$getopts_long_options'
+          (*)
+            ble/util/print "$_getopts_label: unrecognized long option '\''$arg'\''" >&2
+            flags=E$flags ;;
+          esac
+        else
+          arg=${arg:1}
+          while [[ $arg ]]; do
+            case ${arg::1} in
+            '$getopts_short_options'
+            (*)
+              ble/util/print "$_getopts_label: unrecognized option '\''-${arg::1}'\''" >&2
+              flags=E$flags ;;
+            esac
+            arg=${arg:1}
+          done
+        fi
+        continue
+      fi
+
+      '$getopts_arguments'
+    done
+    '$getopts_finalize'
+
+    ble/util/unlocal LC_ALL LC_COLLATE 2>/dev/null
+    ble/base/.restore-bash-options _ble_local_set _ble_local_shopt
+    [[ $flags != *E* ]]
+  '
+
+  builtin eval -- "function $1 { $getopts_script }"
+}
+
+function ble/histdb/sub:top/define {
+  label 'ble-histdb-top'
+  option exclude -x
+  option has_subcommand -s
+}
+ble/getopts/generate-parser ble/histdb/sub:top/read-arguments ble/histdb/sub:top/define
+
+function ble/histdb/sub:top {
+  local flags=
+  local -x exclude= has_subcommand=
+  ble/histdb/sub:top/read-arguments "$@" || return 2
+  ble-histdb | awk '
+    BEGIN {
+      has_subcommand = "^(" ENVIRON["has_subcommand"] ")$";
+      to_exclude = "^(" ENVIRON["exclude"] ")$";
+    }
+    {
+      sub(/^[[:space:]]+/, "");
+      sub(/^\(\(?/, "& ");
+      if ($1 ~ to_exclude) next;
+
+      subcommand = "";
+      if ($1 ~ has_subcommand) {
+        for (i = 2; i <= NF; i++) {
+          if ($i ~ /^-.+/) continue;
+          subcommand = $i
+          break;
+        }
+      }
+
+      if (subcommand != "") {
+        print $1 " " subcommand;
+      } else {
+        print $1;
+      }
+    }
+  ' | sort | uniq -c | sort -nr | head -n 25
+}
+
+## @fn ble/histdb/graph/board/initialize
+##   @arr[out] grboard_export
+function ble/histdb/graph/board/initialize {
+  # todo East_Asian_Width, 24bit color support, gawk
+  local -a colors
+  ble/histdb/graph/palette github-light24
+
+  # todo: Unicode
+  local mark=${1:-'■'}
+
+  grboard_export=()
+  ble/array#push grboard_export "grboard_nlevel=${#colors[@]}"
+
+  local i ret
+  for i in "${!colors[@]}"; do
+    ble/color/gspec2sgr "fg=${colors[i]}"
+    ble/array#push grboard_export "grboard_unit$i=$ret$mark$_ble_term_sgr0"
+  done
+
+  local ret
+  ble/util/s2w "$mark"; local w=$ret
+  ble/string#reserve-prototype "$w"
+  ble/array#push grboard_export "grboard_unit_white=${_ble_string_prototype::w}"
+}
+_ble_histdb_grboard_awk_lib='
+  function grboard_initialize(_, i) {
+    grboard_nlevel = ENVIRON["grboard_nlevel"];
+    grboard_unit[-1] = ENVIRON["grboard_unit_white"];
+    for (i = 0; i < grboard_nlevel; i++)
+      grboard_unit[i] = ENVIRON["grboard_unit" i];
+  }
+  function grboard__score2unit(score, score_max) {
+    if (score == "" || score < 0)
+      return grboard_unit[-1];
+    else if (score == 0)
+      return grboard_unit[0];
+    else
+      return grboard_unit[1 + int((grboard_nlevel - 1) * score / (score_max + 1))];
+  }
+  function grboard_render(lines, table, w, h, _, x, y, maxv, v, line) {
+    maxv = 0;
+    for (y = 0; y < h; y++)
+      for (x = 0; x < w; x++)
+        if (table[y, x] > maxv)
+          maxv = table[y, x];
+
+    for (y = 0; y < h; y++) {
+      line = "";
+      for (x = 0; x < w; x++) {
+        v = table[y, x];
+        line = line grboard__score2unit(v, maxv);
+      }
+      lines[y] = line;
+    }
+  }
+'
+
+## @fn ble/histdb/graph/vbar/initialize [palette]
+##   @var[out] grvbar_declare
+function ble/histdb/graph/vbar/initialize {
+  # todo East_Asian_Width, 24bit color support, gawk
+  local -a colors
+  ble/histdb/graph/palette "$1"
+  local gspec=$colors
+
+  grvbar_declare=()
+
+  local ret sgr1= sgr0=
+  if ble/util/is-unicode-output; then
+    local nlevel=8
+    if [[ $gspec ]]; then
+      ble/color/gspec2sgr "fg=$gspec"
+      sgr1=$ret sgr0=$_ble_term_sgr0
+    fi
+    ble/util/c2w "$((0x2581))"; local w=$ret
+    ble/array#push grvbar_declare grvbar_nlevel="$nlevel" grvbar_unit0='  '
+    local i
+    for ((i=1;i<=nlevel;i++)); do
+      ble/util/c2s "$((0x2580+i))"
+      ((w==1)) && ret=$ret$ret
+      ble/array#push grvbar_declare "grvbar_unit$i=$sgr1$ret$sgr0"
+    done
+  else
+    if [[ $gspec ]]; then
+      ble/color/gspec2sgr "bg=$gspec"
+      sgr1=$ret sgr0=$_ble_term_sgr0
+    fi
+    ble/array#push grvbar_declare grvbar_nlevel=1 grvbar_unit0='  ' grvbar_unit1="$sgr1  $sgr0"
+  fi
+}
+_ble_histdb_grvbar_awk_lib='
+  function grvbar_initialize(_, i) {
+    grvbar_nlevel = ENVIRON["grvbar_nlevel"];
+    grvbar_unit[-1] = ENVIRON["grvbar_unit_white"];
+    for (i = 0; i <= grvbar_nlevel; i++)
+      grvbar_unit[i] = ENVIRON["grvbar_unit" i];
+  }
+  function grvbar__score2unit(score, score_max) {
+    if (score <= 0)
+      return grvbar_unit[0];
+    else
+      return grvbar_unit[1 + int((grvbar_nlevel - 1) * score / (score_max + 1))];
+  }
+  function grvbar__clamp(x, l, u) {
+    return x < l ? l : x > u ? u : x;
+  }
+  function grvbar_render(lines, list, w, h, _, x, y, maxv, line, s) {
+    maxv = 0;
+    for (x = 0; x < w; x++)
+      if (list[x] > maxv)
+        maxv = list[x];
+    for (y = 0; y < h; y++) {
+      line = ""
+      for (x = 0; x < w; x++) {
+        s = int((grvbar_nlevel * h + 1) * list[x] / (maxv + 1));
+        line = line grvbar_unit[grvbar__clamp(s - y * grvbar_nlevel, 0, grvbar_nlevel)];
+      }
+      lines[h - 1 - y] = line;
+    }
+  }
+'
+
+function ble/histdb/graph/palette {
+  # https://github.com/orgs/community/discussions/7078
+  case ${1:-github-light} in
+  (github-light24)    colors=('#ebedf0' '#9be9a8' '#30c463' '#30a14e' '#216e39') ;;
+  (github-dark24)     colors=('#161b22' '#0e4429' '#006d32' '#26a641' '#39d353') ;;
+  (halloween-light24) colors=('#ebedf0' '#ffee4a' '#ffc501' '#fe9600' '#03001c') ;;
+  (halloween-dark24)  colors=('#161b22' '#631c03' '#bd561d' '#fa7a18' '#fddf68') ;;
+  (winter-light24)    colors=('#ebedf0' '#b6e3ff' '#54aeff' '#0969da' '#0a3069') ;;
+  (winter-dark24)     colors=('#161b22' '#0a3069' '#0969da' '#54aeff' '#b6e3ff') ;;
+  (github-light)      colors=(255 151 77 71 23) ;;
+  (github-dark)       colors=(16 22 23 35 77) ;;
+  (halloween-light)   colors=(255 227 220 208 16) ;;
+  (halloween-dark)    colors=(16 52 130 208 221) ;;
+  (winter-light)      colors=(255 153 75 26 23) ;;
+  (winter-dark)       colors=(16 23 26 75 153) ;;
+  (rainbow)
+    colors=({16..21} {21..45..6} {51..46} {82..190..36} {220..196..6}) ;;
+  (*)
+    ble/string#split colors , "$1"
+  esac
+}
+
+## @fn ble/histdb/graph/hbar/initialize [palette]
+##   @var[out] grhbar_declare
+function ble/histdb/graph/hbar/initialize {
+  # todo: East_Asian_Width, 24bit color support, gawk
+  local -a colors
+  ble/histdb/graph/palette "$1"
+
+  grhbar_declare=()
+
+  local -a sgr=()
+  local ret
+  if ble/util/is-unicode-output; then
+    local nlevel=8
+    if ((${#colors[@]})); then
+      sgr[0]=$_ble_term_sgr0
+      local color
+      for color in "${colors[@]}"; do
+        ble/color/gspec2sgr "fg=$color"
+        ble/array#push sgr "$ret"
+      done
+    fi
+
+    ble/util/c2w "$((0x2588))"; local w=$ret
+    ble/array#push grhbar_declare grhbar_wfactor="$((w==1?2:1))"
+
+    local i unit
+    unit[0]=' '
+    for ((i=1;i<=nlevel;i++)); do
+      ble/util/c2s "$((0x2590-i))"
+      ble/array#push unit "$ret"
+    done
+
+    ble/array#push grhbar_declare grhbar_unit0='  '
+    for ((i=1;i<=nlevel;i++)); do
+      ble/array#push grhbar_declare "grhbar_unit$i=${unit[i]}"
+    done
+    ble/array#push grhbar_declare grhbar_nlevel="$nlevel"
+  else
+    if ((${#colors[@]})); then
+      sgr[0]=$_ble_term_sgr0
+      local color
+      for color in "${colors[@]}"; do
+        ble/color/gspec2sgr "bg=$color"
+        ble/array#push sgr "$ret"
+      done
+    fi
+    ble/array#push grhbar_declare grhbar_nlevel=1 grhbar_unit0='  ' grhbar_unit1='  '
+  fi
+
+  local glevel=$((${#sgr[@]}-1))
+  ble/array#push grhbar_declare grhbar_glevel="$glevel"
+  for ((i=0;i<=glevel;i++)); do
+    ble/array#push grhbar_declare "grhbar_sgr$i=${sgr[i]}"
+  done
+}
+_ble_histdb_grhbar_awk_lib='
+  function grhbar_initialize(_, i) {
+    grhbar_wfactor = ENVIRON["grhbar_wfactor"];
+
+    grhbar_nlevel = ENVIRON["grhbar_nlevel"];
+    for (i = 0; i <= grhbar_nlevel; i++)
+      grhbar_unit[i] = ENVIRON["grhbar_unit" i];
+
+    grhbar_glevel = ENVIRON["grhbar_glevel"];
+    if (grhbar_glevel > 0) {
+      for (i = 0; i <= grhbar_glevel; i++)
+        grhbar_sgr[i] = ENVIRON["grhbar_sgr" i];
+    } else {
+      grhbar_glevel = 0;
+      grhbar_sgr[0] = "";
+      grhbar_sgr[1] = "";
+    }
+  }
+  function grhbar__score2unit(score, score_max) {
+    if (score <= 0)
+      return grhbar_unit[0];
+    else
+      return grhbar_unit[1 + int((grhbar_nlevel - 1) * score / (score_max + 1))];
+  }
+  function grhbar__clamp(x, l, u) {
+    return x < l ? l : x > u ? u : x;
+  }
+  function grhbar_render(lines, list, w, h, _, x, y, maxv, line, s, sunit, color) {
+    w *= grhbar_wfactor;
+    maxv = 0;
+    for (y = 0; y < w; y++)
+      if (list[y] > maxv)
+        maxv = list[y];
+    for (y = 0; y < h; y++) {
+      line = ""
+      s = int((grhbar_nlevel * w + 1) * list[y] / (maxv + 1));
+      for (x = 0; x < w; x++) {
+        sunit = grhbar__clamp(s - x * grhbar_nlevel, 0, grhbar_nlevel);
+        color = grhbar_sgr[sunit ? grhbar__clamp(1 + int(grhbar_glevel * x / (w - 1)), 1, grhbar_glevel): 0];
+        line = line color grhbar_unit[sunit];
+      }
+      lines[y] = line grhbar_sgr[0];
+    }
+  }
+'
+
+function ble/histdb/sub:calendar {
+  local grboard_export
+  ble/histdb/graph/board/initialize
+  local -x "${grboard_export[@]}" # disable=#D1566
+
+  local grvbar_declare
+  ble/histdb/graph/vbar/initialize '#30c463'
+  local -x "${grvbar_declare[@]}" # disable=#D1566
+
+  local awk
+  if ble/is-function ble/bin/mawk; then
+    awk=ble/bin/mawk
+  elif ble/is-function ble/bin/gawk; then
+    awk=ble/bin/mawk
+  else
+    printf 'ble-histdb-calendar: gawk or mawk is needed.' >&2
+    return 1
+  fi
+
+  ble/histdb/sub:query -separator ' ' "SELECT strftime('%Y %j %w', issue_time, 'unixepoch', 'localtime') AS date FROM command_history;" |
+    sort | uniq -c | ble/bin/gawk '
+      '"$_ble_histdb_grboard_awk_lib"'
+      '"$_ble_histdb_grvbar_awk_lib"'
+
+      BEGIN {
+        grboard_initialize();
+        grvbar_initialize();
+
+        split("Sun,Mon,Tue,Wed,Thu,Fri,Sat,   ", c_weekday, ",");
+        split("Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec", c_month, ",");
+      }
+      function initialize_year(year, _, i) {
+        g_year = year;
+        g_year_nday = 0 + strftime("%j", mktime(year " 12 31 01 00 00"));
+        g_year_wday_offset = 0 + strftime("%w", mktime(year " 01 01 01 00 00"));
+        g_score_max = 0;
+        g_score_total = 0;
+        for (i = -g_year_wday_offset; i < g_year_nday; i++)
+          g_score[i] = 0;
+      }
+      function flush_year(_, line, i, x, y, w, m, iday, iweek, lines, score_table, score_weekly) {
+        if (g_year == "" || g_year == 1970) return;
+
+        print "\x1b[1m# " g_year " (total = " g_score_total ", max = " g_score_max ")\x1b[m";
+        print "";
+
+        line = c_weekday[8];
+        x = 0;
+        for (m = 1; m <= 12; m++) {
+          iday = strftime("%j", mktime(g_year sprintf(" %02d 01 01 00 00", m))) - 1;
+          iweek = int((iday + g_year_wday_offset) / 7);
+          line = line sprintf("%*s", iweek * 2 - x, "") c_month[m];
+          x = iweek * 2 + length(c_month[m]);
+        }
+        print line;
+
+        # Fill score_table and score_weekly
+        w = 0;
+        for (i = -g_year_wday_offset; i < g_year_nday; i++) {
+          y = (i + g_year_wday_offset) % 7;
+          x = int((i + g_year_wday_offset) / 7);
+          if (x >= w) w = x + 1;
+
+          score_table[y, x] = i < 0 ? -1 : g_score[i];
+          score_weekly[x] += g_score[i];
+        }
+
+        grboard_render(lines, score_table, w, 7);
+        for (y = 0; y < 7; y++) print c_weekday[1 + y] lines[y];
+
+        grvbar_render(lines, score_weekly, w, 3);
+        for (y = 0; y < 3; y++) print c_weekday[8] lines[y];
+
+        print "";
+      }
+
+      $2 != g_year {
+        flush_year();
+        initialize_year($2);
+      }
+      {
+        yday = $3 - 1;
+        g_score[yday] = $1;
+        g_score_total += $1;
+        if ($1 > g_score_max)
+          g_score_max = $1;
+      }
+
+      END {
+        flush_year();
+      }
+    '
+}
+
+function ble/histdb/sub:week {
+  local grboard_export
+  ble/histdb/graph/board/initialize '●'
+  local -x "${grboard_export[@]}" # disable=#D1566
+
+  local grvbar_declare
+  ble/histdb/graph/vbar/initialize '#30c463'
+  local -x "${grvbar_declare[@]}" # disable=#D1566
+
+  local grhbar_declare
+  ble/histdb/graph/hbar/initialize '#30c463'
+  local -x "${grhbar_declare[@]}" # disable=#D1566
+
+  ble/histdb/sub:query -separator ' ' "SELECT strftime('%w %H', issue_time, 'unixepoch', 'localtime') AS date FROM command_history;" |
+    sort | uniq -c | awk '
+      '"$_ble_histdb_grboard_awk_lib"'
+      '"$_ble_histdb_grvbar_awk_lib"'
+      '"$_ble_histdb_grhbar_awk_lib"'
+
+      BEGIN {
+        grboard_initialize();
+        grvbar_initialize();
+        grhbar_initialize();
+        split("Sun,Mon,Tue,Wed,Thu,Fri,Sat,   ", c_weekday, ",");
+      }
+      {
+        y = $2 + 0;
+        x = $3 + 0;
+        g_score[y, x] += $1;
+        g_score[x] += $1;
+        g_score_wday[y] += $1;
+      }
+      END {
+        line = c_weekday[8];
+        for (h = 0; h < 24; h++)
+          line = line sprintf(h % 3 == 0 ? "%02d" : "  ", h);
+        print line;
+
+        grboard_render(lines, g_score, 24, 7);
+        grhbar_render(lines_hbar, g_score_wday, 4, 7);
+        for (y = 0; y < 7; y++) print c_weekday[1 + y] lines[y] lines_hbar[y];
+
+        grvbar_render(lines, g_score, 24, 3);
+        for (y = 0; y < 3; y++) print c_weekday[8] lines[y];
+      }
+    '
+}
