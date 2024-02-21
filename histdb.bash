@@ -968,8 +968,7 @@ function ble/histdb/sub:stats {
 }
 
 #------------------------------------------------------------------------------
-# usage: ble-histdb calendar
-# usage: ble-histdb week
+# lib: ble/getopts
 
 ## @fn ble/getopts/scan-definition type script
 ##   @param[in] type
@@ -1096,54 +1095,23 @@ function ble/getopts/generate-parser {
   builtin eval -- "function $1 { $getopts_script }"
 }
 
-function ble/histdb/sub:top/define {
-  label 'ble-histdb-top'
-  option exclude -x
-  option has_subcommand -s
-}
-ble/getopts/generate-parser ble/histdb/sub:top/read-arguments ble/histdb/sub:top/define
-
-function ble/histdb/sub:top {
-  local flags=
-  local -x exclude= has_subcommand=
-  ble/histdb/sub:top/read-arguments "$@" || return 2
-  ble-histdb | awk '
-    BEGIN {
-      has_subcommand = "^(" ENVIRON["has_subcommand"] ")$";
-      to_exclude = "^(" ENVIRON["exclude"] ")$";
-    }
-    {
-      sub(/^[[:space:]]+/, "");
-      sub(/^\(\(?/, "& ");
-      if ($1 ~ to_exclude) next;
-
-      subcommand = "";
-      if ($1 ~ has_subcommand) {
-        for (i = 2; i <= NF; i++) {
-          if ($i ~ /^-.+/) continue;
-          subcommand = $i
-          break;
-        }
-      }
-
-      if (subcommand != "") {
-        print $1 " " subcommand;
-      } else {
-        print $1;
-      }
-    }
-  ' | sort | uniq -c | sort -nr | head -n 25
-}
+#------------------------------------------------------------------------------
+# lib: ble/histdb/graph
 
 ## @fn ble/histdb/graph/board/initialize
 ##   @arr[out] grboard_export
 function ble/histdb/graph/board/initialize {
-  # todo East_Asian_Width, 24bit color support, gawk
   local -a colors
-  ble/histdb/graph/palette github-light24
+  ble/histdb/graph/palette "$2"
 
-  # todo: Unicode
-  local mark=${1:-'■'}
+  local mark=$1
+  if [[ ! $mark ]]; then
+    if ble/util/is-unicode-output; then
+      mark='■'
+    else
+      mark='##'
+    fi
+  fi
 
   grboard_export=()
   ble/array#push grboard_export "grboard_nlevel=${#colors[@]}"
@@ -1195,10 +1163,9 @@ _ble_histdb_grboard_awk_lib='
 ## @fn ble/histdb/graph/vbar/initialize [palette]
 ##   @var[out] grvbar_declare
 function ble/histdb/graph/vbar/initialize {
-  # todo East_Asian_Width, 24bit color support, gawk
   local -a colors
   ble/histdb/graph/palette "$1"
-  local gspec=$colors
+  local gspec=${colors[0]}
 
   grvbar_declare=()
 
@@ -1258,8 +1225,25 @@ _ble_histdb_grvbar_awk_lib='
 '
 
 function ble/histdb/graph/palette {
+  local palette=$1
+
+  local index=
+  if ble/string#match "$palette" '\[([0-9]+)\]$'; then
+    index=${BASH_REMATCH[1]}
+    palette=${palette::${#palette}-${#BASH_REMATCH}}
+  fi
+  if [[ ! $palette ]]; then
+    local ret
+    ble/util/strftime -v ret '%m'
+    case ${ret#0} in
+    (10) palette=github-halloween ;;
+    (12) palette=github-winter ;;
+    (*)  palette=github-light ;;
+    esac
+  fi
+
   # https://github.com/orgs/community/discussions/7078
-  case ${1:-github-light} in
+  case $palette in
   (github-light24)    colors=('#ebedf0' '#9be9a8' '#30c463' '#30a14e' '#216e39') ;;
   (github-dark24)     colors=('#161b22' '#0e4429' '#006d32' '#26a641' '#39d353') ;;
   (halloween-light24) colors=('#ebedf0' '#ffee4a' '#ffc501' '#fe9600' '#03001c') ;;
@@ -1267,22 +1251,28 @@ function ble/histdb/graph/palette {
   (winter-light24)    colors=('#ebedf0' '#b6e3ff' '#54aeff' '#0969da' '#0a3069') ;;
   (winter-dark24)     colors=('#161b22' '#0a3069' '#0969da' '#54aeff' '#b6e3ff') ;;
   (github-light)      colors=(255 151 77 71 23) ;;
-  (github-dark)       colors=(16 22 23 35 77) ;;
-  (halloween-light)   colors=(255 227 220 208 16) ;;
-  (halloween-dark)    colors=(16 52 130 208 221) ;;
+  (github-dark)       colors=(234 22 23 35 77) ;;
+  (halloween-light)   colors=(255 227 220 208 232) ;;
+  (halloween-dark)    colors=(234 52 130 208 221) ;;
   (winter-light)      colors=(255 153 75 26 23) ;;
-  (winter-dark)       colors=(16 23 26 75 153) ;;
+  (winter-dark)       colors=(234 23 26 75 153) ;;
   (rainbow)
+    colors=({196..220..6} {190..46..36}) ;;
+  (rainbow2)
     colors=({16..21} {21..45..6} {51..46} {82..190..36} {220..196..6}) ;;
   (*)
-    ble/string#split colors , "$1"
+    ble/string#split colors , "$z1"
   esac
+
+  # specify one color
+  if [[ $index ]]; then
+    colors=("${colors[index<${#colors[@]}?index:0]}")
+  fi
 }
 
 ## @fn ble/histdb/graph/hbar/initialize [palette]
 ##   @var[out] grhbar_declare
 function ble/histdb/graph/hbar/initialize {
-  # todo: East_Asian_Width, 24bit color support, gawk
   local -a colors
   ble/histdb/graph/palette "$1"
 
@@ -1311,7 +1301,7 @@ function ble/histdb/graph/hbar/initialize {
       ble/array#push unit "$ret"
     done
 
-    ble/array#push grhbar_declare grhbar_unit0='  '
+    ble/array#push grhbar_declare grhbar_unit0=' '
     for ((i=1;i<=nlevel;i++)); do
       ble/array#push grhbar_declare "grhbar_unit$i=${unit[i]}"
     done
@@ -1325,7 +1315,8 @@ function ble/histdb/graph/hbar/initialize {
         ble/array#push sgr "$ret"
       done
     fi
-    ble/array#push grhbar_declare grhbar_nlevel=1 grhbar_unit0='  ' grhbar_unit1='  '
+    ble/array#push grhbar_declare grhbar_nlevel=1 grhbar_unit0=' ' grhbar_unit1=' '
+    ble/array#push grhbar_declare grhbar_wfactor=2
   fi
 
   local glevel=$((${#sgr[@]}-1))
@@ -1380,13 +1371,93 @@ _ble_histdb_grhbar_awk_lib='
   }
 '
 
+#------------------------------------------------------------------------------
+# usage: ble-histdb top [-x regex|-s regex]
+
+function ble/histdb/sub:top/define {
+  label 'ble-histdb-top'
+  option exclude -x
+  option has_subcommand -s
+  option count -c
+}
+ble/getopts/generate-parser ble/histdb/sub:top/read-arguments ble/histdb/sub:top/define
+
+function ble/histdb/sub:top {
+  local flags=
+  local -x exclude= has_subcommand= count=20
+  ble/histdb/sub:top/read-arguments "$@" || return 2
+
+  local grhbar_declare
+  ble/histdb/graph/hbar/initialize rainbow
+  local -x "${grhbar_declare[@]}" # disable=#D1566
+
+  local ret
+  ble/color/gspec2sgr 'bold'
+  local -x sgr_cmd=$ret
+  local -x sgr0=$_ble_term_sgr0
+
+  ble-histdb | ble/bin/awk '
+    BEGIN {
+      has_subcommand = "^(" ENVIRON["has_subcommand"] ")$";
+      to_exclude = "^(" ENVIRON["exclude"] ")$";
+    }
+    {
+      sub(/^[[:space:]]+/, "");
+      sub(/^\(\(?/, "& ");
+      if ($1 ~ to_exclude) next;
+
+      subcommand = "";
+      if ($1 ~ has_subcommand) {
+        for (i = 2; i <= NF; i++) {
+          if ($i ~ /^-.+/) continue;
+          subcommand = $i
+          break;
+        }
+      }
+
+      if (subcommand != "") {
+        print $1 " " subcommand;
+      } else {
+        print $1;
+      }
+    }
+  ' | ble/bin/sort | uniq -c | ble/bin/sort -nr | ble/bin/awk -v count="$count" '
+    '"$_ble_histdb_grhbar_awk_lib"'
+    BEGIN {
+      grhbar_initialize();
+      g_entry_count = 0;
+      sgr_cmd = ENVIRON["sgr_cmd"];
+      sgr0 = ENVIRON["sgr0"];
+    }
+    {
+      i = g_entry_count++;
+      g_score[i] = $1;
+      g_command[i] = $0;
+      if (g_entry_count >= count) exit;
+    }
+    END {
+      grhbar_render(lines_hbar, g_score, 6, g_entry_count);
+      for (i = 0; i < g_entry_count; i++) {
+        sub(/[0-9]+ /, "&[" lines_hbar[i] "] " sgr_cmd, g_command[i]);
+        print g_command[i] sgr0;
+      }
+    }
+  '
+}
+
+#------------------------------------------------------------------------------
+# usage: ble-histdb calendar
+# usage: ble-histdb week
+
 function ble/histdb/sub:calendar {
+  local palette=$1
+
   local grboard_export
-  ble/histdb/graph/board/initialize
+  ble/histdb/graph/board/initialize '' "$palette"
   local -x "${grboard_export[@]}" # disable=#D1566
 
   local grvbar_declare
-  ble/histdb/graph/vbar/initialize '#30c463'
+  ble/histdb/graph/vbar/initialize "$palette[2]"
   local -x "${grvbar_declare[@]}" # disable=#D1566
 
   local awk
@@ -1400,7 +1471,7 @@ function ble/histdb/sub:calendar {
   fi
 
   ble/histdb/sub:query -separator ' ' "SELECT strftime('%Y %j %w', issue_time, 'unixepoch', 'localtime') AS date FROM command_history;" |
-    sort | uniq -c | ble/bin/gawk '
+    sort | uniq -c | "$awk" '
       '"$_ble_histdb_grboard_awk_lib"'
       '"$_ble_histdb_grvbar_awk_lib"'
 
@@ -1475,20 +1546,22 @@ function ble/histdb/sub:calendar {
 }
 
 function ble/histdb/sub:week {
+  local palette=$1
+
   local grboard_export
-  ble/histdb/graph/board/initialize '●'
+  ble/histdb/graph/board/initialize '●' "$palette"
   local -x "${grboard_export[@]}" # disable=#D1566
 
   local grvbar_declare
-  ble/histdb/graph/vbar/initialize '#30c463'
+  ble/histdb/graph/vbar/initialize "$palette[2]"
   local -x "${grvbar_declare[@]}" # disable=#D1566
 
   local grhbar_declare
-  ble/histdb/graph/hbar/initialize '#30c463'
+  ble/histdb/graph/hbar/initialize "$palette[2]"
   local -x "${grhbar_declare[@]}" # disable=#D1566
 
   ble/histdb/sub:query -separator ' ' "SELECT strftime('%w %H', issue_time, 'unixepoch', 'localtime') AS date FROM command_history;" |
-    sort | uniq -c | awk '
+    sort | uniq -c | ble/bin/awk '
       '"$_ble_histdb_grboard_awk_lib"'
       '"$_ble_histdb_grvbar_awk_lib"'
       '"$_ble_histdb_grhbar_awk_lib"'
