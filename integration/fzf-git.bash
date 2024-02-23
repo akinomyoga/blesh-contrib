@@ -20,19 +20,19 @@ if [[ $- != *i* ]]; then
     }
     case $1 in
     (branches)
-      ble/util/print $'CTRL-O (open in browser) ╱ ALT-A (show all branches)\n'
+      printf '%s\n' $'CTRL-O (open in browser) ╱ ALT-A (show all branches)\n'
       ble/contrib/integration:fzf-git/sub:branches
       ;;
     (all-branches)
-      ble/util/print $'CTRL-O (open in browser)\n'
+      printf '%s\n' $'CTRL-O (open in browser)\n'
       ble/contrib/integration:fzf-git/sub:branches -a
       ;;
     (refs)
-      ble/util/print $'CTRL-O (open in browser) ╱ ALT-E (examine in editor) ╱ ALT-A (show all refs)\n'
+      printf '%s\n' $'CTRL-O (open in browser) ╱ ALT-E (examine in editor) ╱ ALT-A (show all refs)\n'
       ble/contrib/integration:fzf-git/sub:refs 'grep -v ^refs/remotes'
       ;;
     (all-refs)
-      ble/util/print $'CTRL-O (open in browser) ╱ ALT-E (examine in editor)\n'
+      printf '%s\n' $'CTRL-O (open in browser) ╱ ALT-E (examine in editor)\n'
       ble/contrib/integration:fzf-git/sub:refs 'cat'
       ;;
     (nobeep) ;;
@@ -54,7 +54,7 @@ if [[ $- != *i* ]]; then
       ;;
     (branch|remote-branch)
       branch=$(sed 's/^[* ]*//' <<< "$2" | cut -d' ' -f1)
-      remote=$(git config branch."${branch}".remote || ble/util/print 'origin')
+      remote=$(git config branch."${branch}".remote || printf 'origin\n')
       branch=${branch#$remote/}
       path=/tree/$branch
       ;;
@@ -67,8 +67,8 @@ if [[ $- != *i* ]]; then
     (*)    exit 1 ;;
     esac
 
-    remote=${remote:-$(git config branch."${branch}".remote || ble/util/print 'origin')}
-    remote_url=$(git remote get-url "$remote" 2> /dev/null || ble/util/print "$remote")
+    remote=${remote:-$(git config branch."${branch}".remote || printf 'origin\n')}
+    remote_url=$(git remote get-url "$remote" 2> /dev/null || printf '%s\n' "$remote")
 
     if [[ $remote_url =~ ^git@ ]]; then
       url=${remote_url%.git}
