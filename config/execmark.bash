@@ -80,7 +80,8 @@ function ble/contrib/config:execmark/postexec.hook {
         exit="exit $sgrN$exit$sgrE"
       fi
       local mark=$sgrE'[ble: '$exit']'$sgr0
-      ble/util/buffer.print "$mark"
+      x=0 y=0 g=0 LINES=1 ble/canvas/trace "$mark" confine:truncate
+      ble/util/buffer.print "$ret"
     fi
 
     # ata

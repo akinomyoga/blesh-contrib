@@ -35,6 +35,6 @@ function fzf-history-widget {
   function fzf-history-widget { __fzf_history__; }
 
 # ALT-C - cd into the selected directory
-ble-bind -m emacs   -c M-c 'eval "$(__fzf_cd__)"'
-ble-bind -m vi_imap -c M-c 'eval "$(__fzf_cd__)"'
-ble-bind -m vi_nmap -c M-c 'eval "$(__fzf_cd__)"'
+ble-bind -m emacs   -c M-c 'builtin eval -- "$(__fzf_cd__)"'
+ble-bind -m vi_imap -c M-c 'builtin eval -- "$(__fzf_cd__)"'
+ble-bind -m vi_nmap -c M-c 'builtin eval -- "$(__fzf_cd__)"'

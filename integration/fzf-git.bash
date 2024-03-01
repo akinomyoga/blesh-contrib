@@ -14,25 +14,25 @@ if [[ $- != *i* ]]; then
     }
     function ble/contrib/integration:fzf-git/sub:refs {
       git for-each-ref --sort=-creatordate --sort=-HEAD --color=always --format=$'%(refname) %(color:green)(%(creatordate:relative))\t%(color:blue)%(subject)%(color:reset)' |
-        eval "$1" |
+        builtin eval -- "$1" |
         sed 's#^refs/remotes/#\x1b[95mremote-branch\t\x1b[33m#; s#^refs/heads/#\x1b[92mbranch\t\x1b[33m#; s#^refs/tags/#\x1b[96mtag\t\x1b[33m#; s#refs/stash#\x1b[91mstash\t\x1b[33mrefs/stash#' |
         column -ts$'\t'
     }
     case $1 in
     (branches)
-      echo $'CTRL-O (open in browser) ╱ ALT-A (show all branches)\n'
+      printf '%s\n' $'CTRL-O (open in browser) ╱ ALT-A (show all branches)\n'
       ble/contrib/integration:fzf-git/sub:branches
       ;;
     (all-branches)
-      echo $'CTRL-O (open in browser)\n'
+      printf '%s\n' $'CTRL-O (open in browser)\n'
       ble/contrib/integration:fzf-git/sub:branches -a
       ;;
     (refs)
-      echo $'CTRL-O (open in browser) ╱ ALT-E (examine in editor) ╱ ALT-A (show all refs)\n'
+      printf '%s\n' $'CTRL-O (open in browser) ╱ ALT-E (examine in editor) ╱ ALT-A (show all refs)\n'
       ble/contrib/integration:fzf-git/sub:refs 'grep -v ^refs/remotes'
       ;;
     (all-refs)
-      echo $'CTRL-O (open in browser) ╱ ALT-E (examine in editor)\n'
+      printf '%s\n' $'CTRL-O (open in browser) ╱ ALT-E (examine in editor)\n'
       ble/contrib/integration:fzf-git/sub:refs 'cat'
       ;;
     (nobeep) ;;
@@ -54,7 +54,7 @@ if [[ $- != *i* ]]; then
       ;;
     (branch|remote-branch)
       branch=$(sed 's/^[* ]*//' <<< "$2" | cut -d' ' -f1)
-      remote=$(git config branch."${branch}".remote || echo 'origin')
+      remote=$(git config branch."${branch}".remote || printf 'origin\n')
       branch=${branch#$remote/}
       path=/tree/$branch
       ;;
@@ -67,8 +67,8 @@ if [[ $- != *i* ]]; then
     (*)    exit 1 ;;
     esac
 
-    remote=${remote:-$(git config branch."${branch}".remote || echo 'origin')}
-    remote_url=$(git remote get-url "$remote" 2> /dev/null || echo "$remote")
+    remote=${remote:-$(git config branch."${branch}".remote || printf 'origin\n')}
+    remote_url=$(git remote get-url "$remote" 2> /dev/null || printf '%s\n' "$remote")
 
     if [[ $remote_url =~ ^git@ ]]; then
       url=${remote_url%.git}
@@ -137,7 +137,7 @@ fi
 _fzf_git_files() {
   _fzf_git_check || return "$?"
   (git -c color.status=always status --short --no-branch
-   git ls-files | grep -vxFf <(git status -s | grep '^[^?]' | cut -c4-; echo :) | sed 's/^/   /') |
+   git ls-files | grep -vxFf <(git status -s | grep '^[^?]' | cut -c4-; ble/util/print :) | sed 's/^/   /') |
   _fzf_git_fzf -m --ansi --nth 2..,.. \
     --border-label '📁 Files' \
     --header $'CTRL-O (open in browser) ╱ ALT-E (open in editor)\n\n' \
@@ -242,11 +242,11 @@ _fzf_git_each_ref() {
 
 # original
 function ble/contrib:integration/fzf-git/type:original/init {
-  bind '"\er": redraw-current-line'
+  builtin bind '"\er": redraw-current-line'
 }
 function ble/contrib:integration/fzf-git/type:original {
   local binding='"\C-g\C-'$1'": "$(_fzf_git_'$2')\e\C-e\er"'
-  bind "$binding"
+  builtin bind "$binding"
 }
 # function ble/contrib:integration/fzf-git/type:original {
 #   local binding='"\C-g\C-'$1'": "$(_fzf_git_'$2')\M-\C-e\M-\C-l"'

@@ -16,7 +16,7 @@ if ! ble/is-function _fzf_complete; then
 fi
 
 # clear blesh completer for cd
-blehook/eval-after-load complete 'unset -f ble/cmdinfo/complete:cd'
+blehook/eval-after-load complete 'builtin unset -f ble/cmdinfo/complete:cd'
 
 # patch fzf functions
 ble/function#advice around __fzf_generic_path_completion _fzf_complete.advice
@@ -42,9 +42,9 @@ function _fzf_complete.advice {
   ble/function#push caller 'builtin caller ${1+"$(($1+6))"}'
   ble/term/leave-for-widget
   if [[ ${ADVICE_WORDS[0]} == _fzf_complete ]]; then
-    ble/function#advice/do >&"$_ble_util_fd_stdout" 2>&"$_ble_util_fd_stderr"
+    ble/function#advice/do >&"${_ble_util_fd_tty_stdout:-1}" 2>&"${_ble_util_fd_tty_stderr:-2}"
   else
-    ble/function#advice/do >&"$_ble_util_fd_stdout" 2>&"$_ble_util_fd_stderr" <&"$_ble_util_fd_stdin"
+    ble/function#advice/do >&"${_ble_util_fd_tty_stdout:-1}" 2>&"${_ble_util_fd_tty_stderr:-2}" <&"${_ble_util_fd_tty_stdin:-0}"
   fi
   ble/term/enter-for-widget
   ble/function#pop caller
