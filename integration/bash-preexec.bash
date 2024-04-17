@@ -44,7 +44,7 @@ function ble/contrib/integration:bash-preexec/precmd.hook {
     # For older bash-preexec.sh / without bash-preexec.sh
     local _ble_local_hook
     for _ble_local_hook in "${precmd_functions[@]}"; do
-      if builtin type -t "$_ble_local_hook" &>/dev/null; then
+      if ble/bin#has "$_ble_local_hook"; then
         ble/util/setexit "$_ble_local_lastexit" "$_ble_local_lastarg"
         "$_ble_local_hook"
       fi
@@ -63,7 +63,7 @@ function ble/contrib/integration:bash-preexec/preexec.hook {
     # For older bash-preexec.sh / without bash-preexec.sh
     local _ble_local_hook
     for _ble_local_hook in "${preexec_functions[@]}"; do
-      if builtin type -t "$_ble_local_hook" &>/dev/null; then
+      if ble/bin#has "$_ble_local_hook"; then
         ble/util/setexit "$_ble_local_lastexit" "$_ble_local_lastarg"
         "$_ble_local_hook" "$_ble_local_command"
       fi

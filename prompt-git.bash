@@ -44,7 +44,7 @@ function ble/contrib/prompt-git/.check-submodule {
 function ble/prompt/unit:_ble_contrib_prompt_git/update {
   ble/prompt/unit/add-hash '$PWD'
 
-  type git &>/dev/null || return 1
+  ble/bin#has git || return 1
   # [[ $(git rev-parse --is-inside-work-tree 2> /dev/null) ]]
   local path=$PWD found=
   while

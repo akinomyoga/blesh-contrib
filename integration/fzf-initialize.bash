@@ -12,17 +12,18 @@ function ble/contrib/integration:fzf-completion/initialize {
     if [[ -d $_ble_contrib_fzf_base/bin && :$PATH: != *:"$_ble_contrib_fzf_base/bin":* ]]; then
       export PATH="${PATH:+${PATH}:}$_ble_contrib_fzf_base/bin"
     fi
-    if ! type fzf &>/dev/null; then
+    if ! ble/bin#has fzf; then
       ble/util/print 'ble/contrib/integration:fzf-initialize: "fzf" not found.' >&2
       return 1
     fi
   else
-    local ret
-    if ! ble/util/assign ret 'type -p fzf 2>/dev/null'; then
+    local path
+    if ! ble/bin#get-path fzf; then
       ble/util/print 'ble/contrib/integration:fzf: "fzf" not found.' >&2
       return 1
     fi
-    ble/util/readlink "$ret"
+    local ret
+    ble/util/readlink "$path"
     ret=${ret%/*}      # fzf, fzf-linux_amd64, etc.
     ret=${ret%/bin}    # repo/bin/
     ret=${ret%/target} # repo/target (compile directory)
