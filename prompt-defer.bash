@@ -133,7 +133,7 @@ function ble/contrib/prompt-defer/submit {
         ble/util/set "$rbgpid" ''
       fi
 
-      : >| "$tmpfile"
+      >| "$tmpfile"
       ble/util/set "$rbgpid" "$(ble/util/nohup 'ble/contrib/prompt-defer/.worker $prefix' print-bgpid)"
       ((opt_sync>0)) && ble/util/msleep "$opt_sync"
       if [[ -s $tmpfile ]]; then
