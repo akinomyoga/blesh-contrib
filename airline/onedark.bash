@@ -26,6 +26,13 @@ function ble/lib/vim-airline/theme:onedark/initialize {
   ble-face -s vim_airline_c_visual_modified            fg=-1,bg=0    # fg=-1,bg=0
   ble-face -s vim_airline_error                        fg=17,bg=168  # fg=#282c34,bg=#e06c75
   ble-face -s vim_airline_error_inactive               fg=16,bg=88   # fg=#000000,bg=#990000
+  ble-face -s vim_airline_term                         fg=114,bg=17  # fg=#98c379,bg=#282c34
+  ble-face -s vim_airline_term_inactive                fg=249,bg=238 # fg=#abb2bf,bg=#3e4452
+  ble-face -s vim_airline_term_insert                  fg=158,bg=234 # fg=#9cffd3,bg=#202020
+  ble-face -s vim_airline_term_insert_modified         fg=176,bg=17  # fg=#c678dd,bg=#282c34
+  ble-face -s vim_airline_term_normal_modified         fg=176,bg=17  # fg=#c678dd,bg=#282c34
+  ble-face -s vim_airline_term_replace_modified        fg=176,bg=17  # fg=#c678dd,bg=#282c34
+  ble-face -s vim_airline_term_visual                  fg=176,bg=17  # fg=#c678dd,bg=#282c34
   ble-face -s vim_airline_warning                      fg=17,bg=180  # fg=#282c34,bg=#e5c07b
   ble-face -s vim_airline_warning_inactive             fg=16,bg=166  # fg=#000000,bg=#df5f00
 }
