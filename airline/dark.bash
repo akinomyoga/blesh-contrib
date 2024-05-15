@@ -1,6 +1,6 @@
-# From github:vim-airline/vim-airline-themes/autoload/airline/themes/dark.vim
+# From github:vim-airline/vim-airline/autoload/airline/themes/dark.vim
 #   The MIT License (MIT)
-#   Copyright (C) 2013-2021 Bailey Ling & Contributors.
+#   Copyright (c) 2013-2021 Bailey Ling et al.
 #
 
 ble-import lib/vim-airline
