@@ -19,10 +19,8 @@ function ble/lib/vim-airline/theme:transparent/initialize {
   ble-face -s vim_airline_c                            fg=59,bg=-1   # fg=#3f4b59,bg=-1
   ble-face -s vim_airline_c_inactive_modified          fg=215,bg=-1  # fg=#ffae57,bg=-1
   ble-face -s vim_airline_error                        fg=16,bg=204  # fg=#1d1f21,bg=#f07178
-  ble-face -s vim_airline_error_default                fg=16,bg=88   # fg=#000000,bg=#990000
   ble-face -s vim_airline_error_inactive               fg=16,bg=88   # fg=#000000,bg=#990000
   ble-face -s vim_airline_warning                      fg=16,bg=215  # fg=#1d1f21,bg=#ffae57
-  ble-face -s vim_airline_warning_default              fg=16,bg=166  # fg=#000000,bg=#df5f00
   ble-face -s vim_airline_warning_inactive             fg=16,bg=166  # fg=#000000,bg=#df5f00
   ble-face -s vim_airline_x_inactive                   fg=16,bg=-1   # fg=#1d1f21,bg=-1
   ble-face -s vim_airline_z_insert                     fg=150,bg=-1  # fg=#bbe67e,bg=-1
