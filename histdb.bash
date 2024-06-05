@@ -619,14 +619,22 @@ ble/util/import/eval-after-load core-complete '
 # ble histdb command
 
 function ble-histdb {
+  builtin eval -- "$_ble_bash_POSIXLY_CORRECT_local_adjust"
+  local set shopt ext
+  ble/base/.adjust-bash-options set shopt
   if (($#==0)); then
     ble/histdb/sub:query 'select command from command_history;'
+    ext=$?
   elif ble/is-function "ble/histdb/sub:$1"; then
     "ble/histdb/sub:$@"
+    ext=$?
   else
     builtin printf 'ble-histdb: unknown command "%s"\n' "$1"
-    return 2
+    ext=2
   fi
+  ble/base/.restore-bash-options set shopt
+  ble/util/setexit "$ext"
+  builtin eval -- "$_ble_bash_POSIXLY_CORRECT_local_return"
 }
 
 # 一般的な補完のフレームワークを作っても良いのではないかという気がしてきたが、
@@ -991,7 +999,6 @@ function ble/getopts/scan-definition {
     else
       ble/function#push "$header" '((1))'
     fi
-    ble/function#push "$header" "$fn \"\$@\""
   done
   builtin eval -- "$def"
   for header in "${_ble_getopts_definition_headers[@]}"; do
