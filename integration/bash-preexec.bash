@@ -35,7 +35,9 @@ function ble/contrib/integration:bash-preexec/precmd.hook {
 
   # Emulate bash-preexec variables
   __bp_last_ret_value=$_ble_local_lastexit
+  __bp_last_argument_prev_command=$_ble_local_lastarg
   BP_PIPESTATUS=("${BLE_PIPESTATUS[@]}")
+  local __bp_inside_precmd=1
 
   # local __bp_blesh_invoking_through_blesh=1 # XXX
   if ble/is-function __bp_precmd_invoke_functions; then
@@ -54,7 +56,9 @@ function ble/contrib/integration:bash-preexec/precmd.hook {
 
 function ble/contrib/integration:bash-preexec/preexec.hook {
   local _ble_local_lastexit=$? _ble_local_lastarg=$_ _ble_local_command=$1
-  __bp_last_argument_prev_command=$_ble_local_lastarg
+
+  # Emulate bash-preexec variables
+  local __bp_inside_preexec=1
 
   # local __bp_blesh_invoking_through_blesh=1 # XXX
   if ble/is-function __bp_preexec_invoke_functions; then
@@ -169,3 +173,8 @@ __bp_imported=defined
 # }
 # precmd_function+=(__bp_blesh_check)
 # preexec_function+=(__bp_blesh_check)
+
+# Some settings rely on the internal APIs of bash-preexec.  For example, iTerm2
+# shell integration uses "__bp_set_ret_value" and
+# "$__bp_last_argument_prev_command".
+function __bp_set_ret_value { return ${1:+"$1"}; }
