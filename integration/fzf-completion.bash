@@ -60,3 +60,50 @@ function _fzf_complete.advice {
       old_cand_count=0
   fi
 }
+
+#------------------------------------------------------------------------------
+# Extensions
+
+# This widget can be used to trigger fzf's '**' completion from a keybinding.
+function ble/widget/fzf-complete {
+  local handler=_fzf_${1:-path}_completion
+  if ! ble/is-function "$handler"; then
+    ble/widget/.bell "unrecognized fzf-complete type '$1' (function '$handler' not found)"
+    return 1
+  fi
+
+  # If the width of the box-drawing characters in the current terminal is not
+  # 1, we specify --no-unicode to fzf to suppress the use of the box-drawing
+  # characters.
+  if [[ " ${FZF_COMPLETION_OPTS-} " != *' --no-unicode '* ]]; then
+    local ret
+    ble/util/c2w 0x2500
+    ((ret==1)) ||
+      local FZF_COMPLETION_OPTS="--no-unicode${FZF_COMPLETION_OPTS:+ $FZF_COMPLETION_OPTS}"
+  fi
+
+  # Mask completion settings cached by fzf
+  local -a fzf_orig_completions
+  fzf_orig_completions=("${!_fzf_orig_completion_@}")
+  local "${fzf_orig_completions[@]/%/=}" # disable=#D1570
+
+  # Replace the programmable-completion setting
+  local completion_save
+  ble/util/assign completion_save 'complete -p'
+  complete -r
+  complete -F _fzf_path_completion -D
+
+  # Disable completion auto-loader
+  ble/function#push _comp_load 'return 1'
+
+  # Trigger fzf-completion without '**'
+  local FZF_COMPLETION_TRIGGER=
+
+  ble/widget/complete; local ext=$?
+
+  # restore the settings
+  ble/function#pop _comp_load
+  complete -r
+  builtin eval -- "$completion_save"
+  return "$ext"
+}
