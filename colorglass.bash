@@ -90,13 +90,204 @@ function ble/contrib/colorglass/.contrast {
   _ble_contrib_colorglass_contrast[x]=$ret
 }
 
+#------------------------------------------------------------------------------
+# Color blindness simulation
+# based on https://mk.bcgsc.ca/colorblind/math.mhtml
+
+bleopt/declare -n colorglass_blindness none
+function bleopt/check:colorglass_blindness {
+  case $value in
+  (protanopia|deuteranopia|tritanopia|achromatopsia)
+    ble/color/g2sgr/.clear-cache
+    return 0 ;;
+  (*)
+    ble/util/print "bleopt colorglass_blindness: invalid value '$value'" >&2
+    return 1 ;;
+  esac
+}
+
+function ble/contrib/colorglass/blindness/.sRGB-to-lRGB/.2 {
+  ret=$1
+  ((ret=ret*_ble_fixed_unit/255))
+  if ((ret<=2651)); then
+    # if (value <= 0.04045) return value / 12.92;
+    ble/fixed-point#mul "$ret" 5072
+  else
+    # return pow((value + 0.055) / 1.055, 2.4);
+    ble/fixed-point#mul "$((ret+3604))" 62119
+    ble/fixed-point#pow "$ret" 157286
+  fi
+}
+function ble/contrib/colorglass/blindness/.lRGB-to-sRGB/.2 {
+  ret=$1
+  if ((ret<=0)); then
+    ret=0
+  elif ((ret<205)); then
+    # if (value <= 0.0031308) value *= 12.92;
+    ble/fixed-point#mul "$ret" 846725
+  elif ((ret<_ble_fixed_unit)); then
+    # if (value < 1.0) value = 1.055 * value ^ (1.0 / 2.4) - 0.055;
+    ble/fixed-point#pow "$ret" 27307
+    ble/fixed-point#mul "$ret" 69141
+    ((ret-=3604))
+  else
+    ((ret=_ble_fixed_unit))
+  fi
+  ((ret=(ret*255+_ble_fixed_unit/2)/_ble_fixed_unit))
+}
+
+_ble_contrib_colorglass_sRGB_to_lRGB=()
+_ble_contrib_colorglass_lRGB_to_sRGB=()
+function ble/contrib/colorglass/blindness/.sRGB-to-lRGB/.1 {
+  local value=$1
+  if ((value<=0)); then
+    ret=0
+  elif ((value>=255)); then
+    ((ret=_ble_fixed_unit))
+  else
+    ret=${_ble_contrib_colorglass_sRGB_to_lRGB[value]-}
+    if [[ ! $ret ]]; then
+      ble/contrib/colorglass/blindness/.sRGB-to-lRGB/.2 "$value"
+      _ble_contrib_colorglass_sRGB_to_lRGB[value]=$ret
+    fi
+  fi
+}
+function ble/contrib/colorglass/blindness/.lRGB-to-sRGB/.1 {
+  local value=$1
+  if ((value<=0)); then
+    ret=0
+  elif ((value>=_ble_fixed_unit)); then
+    ((ret=255))
+  else
+    ret=${_ble_contrib_colorglass_lRGB_to_sRGB[value]-}
+    if [[ ! $ret ]]; then
+      ble/contrib/colorglass/blindness/.lRGB-to-sRGB/.2 "$value"
+      _ble_contrib_colorglass_lRGB_to_sRGB[value]=$ret
+    fi
+  fi
+}
+
+## @fn ble/contrib/colorglass/blindness/.sRGB-to-lRGB
+##   @var[ref] R G B
+function ble/contrib/colorglass/blindness/.sRGB-to-lRGB {
+  local ret
+  ble/contrib/colorglass/blindness/.sRGB-to-lRGB/.1 "$R"; R=$ret
+  ble/contrib/colorglass/blindness/.sRGB-to-lRGB/.1 "$G"; G=$ret
+  ble/contrib/colorglass/blindness/.sRGB-to-lRGB/.1 "$B"; B=$ret
+}
+
+## @fn ble/contrib/colorglass/blindness/.lRGB-to-sRGB
+##   @var[ref] R G B
+function ble/contrib/colorglass/blindness/.lRGB-to-sRGB {
+  local ret
+  ble/contrib/colorglass/blindness/.lRGB-to-sRGB/.1 "$R"; R=$ret
+  ble/contrib/colorglass/blindness/.lRGB-to-sRGB/.1 "$G"; G=$ret
+  ble/contrib/colorglass/blindness/.lRGB-to-sRGB/.1 "$B"; B=$ret
+}
+
+## @fn ble/contrib/colorglass/blindness/simulate type
+##   @var[ref] R G B
+function ble/contrib/colorglass/blindness/simulate {
+  case $1 in
+  (protanopia)
+    # \begin{matrix}
+    #  0.170556992 & 0.829443014 & 0 \\
+    #  0.170556991 & 0.829443008 & 0 \\
+    # -0.004517144 & 0.004517144 & 1
+    # \end{matrix}
+    ble/contrib/colorglass/blindness/.sRGB-to-lRGB
+    local v1=$(((R*11178+G*54358)/_ble_fixed_unit))
+    local v2=$(((-R*295+G*296)/_ble_fixed_unit+B))
+    ((R=v1,G=v1,B=v2))
+    ble/contrib/colorglass/blindness/.lRGB-to-sRGB ;;
+  (deuteranopia)
+    # \begin{matrix}
+    #  0.33066007 & 0.66933993 & 0 \\
+    #  0.33066007 & 0.66933993 & 0 \\
+    # -0.02785538 & 0.02785538 & 1
+    # \end{matrix}
+    ble/contrib/colorglass/blindness/.sRGB-to-lRGB
+    local v1=$(((R*21670+G*43866)/_ble_fixed_unit))
+    local v2=$(((-R*1825+G*1826)/_ble_fixed_unit+B))
+    ((R=v1,G=v1,B=v2))
+    ble/contrib/colorglass/blindness/.lRGB-to-sRGB ;;
+  (tritanopia)
+    # \begin{matrix}
+    #  1 & 0.1273989 & -0.1273989 \\
+    #  0 & 0.8739093 &  0.1260907 \\
+    #  0 & 0.8739093 &  0.1260907
+    # \end{matrix}
+    ble/contrib/colorglass/blindness/.sRGB-to-lRGB
+    local v1=$(((G*8349-B*8348)/_ble_fixed_unit+R))
+    local v2=$(((G*57273+B*8263)/_ble_fixed_unit))
+    ((R=v1,G=v2,B=v2))
+    ble/contrib/colorglass/blindness/.lRGB-to-sRGB ;;
+  (achromatopsia)
+    # \begin{matrix}
+    #  0.2126 & 0.7152 & 0.0722 \\
+    #  0.2126 & 0.7152 & 0.0722 \\
+    #  0.2126 & 0.7152 & 0.0722
+    # \end{matrix}
+    ble/contrib/colorglass/blindness/.sRGB-to-lRGB
+    local v1=$(((R*13933+G*46871+B*4732)/_ble_fixed_unit))
+    ((R=v1,G=v1,B=v1))
+    ble/contrib/colorglass/blindness/.lRGB-to-sRGB ;;
+  esac
+}
+
+#------------------------------------------------------------------------------
+
+_ble_contrib_colorglass_base16_palette=()
+
+function ble/contrib/colorglass/extract-base16-palette-from-iTerm2-Color-Schemes {
+  # This function is expected to be run in the working tree of
+  # git@github.com:mbadolato/iTerm2-Color-Schemes.git.
+  awk '
+    sub(/ColorPalette=/, "") {
+      gsub(/#/, "0x");
+      gsub(/;/, " ");
+      theme = FILENAME;
+      gsub(/^.*\/|[[:space:]]|\.theme$/, "", theme);
+      # printf("  %-24s ret=(%s) ;;\n", "(" theme ")", $0);
+      printf("%-32s %s\n", theme, $0);
+    }' xfce4terminal/*.theme
+}
+
+bleopt/declare -v colorglass_base16_palette ''
+function bleopt/check:colorglass_base16_palette {
+  if [[ ! $value ]]; then
+    _ble_contrib_colorglass_base16_palette=()
+  else
+    local file=${BASH_SOURCE[0]%.*}.base16.dat
+    if [[ ! -s $file ]]; then
+      ble/util/print "bleopt colorglass_base16_palette: database '$file' not found." >&2
+      return 1
+    fi
+
+    local -a colors
+    local -x key=$value
+    ble/util/assign-words colors 'ble/bin/awk '\''BEGIN { key = ENVIRON["key"]; } $0 !~ /^[[:space:]]*#/ && $1 == key { $1 = ""; print; }'\'' "$file"'
+    if ((${#colors[@]}==0)); then
+      ble/util/print "bleopt colorglass_base16_palette: invalid palette '$value'." >&2
+      return 1
+    fi
+
+    _ble_contrib_colorglass_base16_palette=("${colors[@]}")
+  fi
+  ble/color/g2sgr/.clear-cache
+  return 0
+}
+
 ## @fn ble/contrib/colorglass.filter
 ##   @var[ref] ccode
 function ble/contrib/colorglass.filter {
   # 24bit color
   local R= G= B= dirty=
   if ((ccode<16)); then
-    if ((ccode==7)); then
+    local hex=${_ble_contrib_colorglass_base16_palette[ccode]-}
+    if [[ $hex ]]; then
+      ((hex=hex,R=0xFF&hex>>16,G=0xFF&hex>>8,B=0xFF&hex,dirty=1))
+    elif ((ccode==7)); then
       ((R=G=B=0xAA))
     elif ((ccode==8)); then
       ((R=G=B=0x55))
@@ -234,10 +425,17 @@ function ble/contrib/colorglass.filter {
     ble/contrib/colorglass/.gamma "$B"; B=$ret
   fi
 
+  if [[ $bleopt_colorglass_blindness != none ]]; then
+    dirty=1
+    ble/contrib/colorglass/blindness/simulate "$bleopt_colorglass_blindness"
+  fi
+
   ((dirty)) && ((ccode=0x1000000|R<<16|G<<8|B))
   return 0
 }
 _ble_color_color2sgr_filter=ble/contrib/colorglass.filter
+
+#------------------------------------------------------------------------------
 
 _ble_fixed_unit=0x10000
 _ble_fixed_e=$((0x2b7e1))
@@ -265,6 +463,16 @@ function ble/fixed-point#mul {
     ret=$1; shift
     local a
     for a; do ((ret=ret*a/_ble_fixed_unit)); done
+  else
+    ret=$_ble_fixed_unit
+  fi
+}
+
+function ble/fixed-point#div {
+  if (($#)); then
+    ret=$1; shift
+    local a
+    for a; do ((ret=ret*_ble_fixed_unit/a)); done
   else
     ret=$_ble_fixed_unit
   fi

@@ -82,3 +82,28 @@ This option specifies the background color used by the color synthesis by
 # defualt
 bleopt colorglass_color=0x8888FF
 ```
+
+### Bleopt `colorglass_base16_palette` (Empty/Enumerate)
+
+This option specifies a color scheme of `base16` colors (index colors 0..15).
+When this option is set to a (non-empty) palette name, index colors 0..15 in
+the output of `ble.sh` will be replaced by the corresponding 24-bit colors in
+the palette.  See [List of base16 palettes](https://akinomyoga.github.io/ble.sh/colorglass.base16.html)
+or [`colorglass.base16.dat`](https://github.com/akinomyoga/blesh-contrib/blob/master/colorglass.base16.dat)
+for the list of available palettes.
+
+```bash
+# defualt
+bleopt colorglass_base16_palette=
+```
+
+### Bleopt `colorglass_blindness` (Empty/Enumerate)
+
+When this option is set to a non-empty value, the colors under color blindness
+are simulated.  Three values `protanopia`, `deuteranopia`, `tritanopia`, and
+`achromatopsia` are supported.
+
+```bash
+# default
+bleopt colorglass_blindness=
+```

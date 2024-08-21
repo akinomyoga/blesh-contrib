@@ -3,13 +3,16 @@
 contrib-subdirs := airline config integration layer scheme
 contrib-outdirs := $(OUTDIR)/contrib $(contrib-subdirs:%=$(OUTDIR)/contrib/%)
 contrib-srcfiles := $(wildcard contrib/*.bash $(contrib-subdirs:%=contrib/%/*.bash))
+contrib-datfiles := $(wildcard contrib/*.dat $(contrib-subdirs:%=contrib/%/*.dat))
 contrib-docfiles := $(wildcard contrib/*.md $(contrib-subdirs:%=contrib/%/*.md))
-contrib-outfiles := $(contrib-srcfiles:contrib/%=$(OUTDIR)/contrib/%)
+contrib-outfiles := $(contrib-srcfiles:contrib/%=$(OUTDIR)/contrib/%) $(contrib-datfiles:contrib/%=$(OUTDIR)/contrib/%)
 
 # files
 outdirs += $(contrib-outdirs)
 outfiles += $(contrib-outfiles)
 $(OUTDIR)/contrib/%.bash: contrib/%.bash | $(contrib-outdirs)
+	$(CP) $< $@
+$(OUTDIR)/contrib/%.dat: contrib/%.dat | $(contrib-outdirs)
 	$(CP) $< $@
 
 define LinkOldIntegration
