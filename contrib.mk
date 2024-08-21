@@ -3,6 +3,7 @@
 contrib-subdirs := airline config integration layer
 contrib-outdirs := $(OUTDIR)/contrib $(contrib-subdirs:%=$(OUTDIR)/contrib/%)
 contrib-srcfiles := $(wildcard contrib/*.bash $(contrib-subdirs:%=contrib/%/*.bash))
+contrib-docfiles := $(wildcard contrib/*.md $(contrib-subdirs:%=contrib/%/*.md))
 contrib-outfiles := $(contrib-srcfiles:contrib/%=$(OUTDIR)/contrib/%)
 
 # files
@@ -23,9 +24,8 @@ $(eval $(call LinkOldIntegration,fzf-initialize))
 $(eval $(call LinkOldIntegration,fzf-key-bindings))
 
 # docs
-outdirs += $(OUTDIR)/doc/contrib
-outfiles-doc += $(OUTDIR)/doc/contrib/README-ja.md
-outfiles-doc += $(OUTDIR)/doc/contrib/README.md
+outdirs += $(OUTDIR)/doc/contrib $(OUTDIR)/doc/contrib/integration
+outfiles-doc += $(contrib-docfiles:contrib/%=$(OUTDIR)/doc/contrib/%)
 outfiles-license += $(OUTDIR)/doc/contrib/LICENSE
 
 # Note (workaround for make-3.81): 当初 $(OUTDIR)/doc/contrib/% に対してルール
@@ -33,5 +33,5 @@ outfiles-license += $(OUTDIR)/doc/contrib/LICENSE
 # ので LICENSE と %.md の二つの規則に分けて書く事にする。
 $(OUTDIR)/doc/contrib/LICENSE: contrib/LICENSE | $(OUTDIR)/doc/contrib
 	$(CP) $< $@
-$(OUTDIR)/doc/contrib/%.md: contrib/%.md | $(OUTDIR)/doc/contrib
-	$(CP) $< $@
+$(OUTDIR)/doc/contrib/%.md: contrib/%.md | $(OUTDIR)/doc/contrib $(OUTDIR)/doc/contrib/integration
+	bash make_command.sh install $< $@
