@@ -45,7 +45,7 @@ function ble/contrib/integration:fzf-menu/SELECTOR {
     formatter=$formatter' | column -ts "$sep" -o "$sep" -c unlimited'
   ble/array#push fzf_options -d "$sep" --with-nth=2.. --nth=1
 
-  builtin eval -- "$formatter" | fzf "${fzf_options[@]}" | cut -d ' ' -f 1
+  builtin eval -- "$formatter" | fzf "${fzf_options[@]}" | cut -d "$sep" -f 1
 }
 
 function ble/contrib/integration:fzf-menu/.get-common-prefix {
@@ -55,7 +55,7 @@ function ble/contrib/integration:fzf-menu/.get-common-prefix {
   common_prefix=$ret
 }
 
-function ble/contrib/inetgration:fzf-menu/.select-and-insert {
+function ble/contrib/integration:fzf-menu/.select-and-insert {
   if ((cand_count>1)); then
     local common_prefix=
     ble/contrib/integration:fzf-menu/.get-common-prefix "${cand_cand[@]}"
@@ -66,7 +66,7 @@ function ble/contrib/inetgration:fzf-menu/.select-and-insert {
     ble/color/face2sgr menu_desc_type; local desc_sgrt=$ret
 
     # Create a list of "<index>^\<word>^\- <desc>" where ^\ represents the ANSI
-    # control characeter FS (U+001C).
+    # control character FS (U+001C).
     local sep=$_ble_term_FS
     local -a list=()
     local i
@@ -76,13 +76,16 @@ function ble/contrib/inetgration:fzf-menu/.select-and-insert {
       ble/complete/cand/unpack "${cand_pack[i]}"
 
       local g=0 prefix= suffix= desc=
-      ble/function#try ble/complete/action:"$ACTION"/init-menu-item &&
-        ble/function#try ble/complete/action:"$ACTION"/get-desc
+      ble/function#try ble/complete/action:"$ACTION"/init-menu-item
+      (($?==148)) && return 148
+      ble/function#try ble/complete/action:"$ACTION"/get-desc
       (($?==148)) && return 148
 
-      local cand=${CAND//"$sep"/'^\'}
       ble/color/g2sgr "$g"; local sgr=$ret
-      ble/array#push list "$i$sep$prefix$sgr$cand$_ble_term_sgr0$suffix$sep - $desc"
+      local item=$prefix$sgr$CAND$_ble_term_sgr0$suffix
+      item=${item//"$sep"/'^\'}
+      desc=${desc//"$sep"/'^\'}
+      ble/array#push list "$i$sep$item$_ble_term_sgr0$sep - $desc$_ble_term_sgr0"
     done
 
     ble/term/leave-for-widget
@@ -106,7 +109,7 @@ function ble/contrib/inetgration:fzf-menu/.select-and-insert {
   return 148
 }
 
-ble-import -C 'ble/function#push ble/complete/menu/show "ble/contrib/inetgration:fzf-menu/.select-and-insert"' core-complete
+ble-import -C 'ble/function#push ble/complete/menu/show "ble/contrib/integration:fzf-menu/.select-and-insert"' core-complete
 
 # function ble/contrib/integration:fzf-menu/complete.after {
 #   [[ $_ble_complete_menu_active ]] || return 0
@@ -116,6 +119,6 @@ ble-import -C 'ble/function#push ble/complete/menu/show "ble/contrib/inetgration
 #   ble/complete/candidates/clear
 #   ble/complete/menu/generate-candidates-from-menu
 #   ble/complete/menu/clear
-#   ble/contrib/inetgration:fzf-menu/.select-and-insert
+#   ble/contrib/integration:fzf-menu/.select-and-insert
 # }
 # ble-import -C 'ble/function#advice after ble/widget/complete "ble/contrib/integration:fzf-menu/compelte.after"' core-complete
