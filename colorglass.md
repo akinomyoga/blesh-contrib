@@ -97,13 +97,13 @@ for the list of available palettes.
 bleopt colorglass_base16_palette=
 ```
 
-### Bleopt `colorglass_blindness` (Empty/Enumerate)
+### Bleopt `colorglass_blindness` (Enumerate)
 
 When this option is set to a non-empty value, the colors under color blindness
-are simulated.  Three values `protanopia`, `deuteranopia`, `tritanopia`, and
-`achromatopsia` are supported.
+are simulated.  Five values `none`, `protanopia`, `deuteranopia`, `tritanopia`,
+and `achromatopsia` are supported.
 
 ```bash
 # default
-bleopt colorglass_blindness=
+bleopt colorglass_blindness=none
 ```

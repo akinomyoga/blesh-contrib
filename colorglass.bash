@@ -97,7 +97,7 @@ function ble/contrib/colorglass/.contrast {
 bleopt/declare -n colorglass_blindness none
 function bleopt/check:colorglass_blindness {
   case $value in
-  (protanopia|deuteranopia|tritanopia|achromatopsia)
+  (protanopia|deuteranopia|tritanopia|achromatopsia|none)
     ble/color/g2sgr/.clear-cache
     return 0 ;;
   (*)
