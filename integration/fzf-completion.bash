@@ -72,6 +72,8 @@ function ble/widget/fzf-complete {
     return 1
   fi
 
+  ((_ble_edit_ind==0)) && return 0
+
   # If the width of the box-drawing characters in the current terminal is not
   # 1, we specify --no-unicode to fzf to suppress the use of the box-drawing
   # characters.
@@ -91,7 +93,18 @@ function ble/widget/fzf-complete {
   local completion_save
   ble/util/assign completion_save 'complete -p'
   complete -r
-  complete -F _fzf_path_completion -D
+  if ((_ble_bash>=40100)); then
+    complete -F "$handler" -D
+    complete -F "$handler" -E
+  else
+    complete -F "$handler" _DefaultCmD_
+    complete -F "$handler" _EmptycmD_
+  fi
+  if ((_ble_bash>=50000)); then
+    complete -F "$handler" -I
+  else
+    complete -F "$handler" _InitialWorD_
+  fi
 
   # Disable completion auto-loader
   ble/function#push _comp_load 'return 1'

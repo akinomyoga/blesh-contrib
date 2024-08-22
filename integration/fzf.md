@@ -127,6 +127,24 @@ else
 fi
 ```
 
+## :pencil: `integration/fzf-completion`
+
+The module `integration/fzf-completion` mentioned above also provides a widget.
+
+### Widget `fzf-complete`
+
+This widget performs fzf's completion normally triggered by the key `**`.
+
+```
+widget: fzf-complete [type]
+
+  @param[in,opt] type
+    This specifies the type of the completion.  The shell function
+    "_fzf_${type}_completion" is used to perform the '**' completion.  The
+    values available by default are "path", "file", "dir", "proc", "host",
+    "var", and "alias".
+```
+
 ## :pencil: `integration/fzf-git`
 
 If you want to use
@@ -164,3 +182,14 @@ The value `key-binding` enables the key bindings of the form <kbd>C-g C-f</kbd>,
 The value `sabbrev` enables the sabbrev expansion for the words `gf`, `gb`, `gt`, `gh`, `gr`, and `gs`.
 The value `arpeggio` enables the simultaneous key combinations of <kbd>g f</kbd>, <kbd>g b</kbd>, <kbd>g t</kbd>, <kbd>g h</kbd>, <kbd>g r</kbd>, and <kbd>g s</kbd>.
 The value `old-functions` enables old function names: `is_in_git_repo`, `fzf-down`, `gh`, `gb`, `gt`, `gh`, `gr`, and `gs`.
+
+## :pencil: `integration/fzf-menu`
+
+This module configures so that when the menu completion is started, fzf is
+started instead of `menu-complete` built in `ble.sh`.
+
+```bash
+# blerc
+
+ble-import -d integration/fzf-menu
+```
