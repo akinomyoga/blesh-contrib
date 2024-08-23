@@ -28,8 +28,10 @@ $(eval $(call LinkOldIntegration,fzf-key-bindings))
 
 # docs
 outdirs += $(OUTDIR)/doc/contrib $(OUTDIR)/doc/contrib/integration
-outfiles-doc += $(contrib-docfiles:contrib/%=$(OUTDIR)/doc/contrib/%)
 outfiles-license += $(OUTDIR)/doc/contrib/LICENSE
+ifneq ($(USE_DOC),no)
+  outfiles-doc += $(contrib-docfiles:contrib/%=$(OUTDIR)/doc/contrib/%)
+endif
 
 # Note (workaround for make-3.81): 当初 $(OUTDIR)/doc/contrib/% に対してルール
 # を記述していたが make-3.81 に於いて正しく適用されない事が分かった。仕方がない
