@@ -131,9 +131,9 @@ function ble/syntax-highlight/append {
 function ble/syntax-highlight+region {
   if [[ $_ble_edit_mark_active ]]; then
     if ((_ble_edit_mark>_ble_edit_ind)); then
-      ble/syntax-highlight/append "$_ble_edit_ind $_ble_edit_mark bg=60,fg=white"
+      ble/syntax-highlight/append "$_ble_edit_ind $_ble_edit_mark bg=60,fg=231"
     elif ((_ble_edit_mark<_ble_edit_ind)); then
-      ble/syntax-highlight/append "$_ble_edit_mark $_ble_edit_ind bg=60,fg=white"
+      ble/syntax-highlight/append "$_ble_edit_mark $_ble_edit_ind bg=60,fg=231"
     fi
   fi
 }
