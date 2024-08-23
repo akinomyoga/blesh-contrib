@@ -20,11 +20,11 @@ function ble/lib/vim-airline/theme:apprentice/initialize {
   ble-face -s vim_airline_b_inactive                   fg=240,bg=235 # fg=#585858,bg=#262626
   ble-face -s vim_airline_c                            fg=250,bg=235 # fg=#bcbcbc,bg=#262626
   ble-face -s vim_airline_c_inactive                   fg=240,bg=235 # fg=#585858,bg=#262626
-  ble-face -s vim_airline_c_inactive_modified          fg=208,bg=0   # fg=#ff8700,bg=0
-  ble-face -s vim_airline_c_insert_modified            fg=208,bg=0   # fg=#ff8700,bg=0
-  ble-face -s vim_airline_c_normal_modified            fg=208,bg=0   # fg=#ff8700,bg=0
-  ble-face -s vim_airline_c_replace_modified           fg=208,bg=0   # fg=#ff8700,bg=0
-  ble-face -s vim_airline_c_visual_modified            fg=208,bg=0   # fg=#ff8700,bg=0
+  ble-face -s vim_airline_c_inactive_modified          fg=208,bg=16  # fg=#ff8700,bg=#000000
+  ble-face -s vim_airline_c_insert_modified            fg=208,bg=16  # fg=#ff8700,bg=#000000
+  ble-face -s vim_airline_c_normal_modified            fg=208,bg=16  # fg=#ff8700,bg=#000000
+  ble-face -s vim_airline_c_replace_modified           fg=208,bg=16  # fg=#ff8700,bg=#000000
+  ble-face -s vim_airline_c_visual_modified            fg=208,bg=16  # fg=#ff8700,bg=#000000
   ble-face -s vim_airline_error                        fg=235,bg=131 # fg=#262626,bg=#af5f5f
   ble-face -s vim_airline_error_inactive               fg=16,bg=88   # fg=#000000,bg=#990000
   ble-face -s vim_airline_error_inactive_modified      fg=235,bg=131 # fg=#262626,bg=#af5f5f

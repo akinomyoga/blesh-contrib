@@ -18,7 +18,7 @@ function ble/lib/vim-airline/theme:raven/initialize {
   ble-face -s vim_airline_b_visual                     fg=63,bg=236  # fg=#6565ff,bg=#2e2e2e
   ble-face -s vim_airline_c                            fg=251,bg=236 # fg=#c8c8c8,bg=#2e2e2e
   ble-face -s vim_airline_c_inactive                   fg=61,bg=235  # fg=#5e5e5e,bg=#222222
-  ble-face -s vim_airline_c_inactive_modified          fg=166,bg=0   # fg=#e25000,bg=0
+  ble-face -s vim_airline_c_inactive_modified          fg=166,bg=16  # fg=#e25000,bg=#000000
   ble-face -s vim_airline_c_insert                     fg=36,bg=236  # fg=#11c279,bg=#2e2e2e
   ble-face -s vim_airline_c_insert_modified            fg=166,bg=236 # fg=#e25000,bg=#2e2e2e
   ble-face -s vim_airline_c_normal_modified            fg=166,bg=236 # fg=#e25000,bg=#2e2e2e

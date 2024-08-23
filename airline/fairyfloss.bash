@@ -17,11 +17,11 @@ function ble/lib/vim-airline/theme:fairyfloss/initialize {
   ble-face -s vim_airline_b_inactive                   fg=103,bg=237 # fg=#8076aa,bg=#3b3a32
   ble-face -s vim_airline_c                            fg=237,bg=141 # fg=#3b3a32,bg=#ae81ff
   ble-face -s vim_airline_c_inactive                   fg=103,bg=237 # fg=#8076aa,bg=#3b3a32
-  ble-face -s vim_airline_c_inactive_modified          fg=218,bg=0   # fg=#ffb8d1,bg=0
+  ble-face -s vim_airline_c_inactive_modified          fg=218,bg=16  # fg=#ffb8d1,bg=#000000
   ble-face -s vim_airline_c_insert                     fg=255,bg=238 # fg=#f8f8f0,bg=#49483e
-  ble-face -s vim_airline_c_insert_modified            fg=218,bg=0   # fg=#ffb8d1,bg=0
-  ble-face -s vim_airline_c_normal_modified            fg=218,bg=0   # fg=#ffb8d1,bg=0
-  ble-face -s vim_airline_c_replace_modified           fg=218,bg=0   # fg=#ffb8d1,bg=0
+  ble-face -s vim_airline_c_insert_modified            fg=218,bg=16  # fg=#ffb8d1,bg=#000000
+  ble-face -s vim_airline_c_normal_modified            fg=218,bg=16  # fg=#ffb8d1,bg=#000000
+  ble-face -s vim_airline_c_replace_modified           fg=218,bg=16  # fg=#ffb8d1,bg=#000000
   ble-face -s vim_airline_c_visual                     fg=255,bg=238 # fg=#f8f8f0,bg=#49483e
-  ble-face -s vim_airline_c_visual_modified            fg=218,bg=0   # fg=#ffb8d1,bg=0
+  ble-face -s vim_airline_c_visual_modified            fg=218,bg=16  # fg=#ffb8d1,bg=#000000
 }

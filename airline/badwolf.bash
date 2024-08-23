@@ -19,7 +19,7 @@ function ble/lib/vim-airline/theme:badwolf/initialize {
   ble-face -s vim_airline_b_visual                     fg=16,bg=221  # fg=#000000,bg=#fade3e
   ble-face -s vim_airline_c                            fg=121,bg=235 # fg=#8cffba,bg=#242321
   ble-face -s vim_airline_c_inactive                   fg=235,bg=238 # fg=#242321,bg=#45413b
-  ble-face -s vim_airline_c_inactive_modified          fg=214,bg=0   # fg=#ffa724,bg=0
+  ble-face -s vim_airline_c_inactive_modified          fg=214,bg=16  # fg=#ffa724,bg=#000000
   ble-face -s vim_airline_c_insert                     fg=39,bg=235  # fg=#0a9dff,bg=#242321
   ble-face -s vim_airline_c_insert_modified            fg=214,bg=238 # fg=#ffa724,bg=#45413b
   ble-face -s vim_airline_c_normal_modified            fg=214,bg=238 # fg=#ffa724,bg=#45413b

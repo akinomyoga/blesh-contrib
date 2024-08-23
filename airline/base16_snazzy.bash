@@ -25,7 +25,7 @@ function ble/lib/vim-airline/theme:base16_snazzy/initialize {
   ble-face -s vim_airline_b_visual                     fg=229,bg=17  # fg=#f3f99d,bg=#282a36
   ble-face -s vim_airline_c                            fg=81,bg=17   # fg=#57c7ff,bg=#282a36
   ble-face -s vim_airline_c_inactive                   fg=244,bg=17  # fg=244,bg=#282a36
-  ble-face -s vim_airline_c_inactive_modified          fg=81,bg=0    # fg=#57c7ff,bg=0
+  ble-face -s vim_airline_c_inactive_modified          fg=81,bg=16   # fg=#57c7ff,bg=#000000
   ble-face -s vim_airline_c_insert                     fg=84,bg=17   # fg=#5af78e,bg=#282a36
   ble-face -s vim_airline_c_replace                    fg=203,bg=17  # fg=#ff5c57,bg=#282a36
   ble-face -s vim_airline_c_visual                     fg=229,bg=17  # fg=#f3f99d,bg=#282a36

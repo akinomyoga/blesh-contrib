@@ -23,7 +23,7 @@ function ble/lib/vim-airline/theme:kalisi/initialize {
   ble-face -s vim_airline_b_replace                    fg=53,bg=171  # fg=#5f005f,bg=#d75fff
   ble-face -s vim_airline_b_visual                     fg=25,bg=75   # fg=#005faf,bg=#5fafff
   ble-face -s vim_airline_c                            fg=-1,bg=-1   # fg=-1,bg=-1
-  ble-face -s vim_airline_c_inactive_modified          fg=190,bg=-1  # fg=#d7ff00,bg=-1
+  ble-face -s vim_airline_c_inactive_modified          fg=190,bg=16  # fg=#d7ff00,bg=#000000
   ble-face -s vim_airline_c_replace                    fg=213,bg=91  # fg=#ff87ff,bg=#8700af
   ble-face -s vim_airline_c_visual                     fg=117,bg=25  # fg=#87d7ff,bg=#005faf
 }

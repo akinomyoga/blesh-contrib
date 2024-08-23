@@ -33,7 +33,7 @@ function ble/lib/vim-airline/theme:ubaryd/initialize {
   ble-face -s vim_airline_b_visual_modified            fg=94,bg=235  # fg=#9a4820,bg=#242321
   ble-face -s vim_airline_c                            fg=137,bg=235 # fg=#b88853,bg=#242321
   ble-face -s vim_airline_c_inactive                   fg=22,bg=235  # fg=#005f00,bg=#242321
-  ble-face -s vim_airline_c_inactive_modified          fg=22,bg=0    # fg=#005f00,bg=0
+  ble-face -s vim_airline_c_inactive_modified          fg=22,bg=231  # fg=#005f00,bg=#ffffff
   ble-face -s vim_airline_c_insert                     fg=222,bg=235 # fg=#f4cf86,bg=#242321
   ble-face -s vim_airline_c_normal_modified            fg=22,bg=235  # fg=#005f00,bg=#242321
   ble-face -s vim_airline_c_replace                    fg=255,bg=208 # fg=#f8f6f2,bg=#ff7400

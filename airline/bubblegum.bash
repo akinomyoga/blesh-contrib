@@ -17,7 +17,7 @@ function ble/lib/vim-airline/theme:bubblegum/initialize {
   ble-face -s vim_airline_b_inactive                   fg=249,bg=238 # fg=#b2b2b2,bg=#444444
   ble-face -s vim_airline_c                            fg=150,bg=238 # fg=#afd787,bg=#444444
   ble-face -s vim_airline_c_inactive                   fg=249,bg=238 # fg=#b2b2b2,bg=#444444
-  ble-face -s vim_airline_c_inactive_modified          fg=179,bg=0   # fg=#d7af5f,bg=0
+  ble-face -s vim_airline_c_inactive_modified          fg=179,bg=16  # fg=#d7af5f,bg=#000000
   ble-face -s vim_airline_c_insert                     fg=110,bg=238 # fg=#87afd7,bg=#444444
   ble-face -s vim_airline_c_insert_modified            fg=179,bg=238 # fg=#d7af5f,bg=#444444
   ble-face -s vim_airline_c_normal_modified            fg=179,bg=238 # fg=#d7af5f,bg=#444444

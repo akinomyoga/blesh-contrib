@@ -15,14 +15,14 @@ function ble/lib/vim-airline/theme:deus/initialize {
   ble-face -s vim_airline_b                            fg=249,bg=238 # fg=#abb2bf,bg=#3e4452
   ble-face -s vim_airline_c                            fg=114,bg=17  # fg=#98c379,bg=#282c34
   ble-face -s vim_airline_c_inactive                   fg=249,bg=238 # fg=#abb2bf,bg=#3e4452
-  ble-face -s vim_airline_c_inactive_modified          fg=-1,bg=0    # fg=-1,bg=0
+  ble-face -s vim_airline_c_inactive_modified          fg=-1,bg=-1   # fg=-1,bg=-1
   ble-face -s vim_airline_c_insert                     fg=75,bg=17   # fg=#61afef,bg=#282c34
-  ble-face -s vim_airline_c_insert_modified            fg=-1,bg=0    # fg=-1,bg=0
-  ble-face -s vim_airline_c_normal_modified            fg=-1,bg=0    # fg=-1,bg=0
+  ble-face -s vim_airline_c_insert_modified            fg=-1,bg=-1   # fg=-1,bg=-1
+  ble-face -s vim_airline_c_normal_modified            fg=-1,bg=-1   # fg=-1,bg=-1
   ble-face -s vim_airline_c_replace                    fg=168,bg=17  # fg=#e06c75,bg=#282c34
-  ble-face -s vim_airline_c_replace_modified           fg=-1,bg=0    # fg=-1,bg=0
+  ble-face -s vim_airline_c_replace_modified           fg=-1,bg=-1   # fg=-1,bg=-1
   ble-face -s vim_airline_c_visual                     fg=176,bg=17  # fg=#c678dd,bg=#282c34
-  ble-face -s vim_airline_c_visual_modified            fg=-1,bg=0    # fg=-1,bg=0
+  ble-face -s vim_airline_c_visual_modified            fg=-1,bg=-1   # fg=-1,bg=-1
   ble-face -s vim_airline_error                        fg=17,bg=168  # fg=#282c34,bg=#e06c75
   ble-face -s vim_airline_error_inactive               fg=16,bg=88   # fg=#000000,bg=#990000
   ble-face -s vim_airline_warning                      fg=17,bg=180  # fg=#282c34,bg=#e5c07b

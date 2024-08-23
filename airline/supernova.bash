@@ -14,7 +14,7 @@ function ble/lib/vim-airline/theme:supernova/initialize {
   ble-face -s vim_airline_a_visual                     fg=235,bg=32  # fg=#262626,bg=#0087d7
   ble-face -s vim_airline_b                            fg=252,bg=240 # fg=#d0d0d0,bg=#585858
   ble-face -s vim_airline_b_inactive                   fg=252,bg=238 # fg=#d0d0d0,bg=#444444
-  ble-face -s vim_airline_b_visual                     fg=0,bg=240   # fg=0,bg=#585858
+  ble-face -s vim_airline_b_visual                     fg=231,bg=240 # fg=#ffffff,bg=#585858
   ble-face -s vim_airline_c                            fg=248,bg=235 # fg=#a8a8a8,bg=#262626
   ble-face -s vim_airline_c_inactive                   fg=252,bg=240 # fg=#d0d0d0,bg=#585858
   ble-face -s vim_airline_c_inactive_modified          fg=255,bg=238 # fg=#eeeeee,bg=#444444

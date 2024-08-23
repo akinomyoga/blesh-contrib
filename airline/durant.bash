@@ -18,7 +18,7 @@ function ble/lib/vim-airline/theme:durant/initialize {
   ble-face -s vim_airline_b_visual                     fg=231,bg=238 # fg=#ffffff,bg=#44403a
   ble-face -s vim_airline_c                            fg=109,bg=23  # fg=#93a1a1,bg=#073642
   ble-face -s vim_airline_c_inactive                   fg=239,bg=236 # fg=#4e4e4e,bg=#303030
-  ble-face -s vim_airline_c_inactive_modified          fg=97,bg=0    # fg=#875faf,bg=0
+  ble-face -s vim_airline_c_inactive_modified          fg=97,bg=231  # fg=#875faf,bg=#ffffff
   ble-face -s vim_airline_c_insert                     fg=117,bg=24  # fg=#87d7ff,bg=#005f87
   ble-face -s vim_airline_c_insert_modified            fg=231,bg=53  # fg=#ffffff,bg=#5f005f
   ble-face -s vim_airline_c_replace_modified           fg=231,bg=53  # fg=#ffffff,bg=#5f005f

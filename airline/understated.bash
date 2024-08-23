@@ -16,7 +16,7 @@ function ble/lib/vim-airline/theme:understated/initialize {
   ble-face -s vim_airline_b_inactive                   fg=239,bg=234 # fg=#4e4e4e,bg=#1c1c1c
   ble-face -s vim_airline_c                            fg=144,bg=62  # fg=#afaf87,bg=#5f5f5f
   ble-face -s vim_airline_c_inactive                   fg=239,bg=234 # fg=#4e4e4e,bg=#1c1c1c
-  ble-face -s vim_airline_c_inactive_modified          fg=239,bg=0   # fg=#4e4e4e,bg=0
+  ble-face -s vim_airline_c_inactive_modified          fg=239,bg=231 # fg=#4e4e4e,bg=#ffffff
   ble-face -s vim_airline_c_normal_modified            fg=231,bg=53  # fg=#ffffff,bg=#5f005f
   ble-face -s vim_airline_c_visual_modified            fg=144,bg=53  # fg=#afaf87,bg=#5f005f
   ble-face -s vim_airline_z_replace                    fg=231,bg=107 # fg=#ffffff,bg=#87af5f

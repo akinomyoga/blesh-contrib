@@ -16,11 +16,11 @@ function ble/lib/vim-airline/theme:jellybeans/initialize {
   ble-face -s vim_airline_b                            fg=231,bg=235 # fg=#ffffff,bg=#262626
   ble-face -s vim_airline_b_inactive                   fg=240,bg=233 # fg=#4f5b66,bg=#151515
   ble-face -s vim_airline_c                            fg=240,bg=233 # fg=#4f5b66,bg=#151515
-  ble-face -s vim_airline_c_inactive_modified          fg=215,bg=0   # fg=#ffb964,bg=0
+  ble-face -s vim_airline_c_inactive_modified          fg=215,bg=16  # fg=#ffb964,bg=#000000
   ble-face -s vim_airline_c_insert                     fg=231,bg=233 # fg=#ffffff,bg=#151515
-  ble-face -s vim_airline_c_insert_modified            fg=215,bg=0   # fg=#ffb964,bg=0
-  ble-face -s vim_airline_c_normal_modified            fg=215,bg=0   # fg=#ffb964,bg=0
-  ble-face -s vim_airline_c_replace_modified           fg=215,bg=0   # fg=#ffb964,bg=0
+  ble-face -s vim_airline_c_insert_modified            fg=215,bg=16  # fg=#ffb964,bg=#000000
+  ble-face -s vim_airline_c_normal_modified            fg=215,bg=16  # fg=#ffb964,bg=#000000
+  ble-face -s vim_airline_c_replace_modified           fg=215,bg=16  # fg=#ffb964,bg=#000000
   ble-face -s vim_airline_c_visual                     fg=231,bg=233 # fg=#ffffff,bg=#151515
-  ble-face -s vim_airline_c_visual_modified            fg=215,bg=0   # fg=#ffb964,bg=0
+  ble-face -s vim_airline_c_visual_modified            fg=215,bg=16  # fg=#ffb964,bg=#000000
 }

@@ -18,7 +18,7 @@ function ble/lib/vim-airline/theme:silver/initialize {
   ble-face -s vim_airline_b_visual                     fg=19,bg=254  # fg=#0000b3,bg=#e1e1e1
   ble-face -s vim_airline_c                            fg=238,bg=254 # fg=#414141,bg=#e1e1e1
   ble-face -s vim_airline_c_inactive                   fg=247,bg=253 # fg=#a1a1a1,bg=#dddddd
-  ble-face -s vim_airline_c_inactive_modified          fg=166,bg=0   # fg=#e25000,bg=0
+  ble-face -s vim_airline_c_inactive_modified          fg=166,bg=16  # fg=#e25000,bg=#000000
   ble-face -s vim_airline_c_insert                     fg=29,bg=254  # fg=#0d935c,bg=#e1e1e1
   ble-face -s vim_airline_c_insert_modified            fg=166,bg=254 # fg=#e25000,bg=#e1e1e1
   ble-face -s vim_airline_c_normal_modified            fg=166,bg=254 # fg=#e25000,bg=#e1e1e1

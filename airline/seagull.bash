@@ -21,7 +21,7 @@ function ble/lib/vim-airline/theme:seagull/initialize {
   ble-face -s vim_airline_b_inactive                   fg=189,bg=244 # fg=#e6eaed,bg=#787e82
   ble-face -s vim_airline_c                            fg=102,bg=189 # fg=#808487,bg=#e6eaed
   ble-face -s vim_airline_c_inactive                   fg=189,bg=244 # fg=#e6eaed,bg=#787e82
-  ble-face -s vim_airline_c_inactive_modified          fg=235,bg=0   # fg=#1d252b,bg=0
+  ble-face -s vim_airline_c_inactive_modified          fg=235,bg=231 # fg=#1d252b,bg=#ffffff
   ble-face -s vim_airline_c_insert_modified            fg=60,bg=189  # fg=#61707a,bg=#e6eaed
   ble-face -s vim_airline_c_normal_modified            fg=60,bg=189  # fg=#61707a,bg=#e6eaed
   ble-face -s vim_airline_c_replace_modified           fg=60,bg=189  # fg=#61707a,bg=#e6eaed

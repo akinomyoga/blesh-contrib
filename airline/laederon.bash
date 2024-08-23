@@ -32,7 +32,7 @@ function ble/lib/vim-airline/theme:laederon/initialize {
   ble-face -s vim_airline_b_visual_modified            fg=58,bg=235  # fg=#594512,bg=#242321
   ble-face -s vim_airline_c                            fg=108,bg=236 # fg=#90a680,bg=#2e2d2a
   ble-face -s vim_airline_c_inactive                   fg=255,bg=236 # fg=#f8f6f2,bg=#2e2d2a
-  ble-face -s vim_airline_c_inactive_modified          fg=18,bg=0    # fg=#081c8c,bg=0
+  ble-face -s vim_airline_c_inactive_modified          fg=18,bg=231  # fg=#081c8c,bg=#ffffff
   ble-face -s vim_airline_c_insert                     fg=31,bg=255  # fg=#1693a5,bg=#f8f6f2
   ble-face -s vim_airline_c_insert_modified            fg=31,bg=236  # fg=#1693a5,bg=#2e2d2a
   ble-face -s vim_airline_c_normal_modified            fg=18,bg=236  # fg=#081c8c,bg=#2e2d2a

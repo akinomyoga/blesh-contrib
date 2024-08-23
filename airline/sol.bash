@@ -20,7 +20,7 @@ function ble/lib/vim-airline/theme:sol/initialize {
   ble-face -s vim_airline_b_visual                     fg=236,bg=248 # fg=#343434,bg=#a3a3a3
   ble-face -s vim_airline_c                            fg=236,bg=251 # fg=#343434,bg=#c7c7c7
   ble-face -s vim_airline_c_inactive                   fg=243,bg=251 # fg=#777777,bg=#c7c7c7
-  ble-face -s vim_airline_c_inactive_modified          fg=203,bg=0   # fg=#ff3535,bg=0
+  ble-face -s vim_airline_c_inactive_modified          fg=203,bg=16  # fg=#ff3535,bg=#000000
   ble-face -s vim_airline_c_insert                     fg=236,bg=149 # fg=#343434,bg=#b0b0b0
   ble-face -s vim_airline_c_insert_modified            fg=236,bg=224 # fg=#343434,bg=#ffdbc7
   ble-face -s vim_airline_c_normal_modified            fg=231,bg=203 # fg=#ffffff,bg=#ff6868

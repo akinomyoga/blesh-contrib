@@ -16,7 +16,7 @@ function ble/lib/vim-airline/theme:solarized/initialize {
   ble-face -s vim_airline_b_inactive                   fg=224,bg=246 # fg=#eee8d5,bg=#839496
   ble-face -s vim_airline_c                            fg=109,bg=224 # fg=#93a1a1,bg=#eee8d5
   ble-face -s vim_airline_c_inactive                   fg=224,bg=246 # fg=#eee8d5,bg=#839496
-  ble-face -s vim_airline_c_inactive_modified          fg=23,bg=0    # fg=#073642,bg=0
+  ble-face -s vim_airline_c_inactive_modified          fg=23,bg=231  # fg=#073642,bg=#ffffff
   ble-face -s vim_airline_c_insert_modified            fg=60,bg=224  # fg=#586e75,bg=#eee8d5
   ble-face -s vim_airline_c_normal_modified            fg=60,bg=224  # fg=#586e75,bg=#eee8d5
   ble-face -s vim_airline_c_replace_modified           fg=60,bg=224  # fg=#586e75,bg=#eee8d5

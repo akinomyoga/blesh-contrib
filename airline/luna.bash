@@ -18,7 +18,7 @@ function ble/lib/vim-airline/theme:luna/initialize {
   ble-face -s vim_airline_b_inactive                   fg=239,bg=234 # fg=#4e4e4e,bg=#002b2b
   ble-face -s vim_airline_c                            fg=231,bg=234 # fg=#ffffff,bg=#002b2b
   ble-face -s vim_airline_c_inactive                   fg=239,bg=234 # fg=#4e4e4e,bg=#002b2b
-  ble-face -s vim_airline_c_inactive_modified          fg=160,bg=0   # fg=#e20000,bg=0
+  ble-face -s vim_airline_c_inactive_modified          fg=160,bg=231 # fg=#e20000,bg=#ffffff
   ble-face -s vim_airline_c_insert_modified            fg=231,bg=23  # fg=#ffffff,bg=#005e5e
   ble-face -s vim_airline_c_normal_modified            fg=231,bg=52  # fg=#ffffff,bg=#450000
   ble-face -s vim_airline_c_replace_modified           fg=231,bg=23  # fg=#ffffff,bg=#005e5e
