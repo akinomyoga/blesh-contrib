@@ -1,6 +1,6 @@
 # blesh/contrib/config/github481-elapsed-mark-without-command.bash (C) 2024, Koichi Murase <myoga.murase@gmail.com>
 
-bleopt/declare -v github481_elapsed_mark=$'\e[94m[ble: elapsed %s (CPU %s%%)]\e[m'
+bleopt/declare -v github481_elapsed_mark $'\e[94m[ble: elapsed %s (CPU %s%%)]\e[m'
 
 function ble/contrib/config:github481/elapsed-mark-without-command.hook {
   ble/exec/time#mark-enabled || return 0

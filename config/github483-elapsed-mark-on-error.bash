@@ -1,6 +1,6 @@
 # blesh/contrib/config/github483-elapsed-mark-on-error.bash (C) 2024, Koichi Murase <myoga.murase@gmail.com>
 
-bleopt/declare -v github483_elapsed_mark=$'\e[94m[ble: elapsed %s (CPU %s%%)]\e[m'
+bleopt/declare -v github483_elapsed_mark $'\e[94m[ble: elapsed %s (CPU %s%%)]\e[m'
 
 function ble/contrib/config:github483/elapsed-mark-on-error.hook {
   ((_ble_edit_exec_lastexit)) || ble/exec/time#mark-enabled || return 0
