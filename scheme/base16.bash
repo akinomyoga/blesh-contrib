@@ -46,7 +46,7 @@ function ble/contrib/scheme:base16/initialize {
   ble-face -s varname_number            'fg=olive'
   ble-face -s varname_readonly          'fg=magenta'
   ble-face -s varname_transform         'fg=teal,bold'
-  ble-face -s varname_unset             'fg=brown'
+  ble-face -s varname_unset             'fg=silver'
   ble-face -s vbell_erase               'bg=silver'
   return 0
 }
