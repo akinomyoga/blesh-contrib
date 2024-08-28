@@ -43,6 +43,7 @@ function ble/contrib/scheme:base16/initialize {
   ble-face -s varname_export            'fg=megenta,bold'
   ble-face -s varname_expr              'fg=blue,bold'
   ble-face -s varname_hash              'fg=green,bold'
+  ble-face -s varname_new               'fg=green'
   ble-face -s varname_number            'fg=olive'
   ble-face -s varname_readonly          'fg=magenta'
   ble-face -s varname_transform         'fg=teal,bold'
