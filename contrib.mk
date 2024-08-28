@@ -26,17 +26,18 @@ $(eval $(call LinkOldIntegration,fzf-git))
 $(eval $(call LinkOldIntegration,fzf-initialize))
 $(eval $(call LinkOldIntegration,fzf-key-bindings))
 
+# licenses
+
+outdirs += $(OUTDIR)/licenses/contrib
+outfiles-license += $(OUTDIR)/licenses/contrib/LICENSE
+$(OUTDIR)/licenses/contrib/LICENSE: contrib/LICENSE | $(OUTDIR)/licenses/contrib
+	$(CP) $< $@
+
 # docs
+
 outdirs += $(OUTDIR)/doc/contrib $(OUTDIR)/doc/contrib/integration
-outfiles-license += $(OUTDIR)/doc/contrib/LICENSE
 ifneq ($(USE_DOC),no)
   outfiles-doc += $(contrib-docfiles:contrib/%=$(OUTDIR)/doc/contrib/%)
 endif
-
-# Note (workaround for make-3.81): 当初 $(OUTDIR)/doc/contrib/% に対してルール
-# を記述していたが make-3.81 に於いて正しく適用されない事が分かった。仕方がない
-# ので LICENSE と %.md の二つの規則に分けて書く事にする。
-$(OUTDIR)/doc/contrib/LICENSE: contrib/LICENSE | $(OUTDIR)/doc/contrib
-	$(CP) $< $@
 $(OUTDIR)/doc/contrib/%.md: contrib/%.md | $(OUTDIR)/doc/contrib $(OUTDIR)/doc/contrib/integration
-	bash make_command.sh install $< $@
+	$(CP) $< $@
