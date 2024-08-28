@@ -239,22 +239,9 @@ function ble/contrib/colorglass/blindness/simulate {
 
 _ble_contrib_colorglass_base16_palette=()
 
-function ble/contrib/colorglass/extract-base16-palette-from-iTerm2-Color-Schemes {
-  # This function is expected to be run in the working tree of
-  # git@github.com:mbadolato/iTerm2-Color-Schemes.git.
-  awk '
-    sub(/ColorPalette=/, "") {
-      gsub(/#/, "0x");
-      gsub(/;/, " ");
-      theme = FILENAME;
-      gsub(/^.*\/|[[:space:]]|\.theme$/, "", theme);
-      # printf("  %-24s ret=(%s) ;;\n", "(" theme ")", $0);
-      printf("%-32s %s\n", theme, $0);
-    }' xfce4terminal/*.theme
-}
-
 bleopt/declare -v colorglass_base16_palette ''
 function bleopt/check:colorglass_base16_palette {
+  value=${value//["$_ble_term_IFS"]}
   if [[ ! $value ]]; then
     _ble_contrib_colorglass_base16_palette=()
   else
