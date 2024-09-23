@@ -19,10 +19,8 @@ fi
 blehook/eval-after-load complete 'builtin unset -f ble/cmdinfo/complete:cd'
 
 # patch fzf functions
-ble/function#advice around __fzf_generic_path_completion _fzf_complete.advice
-ble/function#advice around _fzf_complete                 _fzf_complete.advice
-ble/function#advice around _fzf_complete_kill            _fzf_complete.advice
-function _fzf_complete.advice {
+
+function ble/contrib/integration:fzf-completion/_fzf_complete.advice {
   if [[ ! ${_ble_attached-} ]]; then
     ble/function#push caller 'builtin caller ${1+"$(($1+6))"}'
     ble/function#advice/do
@@ -31,13 +29,18 @@ function _fzf_complete.advice {
   fi
 
   [[ :$comp_type: == *:auto:* || :$comp_type: == *:[maA]:* ]] && return 0
-  compopt -o ble/syntax-raw
+
   if [[ ! ${_ble_contrib_fzf_comp_words_raw-} ]]; then
+    local val_COMP_LINE val_COMP_POINT val_COMP_WORDS val_COMP_CWORD
+    ble/util/save-vars val_ COMP_LINE COMP_POINT COMP_WORDS COMP_CWORD
+
+    compopt -o ble/syntax-raw
     local _ble_contrib_fzf_comp_words_raw=1
     local COMP_WORDS; COMP_WORDS=("${comp_words[@]}")
     local COMP_CWORD=$comp_cword
     local COMP_LINE=$comp_line COMP_POINT=$comp_point
   fi
+
   ble/function#push printf '[[ $1 == "\e[5n" ]] || builtin printf "$@"'
   ble/function#push caller 'builtin caller ${1+"$(($1+6))"}'
   ble/term/leave-for-widget
@@ -60,6 +63,24 @@ function _fzf_complete.advice {
       old_cand_count=0
   fi
 }
+ble/function#advice around __fzf_generic_path_completion ble/contrib/integration:fzf-completion/_fzf_complete.advice
+ble/function#advice around _fzf_complete                 ble/contrib/integration:fzf-completion/_fzf_complete.advice
+ble/function#advice around _fzf_complete_kill            ble/contrib/integration:fzf-completion/_fzf_complete.advice
+
+function ble/contrib/integration:fzf-completion/_fzf_handle_dynamic_completion.advice {
+  if [[ ${_ble_attached-} && ${_ble_contrib_fzf_comp_words_raw-} ]]; then
+    compopt +o ble/syntax-raw
+    local _ble_contrib_fzf_comp_words_raw=
+    local COMP_LINE COMP_POINT COMP_WORDS COMP_CWORD
+    ble/util/restore-vars val_ COMP_LINE COMP_POINT COMP_WORDS COMP_CWORD
+  fi
+
+  ble/function#advice/do
+}
+if ble/is-function _fzf_handle_dynamic_completion; then
+  ble/function#advice around _fzf_handle_dynamic_completion \
+                      ble/contrib/integration:fzf-completion/_fzf_handle_dynamic_completion.advice
+fi
 
 #------------------------------------------------------------------------------
 # Extensions
