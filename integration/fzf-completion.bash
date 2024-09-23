@@ -12,6 +12,8 @@ if ! ble/is-function _fzf_complete; then
     source "$_ble_contrib_fzf_base/shell/completion.bash"
   elif [[ $_ble_contrib_fzf_base == */share/fzf && -f /etc/bash_completion.d/fzf ]]; then
     source /etc/bash_completion.d/fzf
+  elif ((_ble_contrib_fzf_version>=4800)); then
+    eval "$("$_ble_contrib_fzf_path" --bash | sed -n '/### completion/,/### end/p')"
   fi
 fi
 

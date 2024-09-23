@@ -9,6 +9,8 @@ if [[ -f $_ble_contrib_fzf_base/key-bindings.bash ]]; then
   source "$_ble_contrib_fzf_base/key-bindings.bash"
 elif [[ -f $_ble_contrib_fzf_base/shell/key-bindings.bash ]]; then
   source "$_ble_contrib_fzf_base/shell/key-bindings.bash"
+elif ((_ble_contrib_fzf_version>=4800)); then
+  eval "$("$_ble_contrib_fzf_path" --bash | sed -n '/### key-bindings/,/### end/p')"
 fi
 ble/function#pop bind
 
