@@ -1,18 +1,19 @@
-# ble/contrib/integration/fzf-key-bindings.bash (C) 2020-2023, akinomyoga
-
-ble-import contrib/integration/fzf-initialize
+# ble/contrib/integration/fzf-key-bindings.bash (C) 2020-2024, akinomyoga
 
 [[ $- == *i* ]] || return 0
 
-ble/function#push bind :
-if [[ -f $_ble_contrib_fzf_base/key-bindings.bash ]]; then
-  source "$_ble_contrib_fzf_base/key-bindings.bash"
-elif [[ -f $_ble_contrib_fzf_base/shell/key-bindings.bash ]]; then
-  source "$_ble_contrib_fzf_base/shell/key-bindings.bash"
-elif ((_ble_contrib_fzf_version>=4800)); then
-  eval "$("$_ble_contrib_fzf_path" --bash | sed -n '/### key-bindings/,/### end/p')"
+if ! ble/is-function __fzf_history__; then
+  ble-import contrib/integration/fzf-initialize || return 1
+  ble/function#push bind :
+  if [[ -f $_ble_contrib_fzf_base/key-bindings.bash ]]; then
+    source "$_ble_contrib_fzf_base/key-bindings.bash"
+  elif [[ -f $_ble_contrib_fzf_base/shell/key-bindings.bash ]]; then
+    source "$_ble_contrib_fzf_base/shell/key-bindings.bash"
+  elif [[ $_ble_contrib_fzf_base == __eval_fzf_bash__ ]]; then
+    builtin eval -- "$("$_ble_contrib_fzf_path" --bash | sed -n '/### key-bindings/,/### end/p')"
+  fi
+  ble/function#pop bind
 fi
-ble/function#pop bind
 
 function ble/contrib/integration:fzf-key-bindings/is-fzf-above-7c447bbd {
   local def; ble/function#getdef __fzf_history__ 
