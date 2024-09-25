@@ -500,6 +500,8 @@ blehook unload!=ble/histdb/unload.hook
 # auto-complete
 
 function ble/complete/auto-complete/source:histdb-history {
+  [[ $_ble_history_prefix ]] && return 1
+
   local limit=$((bleopt_line_limit_length)) limit_condition=
   if ((limit)); then
     ((limit-=${#_ble_edit_str},limit>0)) || return 1
@@ -523,6 +525,8 @@ function ble/complete/auto-complete/source:histdb-history {
 }
 
 function ble/complete/auto-complete/source:histdb-word {
+  [[ $_ble_history_prefix ]] && return 1
+
   local iN=${#_ble_edit_str}
   ((_ble_edit_ind>0)) || return 1
 
@@ -642,7 +646,7 @@ function ble-histdb {
 function ble/cmdinfo/complete:ble-histdb {
   if ((comp_cword==1)); then
     local ret sub
-    ble/util/assign-array ret 'compgen -A function -- ble/histdb/sub:'
+    ble/util/compgen ret -A function -- 'ble/histdb/sub:'
     ((${#ret[@]})) || return 0
 
     local cands
