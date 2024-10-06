@@ -1247,8 +1247,8 @@ function ble/histdb/graph/palette {
     local ret
     ble/util/strftime -v ret '%m'
     case ${ret#0} in
-    (10) palette=github-halloween ;;
-    (12) palette=github-winter ;;
+    (10) palette=halloween-light ;;
+    (12) palette=winter-light ;;
     (*)  palette=github-light ;;
     esac
   fi
