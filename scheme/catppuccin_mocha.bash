@@ -1,8 +1,11 @@
 # Scheme Inspired by catppuccin mocha
 # https://github.com/catppuccin/catppuccin
+# initial idea/work by @abhijeeth-babu
+# https://github.com/akinomyoga/ble.sh/discussions/411#discussioncomment-10088978
+
 ble-import contrib/scheme/default
 
-function ble/contrib/scheme:catppuccin/initialize {
+function ble/contrib/scheme:catppuccin_mocha/initialize {
   ble/contrib/scheme:default/initialize
 
   ble-face -s argument_error 'bg=#f38ba8,fg=#11111b'            # Red background, Crust foreground for better contrast
