@@ -629,8 +629,8 @@ function ble-histdb {
   if (($#==0)); then
     ble/histdb/sub:query 'select command from command_history;'
     ext=$?
-  elif ble/is-function "ble/histdb/sub:$1"; then
-    "ble/histdb/sub:$@"
+  elif ble/is-function ble/histdb/sub:"$1"; then
+    ble/histdb/sub:"$@"
     ext=$?
   else
     builtin printf 'ble-histdb: unknown command "%s"\n' "$1"
