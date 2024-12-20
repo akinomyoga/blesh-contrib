@@ -14,10 +14,10 @@ function ble/syntax:edit.named-command/initialize-vars { return 0; }
 _ble_syntax_context_proc[_ble_ctx_EDIT_NamedCommand]=ble/syntax:edit.named-command/ctx-rlfunc
 
 function ble/syntax:edit.named-command/ctx-rlfunc {
-  if ble/string#match "$tail" $'^[[:space:]]+'; then
+  if ble/string#match "$tail" $'^[[:blank:]]+'; then
     ((_ble_syntax_attr[i]=_ble_ctx_UNSPECIFIED,i+=${#BASH_REMATCH}))
     return 0
-  elif ble/string#match "$tail" $'^[^[:space:]]+'; then
+  elif ble/string#match "$tail" $'^[^[:blank:]]+'; then
     local name=$BASH_REMATCH
 
     # determine the color
@@ -99,7 +99,7 @@ function ble/complete/source:edit.named-command {
 _ble_syntax_completion_context_check_prefix[_ble_ctx_EDIT_NamedCommand]=edit.named-command/rlfunc
 function ble/syntax/completion-context/prefix:edit.named-command/rlfunc {
   local word=${text:istat:index-istat}
-  ble/string#match "$word" $'^[[:space:]]*'
+  ble/string#match "$word" $'^[[:blank:]]*'
   ble/syntax/completion-context/add edit.named-command "$((istat+${#BASH_REMATCH}))"
 }
 

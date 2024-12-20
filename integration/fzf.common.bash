@@ -60,7 +60,7 @@ function ble/contrib/integration:fzf/locate-shell-settings {
     else
       if [[ $cmd == fzf ]]; then
         ble/util/assign version '"$path" --version 2>/dev/null'
-        ble/string#match "$version" '^[[:space:]]*([0-9]+)\.([0-9]+)\.([0-9]+)?' &&
+        ble/string#match "$version" '^[[:blank:]]*([0-9]+)\.([0-9]+)\.([0-9]+)?' &&
           ((version=10#0${BASH_REMATCH[1]}*10000+10#0${BASH_REMATCH[2]}*100+10#0${BASH_REMATCH[3]}))
 
         # fzf >= 0.48.0 has started to offer « eval "$(fzf --bash)" », so

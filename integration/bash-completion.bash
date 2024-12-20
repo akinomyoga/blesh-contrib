@@ -75,7 +75,7 @@ function ble/contrib/integration:bash-completion/mandb/_parse_help.advice {
         # ble/complete/mandb:help/generate-cache.
         desc = $4;
         gsub(/\033\[[ -?]*[@-~]/, "", desc);
-        if (match(desc, /^\[[^]'"$_ble_term_space"'[]*\] /) > 0) { # #D1709 safe
+        if (match(desc, /^\[[^]'"$_ble_term_blank"'[]*\] /) > 0) { # #D1709 safe
           short_opt = substr(desc, 2, RLENGTH - 3);
           excludes[short_opt] =1;
         }

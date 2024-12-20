@@ -753,7 +753,7 @@ function ble/histdb/sub:stats/get-user-name {
   ble/bin#has getenv && ble/util/assign ret '
     getent passwd 2>/dev/null | ble/bin/awk -F : -v UID="$UID" '\''
       $3==UID {
-        sub(/[[:space:]]*[<>].*$/, "", $5);
+        sub(/[[:blank:]]*[<>].*$/, "", $5);
         print $5;
       }
     '\''
@@ -1413,7 +1413,7 @@ function ble/histdb/sub:top {
       to_exclude = "^(" ENVIRON["exclude"] ")$";
     }
     {
-      sub(/^[[:space:]]+/, "");
+      sub(/^[[:blank:]]+/, "");
       sub(/^\(\(?/, "& ");
       if ($1 ~ to_exclude) next;
 

@@ -3,7 +3,7 @@
 function ble/contrib/config:github296/named-execmark.hook {
   local lastexit=$? command=$1
 
-  if ((lastexit)) && ! ble/string#match "$command" $'^[[:space:]]*#[^\n]+$'; then
+  if ((lastexit)) && ! ble/string#match "$command" $'^[[:blank:]]*#[^\n]+$'; then
     local sgr=$'\e[;94m' sgr0=$'\e[m' sgrE=$'\e[;91m' ret
     ble/color/face2sgr-ansi varname_number; local sgrN=$ret
 
