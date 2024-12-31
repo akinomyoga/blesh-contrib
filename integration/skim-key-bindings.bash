@@ -25,6 +25,6 @@ ble-bind -m vi_nmap -s C-r 'i\C-r'
 function skim-history-widget { __skim_history__; }
 
 # ALT-C - cd into the selected directory
-ble-bind -m emacs   -c M-c 'builtin eval -- "$(__skim_cd__)"'
-ble-bind -m vi_imap -c M-c 'builtin eval -- "$(__skim_cd__)"'
-ble-bind -m vi_nmap -c M-c 'builtin eval -- "$(__skim_cd__)"'
+ble-bind -m emacs   -c M-c 'ble/util/eval-stdout "__skim_cd__"'
+ble-bind -m vi_imap -c M-c 'ble/util/eval-stdout "__skim_cd__"'
+ble-bind -m vi_nmap -c M-c 'ble/util/eval-stdout "__skim_cd__"'

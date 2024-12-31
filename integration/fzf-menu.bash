@@ -89,7 +89,8 @@ function ble/contrib/integration:fzf-menu/.select-and-insert {
     done
 
     ble/term/leave-for-widget
-    local index=$(ble/contrib/integration:fzf-menu/SELECTOR "${list[@]}")
+    local index
+    ble/util/assign index 'ble/contrib/integration:fzf-menu/SELECTOR "${list[@]}"'
     ble/term/enter-for-widget
     ble/textarea#invalidate
 

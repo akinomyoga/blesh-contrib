@@ -10,7 +10,7 @@ if ! ble/is-function __fzf_history__; then
   elif [[ -f $_ble_contrib_fzf_base/shell/key-bindings.bash ]]; then
     source "$_ble_contrib_fzf_base/shell/key-bindings.bash"
   elif [[ $_ble_contrib_fzf_base == __eval_fzf_bash__ ]]; then
-    builtin eval -- "$("$_ble_contrib_fzf_path" --bash | sed -n '/### key-bindings/,/### end/p')"
+    ble/util/eval-stdout '"$_ble_contrib_fzf_path" --bash | sed -n "/### key-bindings/,/### end/p"'
   fi
   ble/function#pop bind
 fi
@@ -30,7 +30,8 @@ ble-bind -m emacs   -x C-r fzf-history-widget
 ble-bind -m vi_imap -x C-r fzf-history-widget
 ble-bind -m vi_nmap -s C-r 'i\C-r'
 function fzf-history-widget {
-  READLINE_LINE=$(history -p "$(__fzf_history__)")
+  ble/util/assign READLINE_LINE '__fzf_history__'
+  ble/util/assign READLINE_LINE 'history -p "$READLINE_LINE"'
   READLINE_POINT=${#READLINE_LINE}
 }
 ((_ble_bash>=40000)) &&
@@ -38,6 +39,6 @@ function fzf-history-widget {
   function fzf-history-widget { __fzf_history__; }
 
 # ALT-C - cd into the selected directory
-ble-bind -m emacs   -c M-c 'builtin eval -- "$(__fzf_cd__)"'
-ble-bind -m vi_imap -c M-c 'builtin eval -- "$(__fzf_cd__)"'
-ble-bind -m vi_nmap -c M-c 'builtin eval -- "$(__fzf_cd__)"'
+ble-bind -m emacs   -c M-c 'ble/util/eval-stdout "__fzf_cd__"'
+ble-bind -m vi_imap -c M-c 'ble/util/eval-stdout "__fzf_cd__"'
+ble-bind -m vi_nmap -c M-c 'ble/util/eval-stdout "__fzf_cd__"'

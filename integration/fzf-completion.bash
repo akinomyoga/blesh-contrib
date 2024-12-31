@@ -12,7 +12,7 @@ if ! ble/is-function _fzf_complete; then
   elif [[ $_ble_contrib_fzf_base == */share/fzf && -f /etc/bash_completion.d/fzf ]]; then
     source /etc/bash_completion.d/fzf
   elif [[ $_ble_contrib_fzf_base == __eval_fzf_bash__ ]]; then
-    builtin eval -- "$("$_ble_contrib_fzf_path" --bash | sed -n '/### completion/,/### end/p')"
+    ble/util/eval-stdout '"$_ble_contrib_fzf_path" --bash | sed -n "/### completion/,/### end/p"'
   fi
 fi
 

@@ -56,6 +56,6 @@ function ble/contrib/integration:zoxide/adjust {
 
 if ! ble/contrib/integration:zoxide/adjust; then
   ble/bin#has zoxide || return 1
-  builtin eval -- "$(zoxide init bash)"
+  ble/util/eval-stdout 'zoxide init bash'
   ble/contrib/integration:zoxide/adjust
 fi
