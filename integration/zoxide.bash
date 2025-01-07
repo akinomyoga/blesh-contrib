@@ -7,7 +7,6 @@ function ble/contrib/integration:zoxide/completion.advice {
   fi
 
   [[ :$comp_type: == *:auto:* || :$comp_type: == *:[maA]:* ]] && return 0
-  compopt -o noquote
 
   ble/term/leave-for-widget
   ble/function#advice/do >/dev/null
