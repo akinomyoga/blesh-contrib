@@ -182,12 +182,12 @@ function ble/contrib/integration:bash-completion/mandb/adjust {
 
 #------------------------------------------------------------------------------
 
-function ble/contrib/integration:bash-completion/_comp_cmd_make.advice {
+function ble/contrib/integration:bash-completion/cmd-with-conditional-sync.advice {
   if [[ ${BLE_ATTACHED-} ]]; then
     ble/function#push "${ADVICE_WORDS[1]}" '
-      local -a make_args; make_args=("${ADVICE_WORDS[1]}" "$@")
+      local -a cmd_args; cmd_args=("${ADVICE_WORDS[1]}" "$@")
       ble/util/conditional-sync \
-        '\''command "${make_args[@]}"'\'' \
+        '\''command "${cmd_args[@]}"'\'' \
         '\''! ble/complete/check-cancel'\'' 128 progressive-weight:killall'
     ble/function#advice/do
     ble/function#pop "${ADVICE_WORDS[1]}"
@@ -196,13 +196,44 @@ function ble/contrib/integration:bash-completion/_comp_cmd_make.advice {
   fi
 }
 
+function ble/contrib/integration:bash-completion/_do_dnf5_completion.advice {
+  ble/contrib/integration:bash-completion/cmd-with-conditional-sync.advice "$@"
+  if ((${#COMPREPLY[@]}>=2)); then
+    local i has_desc=
+    for i in "${!COMPREPLY[@]}"; do
+      if ble/string#match "${COMPREPLY[i]}" '[[:blank:]]+\((.*)\)$'; then
+        local cand=${COMPREPLY[i]%"$BASH_REMATCH"} desc=${BASH_REMATCH[1]}
+        if [[ $cand && $cand != "${COMPREPLY[i]}" ]]; then
+          ble/complete/cand/yield word "$cand" "$desc"
+          has_desc=1
+          unset -v 'COMPREPLY[i]'
+          continue
+        fi
+      fi
+
+      if [[ ! -e ${COMPREPLY[i]} ]]; then
+        ble/complete/cand/yield word "$cand"
+        unset -v 'COMPREPLY[i]'
+      fi
+    done
+
+    COMPREPLY=("${COMPREPLY[@]}")
+    [[ $has_desc ]] && bleopt complete_menu_style=desc
+  fi
+}
+
 function ble/contrib/integration:bash-completion/adjust {
   ble/is-function _comp_initialize || ble/is-function _quote_readline_by_ref || return 0
 
-  ble/is-function _comp_cmd_make &&
-    ble/function#advice around _comp_cmd_make 'ble/contrib/integration:bash-completion/_comp_cmd_make.advice'
-  ble/is-function _make &&
-    ble/function#advice around _make 'ble/contrib/integration:bash-completion/_comp_cmd_make.advice'
+  _ble_contrib_integration_bash_completion_cmd_conditional_sync=(_comp_cmd_make _make _do_dnf5_completion)
+
+  if [[ $comp_func == _comp_cmd_make || $comp_func == _make ]]; then
+    ble/is-function "$comp_func" &&
+      ble/function#advice around "$comp_func" ble/contrib/integration:bash-completion/cmd-with-conditional-sync.advice
+  elif [[ $comp_func == _do_dnf5_completion ]]; then
+    ble/is-function "$comp_func" &&
+      ble/function#advice around "$comp_func" ble/contrib/integration:bash-completion/_do_dnf5_completion.advice
+  fi
 
   if ((BASH_COMPLETION_VERSINFO[0]<2||BASH_COMPLETION_VERSINFO[0]==2&&BASH_COMPLETION_VERSINFO[1]<12)); then
     # Fix issues with bash-completion <= 2.11
