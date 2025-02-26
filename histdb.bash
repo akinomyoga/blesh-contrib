@@ -397,7 +397,7 @@ function ble/histdb/exec_register.hook {
       VALUES(
         '${session_id//$q/$qq}', '${command_id//$q/$qq}',
         '${lineno//$q/$qq}', '${history_index//$q/$qq}',
-        '${command//$q/$qq}', '${PWD//$q/$qq}', ${inode:-None}, '${issue_time//$q/$qq}', '${remarks//$q/$qq}');
+        '${command//$q/$qq}', '${PWD//$q/$qq}', ${inode:-NULL}, '${issue_time//$q/$qq}', '${remarks//$q/$qq}');
     $extra_query
     COMMIT;"
 }
