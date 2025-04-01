@@ -74,7 +74,7 @@ function ble/contrib/integration:bash-completion/mandb/_parse_help.advice {
         # "[short_opt] desc".  The format is defined by
         # ble/complete/mandb:help/generate-cache.
         desc = $4;
-        gsub(/\033\[[ -?]*[@-~]/, "", desc);
+        gsub(/\033\[[ -?]*[@-~]/, "", desc); # disable=#D1440 (LC_COLLATE=C is set)
         if (match(desc, /^\[[^]'"$_ble_term_blank"'[]*\] /) > 0) { # #D1709 safe
           short_opt = substr(desc, 2, RLENGTH - 3);
           excludes[short_opt] =1;
@@ -206,14 +206,14 @@ function ble/contrib/integration:bash-completion/_do_dnf5_completion.advice {
         if [[ $cand && $cand != "${COMPREPLY[i]}" ]]; then
           ble/complete/cand/yield word "$cand" "$desc"
           has_desc=1
-          unset -v 'COMPREPLY[i]'
+          builtin unset -v 'COMPREPLY[i]'
           continue
         fi
       fi
 
       if [[ ! -e ${COMPREPLY[i]} ]]; then
         ble/complete/cand/yield word "$cand"
-        unset -v 'COMPREPLY[i]'
+        builtin unset -v 'COMPREPLY[i]'
       fi
     done
 
