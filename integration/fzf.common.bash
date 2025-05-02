@@ -129,6 +129,7 @@ function ble/contrib/integration:fzf/complete.advice {
   fi
 }
 
+_ble_contrib_fzf_adjust_dynamic_completion=
 function ble/contrib/integration:fzf/handle_dynamic_completion.advice {
   if [[ ${_ble_attached-} && ${_ble_contrib_fzf_comp_words_raw-} ]]; then
     compopt +o ble/syntax-raw
@@ -137,5 +138,15 @@ function ble/contrib/integration:fzf/handle_dynamic_completion.advice {
     ble/util/restore-vars val_ COMP_LINE COMP_POINT COMP_WORDS COMP_CWORD
   fi
 
+  if [[ ${_ble_attached-} && $_ble_contrib_fzf_adjust_dynamic_completion ]]; then
+    local comp_func=_fzf_orig_completion_${ADVICE_WORDS[1]} comp_prog=
+    local comp_func=${!comp_func}
+    local comp_func=${comp_func##*#}
+    if ble/bin#has "$comp_func"; then
+      ble/complete/progcomp/adjust-third-party-completions
+    fi
+  fi
+
   ble/function#advice/do
+
 }

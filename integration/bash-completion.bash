@@ -18,6 +18,62 @@ function ble/string#hash-pjw {
 }
 
 #------------------------------------------------------------------------------
+# Hooks for completion loaders
+
+## @fn ble/contrib/integration:bash-completion/loader/.adjust-progcomp cmd
+##   @param[in] cmd
+##     The command name whose completion setting should be parsed and adjusted.
+function ble/contrib/integration:bash-completion/loader/.adjust-progcomp {
+  local ret
+  ble/syntax:bash/simple-word/safe-eval "$1" nonull || return 0
+  local cmd=$ret
+
+  local compdef
+  ble/util/assign compdef 'builtin complete -p -- "$cmd"' 2>/dev/null ||
+    { cmd=${cmd##*/}; ble/util/assign compdef 'builtin complete -p -- "$cmd"' 2>/dev/null; } ||
+    return 0
+  compdef=${compdef%"${cmd:-''}"}
+  compdef=${compdef%' '}' '
+
+  local comp_opts=$comp_opts comp_prog comp_func compoptions flag_noquote
+  ble/complete/progcomp/parse-complete "$compdef"
+
+  # Call adjustments based on the values of "comp_prog" and "comp_func"
+  ble/complete/progcomp/adjust-third-party-completions
+}
+
+function ble/contrib/integration:bash-completion/loader/_comp_load.advice {
+  ((ADVICE_EXIT==0)) || return 0
+
+  # command-line argument parsing taken from _comp_load (bash_completion).
+  local flag_fallback_default="" IFS=$' \t\n'
+  local OPTIND=1 OPTARG="" OPTERR=0 opt
+  set -- "${ADVICE_WORDS[@]:1}"
+  while getopts ':D' opt "$@"; do
+    case $opt in
+    D) flag_fallback_default=set ;;
+    *) return 2 ;;
+    esac
+  done
+  shift "$((OPTIND - 1))"
+
+  ble/contrib/integration:bash-completion/loader/.adjust-progcomp "$@"
+}
+
+function ble/contrib/integration:bash-completion/loader/__load_completion.advice {
+  ((ADVICE_EXIT==0)) || return 0
+  ble/contrib/integration:bash-completion/loader/.adjust-progcomp "$@"
+}
+
+function ble/contrib/integration:bash-completion/loader/adjust {
+  if ble/is-function _comp_load; then
+    ble/function#advice after _comp_load ble/contrib/integration:bash-completion/loader/_comp_load.advice
+  elif ble/is-function __load_completion; then
+    ble/function#advice after __load_completion ble/contrib/integration:bash-completion/loader/__load_completion.advice
+  fi
+}
+
+#------------------------------------------------------------------------------
 # Hooks for mandb
 
 ## @fn ble/contrib/integration:bash-completion/mandb/.alloc-subcache command hash [opts]
@@ -224,6 +280,8 @@ function ble/contrib/integration:bash-completion/_do_dnf5_completion.advice {
 
 function ble/contrib/integration:bash-completion/adjust {
   ble/is-function _comp_initialize || ble/is-function _quote_readline_by_ref || return 0
+
+  ble/contrib/integration:bash-completion/loader/adjust
 
   _ble_contrib_integration_bash_completion_cmd_conditional_sync=(_comp_cmd_make _make _do_dnf5_completion)
 

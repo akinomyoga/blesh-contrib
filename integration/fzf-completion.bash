@@ -26,6 +26,20 @@ ble/function#advice -f around _fzf_complete                  'ble/contrib/integr
 ble/function#advice -f around _fzf_complete_kill             'ble/contrib/integration:fzf/complete.advice'
 ble/function#advice -f around _fzf_handle_dynamic_completion 'ble/contrib/integration:fzf/handle_dynamic_completion.advice'
 
+if ble/is-function __fzf_orig_completion_get_orig_func; then
+  ## @fn ble/contrib/integration:fzf/orig_completion_get_orig_func.advice
+  ##   @var[ref] comp_opts
+  function ble/contrib/integration:fzf/orig_completion_get_orig_func.advice {
+    if ((ADVICE_EXIT==0)); then
+      local comp_func=$REPLY comp_prog=
+      ble/complete/progcomp/adjust-third-party-completions
+    fi
+  }
+  ble/function#advice after __fzf_orig_completion_get_orig_func 'ble/contrib/integration:fzf/orig_completion_get_orig_func.advice'
+elif ble/is-function _fzf_handle_dynamic_completion; then
+  _ble_contrib_fzf_adjust_dynamic_completion=1
+fi
+
 #------------------------------------------------------------------------------
 # Extensions
 
