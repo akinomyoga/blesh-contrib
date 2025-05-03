@@ -20,12 +20,9 @@ function ble/lib/vim-airline/theme:minimalist/initialize {
   ble-face -s vim_airline_c                            fg=236,bg=252 # fg=#333333,bg=#cccccc
   ble-face -s vim_airline_c_inactive                   fg=235,bg=252 # fg=#262626,bg=#cccccc
   ble-face -s vim_airline_error                        fg=234,bg=167 # fg=#1c1c1c,bg=#d75f5f
-  ble-face -s vim_airline_error_default                fg=16,bg=88   # fg=#000000,bg=#990000
   ble-face -s vim_airline_error_inactive               fg=16,bg=88   # fg=#000000,bg=#990000
   ble-face -s vim_airline_term                         fg=234,bg=249 # fg=#1c1c1c,bg=#b3b3b3
-  ble-face -s vim_airline_term_default                 fg=158,bg=234 # fg=#9cffd3,bg=#202020
   ble-face -s vim_airline_term_inactive                fg=158,bg=234 # fg=#9cffd3,bg=#202020
   ble-face -s vim_airline_warning                      fg=234,bg=215 # fg=#1c1c1c,bg=#ffaf5f
-  ble-face -s vim_airline_warning_default              fg=16,bg=166  # fg=#000000,bg=#df5f00
   ble-face -s vim_airline_warning_inactive             fg=16,bg=166  # fg=#000000,bg=#df5f00
 }

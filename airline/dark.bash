@@ -1,6 +1,6 @@
-# From github:vim-airline/vim-airline-themes/autoload/airline/themes/dark.vim
+# From github:vim-airline/vim-airline/autoload/airline/themes/dark.vim
 #   The MIT License (MIT)
-#   Copyright (C) 2013-2021 Bailey Ling & Contributors.
+#   Copyright (c) 2013-2021 Bailey Ling et al.
 #
 
 ble-import lib/vim-airline
@@ -19,7 +19,7 @@ function ble/lib/vim-airline/theme:dark/initialize {
   ble-face -s vim_airline_b_visual                     fg=16,bg=202  # fg=#000000,bg=#ff5f00
   ble-face -s vim_airline_c                            fg=158,bg=234 # fg=#9cffd3,bg=#202020
   ble-face -s vim_airline_c_inactive                   fg=239,bg=236 # fg=#4e4e4e,bg=#303030
-  ble-face -s vim_airline_c_inactive_modified          fg=97,bg=0    # fg=#875faf,bg=0
+  ble-face -s vim_airline_c_inactive_modified          fg=97,bg=231  # fg=#875faf,bg=#ffffff
   ble-face -s vim_airline_c_insert                     fg=231,bg=18  # fg=#ffffff,bg=#000080
   ble-face -s vim_airline_c_insert_modified            fg=231,bg=53  # fg=#ffffff,bg=#5f005f
   ble-face -s vim_airline_c_normal_modified            fg=231,bg=53  # fg=#ffffff,bg=#5f005f

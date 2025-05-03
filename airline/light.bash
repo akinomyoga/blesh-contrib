@@ -18,12 +18,17 @@ function ble/lib/vim-airline/theme:light/initialize {
   ble-face -s vim_airline_b_visual                     fg=52,bg=214  # fg=#5f0000,bg=#ffaf00
   ble-face -s vim_airline_c                            fg=27,bg=159  # fg=#005fff,bg=#afffff
   ble-face -s vim_airline_c_inactive                   fg=248,bg=231 # fg=#a8a8a8,bg=#ffffff
-  ble-face -s vim_airline_c_inactive_modified          fg=160,bg=0   # fg=#df0000,bg=0
+  ble-face -s vim_airline_c_inactive_modified          fg=160,bg=231 # fg=#df0000,bg=#ffffff
   ble-face -s vim_airline_c_insert                     fg=23,bg=156  # fg=#005f5f,bg=#afff87
   ble-face -s vim_airline_c_insert_modified            fg=160,bg=224 # fg=#df0000,bg=#ffdfdf
   ble-face -s vim_airline_c_normal_modified            fg=160,bg=224 # fg=#df0000,bg=#ffdfdf
   ble-face -s vim_airline_c_replace_modified           fg=160,bg=224 # fg=#df0000,bg=#ffdfdf
   ble-face -s vim_airline_c_visual                     fg=166,bg=228 # fg=#df5f00,bg=#ffff87
   ble-face -s vim_airline_c_visual_modified            fg=160,bg=224 # fg=#df0000,bg=#ffdfdf
+  ble-face -s vim_airline_term                         fg=27,bg=159  # fg=#005fff,bg=#afffff
+  ble-face -s vim_airline_term_inactive                fg=158,bg=234 # fg=#9cffd3,bg=#202020
+  ble-face -s vim_airline_term_insert                  fg=158,bg=234 # fg=#9cffd3,bg=#202020
+  ble-face -s vim_airline_term_normal_modified         fg=160,bg=224 # fg=#df0000,bg=#ffdfdf
+  ble-face -s vim_airline_term_visual                  fg=158,bg=234 # fg=#9cffd3,bg=#202020
   ble-face -s vim_airline_z_replace                    fg=231,bg=29  # fg=#ffffff,bg=#00875f
 }

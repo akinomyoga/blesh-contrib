@@ -7,7 +7,6 @@ function ble/contrib/integration:zoxide/completion.advice {
   fi
 
   [[ :$comp_type: == *:auto:* || :$comp_type: == *:[maA]:* ]] && return 0
-  compopt -o noquote
 
   ble/term/leave-for-widget
   ble/function#advice/do >/dev/null
@@ -56,6 +55,6 @@ function ble/contrib/integration:zoxide/adjust {
 
 if ! ble/contrib/integration:zoxide/adjust; then
   ble/bin#has zoxide || return 1
-  builtin eval -- "$(zoxide init bash)"
+  ble/util/eval-stdout 'zoxide init bash'
   ble/contrib/integration:zoxide/adjust
 fi

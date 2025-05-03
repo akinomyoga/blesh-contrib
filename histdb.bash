@@ -397,7 +397,7 @@ function ble/histdb/exec_register.hook {
       VALUES(
         '${session_id//$q/$qq}', '${command_id//$q/$qq}',
         '${lineno//$q/$qq}', '${history_index//$q/$qq}',
-        '${command//$q/$qq}', '${PWD//$q/$qq}', ${inode:-None}, '${issue_time//$q/$qq}', '${remarks//$q/$qq}');
+        '${command//$q/$qq}', '${PWD//$q/$qq}', ${inode:-NULL}, '${issue_time//$q/$qq}', '${remarks//$q/$qq}');
     $extra_query
     COMMIT;"
 }
@@ -500,6 +500,8 @@ blehook unload!=ble/histdb/unload.hook
 # auto-complete
 
 function ble/complete/auto-complete/source:histdb-history {
+  [[ $_ble_history_prefix ]] && return 1
+
   local limit=$((bleopt_line_limit_length)) limit_condition=
   if ((limit)); then
     ((limit-=${#_ble_edit_str},limit>0)) || return 1
@@ -523,6 +525,8 @@ function ble/complete/auto-complete/source:histdb-history {
 }
 
 function ble/complete/auto-complete/source:histdb-word {
+  [[ $_ble_history_prefix ]] && return 1
+
   local iN=${#_ble_edit_str}
   ((_ble_edit_ind>0)) || return 1
 
@@ -619,14 +623,22 @@ ble/util/import/eval-after-load core-complete '
 # ble histdb command
 
 function ble-histdb {
+  builtin eval -- "$_ble_bash_POSIXLY_CORRECT_local_adjust"
+  local set shopt ext
+  ble/base/.adjust-bash-options set shopt
   if (($#==0)); then
     ble/histdb/sub:query 'select command from command_history;'
-  elif ble/is-function "ble/histdb/sub:$1"; then
-    "ble/histdb/sub:$@"
+    ext=$?
+  elif ble/is-function ble/histdb/sub:"$1"; then
+    ble/histdb/sub:"$@"
+    ext=$?
   else
     builtin printf 'ble-histdb: unknown command "%s"\n' "$1"
-    return 2
+    ext=2
   fi
+  ble/base/.restore-bash-options set shopt
+  ble/util/setexit "$ext"
+  builtin eval -- "$_ble_bash_POSIXLY_CORRECT_local_return"
 }
 
 # 一般的な補完のフレームワークを作っても良いのではないかという気がしてきたが、
@@ -634,7 +646,7 @@ function ble-histdb {
 function ble/cmdinfo/complete:ble-histdb {
   if ((comp_cword==1)); then
     local ret sub
-    ble/util/assign-array ret 'compgen -A function -- ble/histdb/sub:'
+    ble/util/compgen ret -A function -- 'ble/histdb/sub:'
     ((${#ret[@]})) || return 0
 
     local cands
@@ -741,7 +753,7 @@ function ble/histdb/sub:stats/get-user-name {
   ble/bin#has getenv && ble/util/assign ret '
     getent passwd 2>/dev/null | ble/bin/awk -F : -v UID="$UID" '\''
       $3==UID {
-        sub(/[[:space:]]*[<>].*$/, "", $5);
+        sub(/[[:blank:]]*[<>].*$/, "", $5);
         print $5;
       }
     '\''
@@ -991,7 +1003,6 @@ function ble/getopts/scan-definition {
     else
       ble/function#push "$header" '((1))'
     fi
-    ble/function#push "$header" "$fn \"\$@\""
   done
   builtin eval -- "$def"
   for header in "${_ble_getopts_definition_headers[@]}"; do
@@ -1236,8 +1247,8 @@ function ble/histdb/graph/palette {
     local ret
     ble/util/strftime -v ret '%m'
     case ${ret#0} in
-    (10) palette=github-halloween ;;
-    (12) palette=github-winter ;;
+    (10) palette=halloween-light ;;
+    (12) palette=winter-light ;;
     (*)  palette=github-light ;;
     esac
   fi
@@ -1402,7 +1413,7 @@ function ble/histdb/sub:top {
       to_exclude = "^(" ENVIRON["exclude"] ")$";
     }
     {
-      sub(/^[[:space:]]+/, "");
+      sub(/^[[:blank:]]+/, "");
       sub(/^\(\(?/, "& ");
       if ($1 ~ to_exclude) next;
 

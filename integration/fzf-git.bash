@@ -116,6 +116,14 @@ _fzf_git_fzf() {
     --bind='ctrl-/:change-preview-window(down,50%,border-top|hidden|)' "$@"
 }
 
+function ble/contrib/integration:fzf-git/fzf {
+  [[ $_ble_term_state == internal ]] && ble/term/leave-for-widget
+  _fzf_git_fzf "$@"
+  local ext=$?
+  [[ $_ble_term_state == internal ]] && ble/term/enter-for-widget
+  return "$ext"
+}
+
 _fzf_git_check() {
   git rev-parse HEAD > /dev/null 2>&1 && return 0
 
@@ -138,7 +146,7 @@ _fzf_git_files() {
   _fzf_git_check || return "$?"
   (git -c color.status=always status --short --no-branch
    git ls-files | grep -vxFf <(git status -s | grep '^[^?]' | cut -c4-; ble/util/print :) | sed 's/^/   /') |
-  _fzf_git_fzf -m --ansi --nth 2..,.. \
+  ble/contrib/integration:fzf-git/fzf -m --ansi --nth 2..,.. \
     --border-label '📁 Files' \
     --header $'CTRL-O (open in browser) ╱ ALT-E (open in editor)\n\n' \
     --bind "ctrl-o:execute-silent:bash $__fzf_git file {-1}" \
@@ -150,7 +158,7 @@ _fzf_git_files() {
 _fzf_git_branches() {
   _fzf_git_check || return "$?"
   bash "$__fzf_git" branches |
-  _fzf_git_fzf --ansi \
+  ble/contrib/integration:fzf-git/fzf --ansi \
     --border-label '🌲 Branches' \
     --header-lines 2 \
     --tiebreak begin \
@@ -167,7 +175,7 @@ _fzf_git_branches() {
 _fzf_git_tags() {
   _fzf_git_check || return "$?"
   git tag --sort -version:refname |
-  _fzf_git_fzf --preview-window right,70% \
+  ble/contrib/integration:fzf-git/fzf --preview-window right,70% \
     --border-label '📛 Tags' \
     --header $'CTRL-O (open in browser)\n\n' \
     --bind "ctrl-o:execute-silent:bash $__fzf_git tag {}" \
@@ -177,7 +185,7 @@ _fzf_git_tags() {
 _fzf_git_hashes() {
   _fzf_git_check || return "$?"
   git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" --graph --color=always |
-  _fzf_git_fzf --ansi --no-sort --bind 'ctrl-s:toggle-sort' \
+  ble/contrib/integration:fzf-git/fzf --ansi --no-sort --bind 'ctrl-s:toggle-sort' \
     --border-label '🍡 Hashes' \
     --header $'CTRL-O (open in browser) ╱ CTRL-D (diff) ╱ CTRL-S (toggle sort)\n\n' \
     --bind "ctrl-o:execute-silent:bash $__fzf_git commit {}" \
@@ -190,7 +198,7 @@ _fzf_git_hashes() {
 _fzf_git_remotes() {
   _fzf_git_check || return "$?"
   git remote -v | awk '{print $1 "\t" $2}' | uniq |
-  _fzf_git_fzf --tac \
+  ble/contrib/integration:fzf-git/fzf --tac \
     --border-label '📡 Remotes' \
     --header $'CTRL-O (open in browser)\n\n' \
     --bind "ctrl-o:execute-silent:bash $__fzf_git remote {1}" \
@@ -201,7 +209,7 @@ _fzf_git_remotes() {
 
 _fzf_git_stashes() {
   _fzf_git_check || return "$?"
-  git stash list | _fzf_git_fzf \
+  git stash list | ble/contrib/integration:fzf-git/fzf \
     --border-label '🥡 Stashes' \
     --header $'CTRL-X (drop stash)\n\n' \
     --bind 'ctrl-x:execute-silent(git stash drop {1})+reload(git stash list)' \
@@ -211,7 +219,7 @@ _fzf_git_stashes() {
 
 _fzf_git_lreflogs() {
   _fzf_git_check || return "$?"
-  git reflog --color=always --format="%C(blue)%gD %C(yellow)%h%C(auto)%d %gs" | _fzf_git_fzf --ansi \
+  git reflog --color=always --format="%C(blue)%gD %C(yellow)%h%C(auto)%d %gs" | ble/contrib/integration:fzf-git/fzf --ansi \
     --border-label '📒 Reflogs' \
     --preview 'git show --color=always {1}' "$@" |
   awk '{print $1}'
@@ -219,7 +227,7 @@ _fzf_git_lreflogs() {
 
 _fzf_git_each_ref() {
   _fzf_git_check || return "$?"
-  bash "$__fzf_git" refs | _fzf_git_fzf --ansi \
+  bash "$__fzf_git" refs | ble/contrib/integration:fzf-git/fzf --ansi \
     --nth 2,2.. \
     --tiebreak begin \
     --border-label '☘️  Each ref' \
@@ -242,11 +250,11 @@ _fzf_git_each_ref() {
 
 # original
 function ble/contrib:integration/fzf-git/type:original/init {
-  builtin bind '"\er": redraw-current-line'
+  ble/builtin/bind '"\er": redraw-current-line'
 }
 function ble/contrib:integration/fzf-git/type:original {
   local binding='"\C-g\C-'$1'": "$(_fzf_git_'$2')\e\C-e\er"'
-  builtin bind "$binding"
+  ble/builtin/bind "$binding"
 }
 # function ble/contrib:integration/fzf-git/type:original {
 #   local binding='"\C-g\C-'$1'": "$(_fzf_git_'$2')\M-\C-e\M-\C-l"'
@@ -284,11 +292,14 @@ function ble/contrib:integration/fzf-git/type:arpeggio {
 
 # old-functions
 function ble/contrib:integration/fzf-git/type:old-functions/init {
-  function is_in_git_repo { _fzf_git_fzf "$@"; }
-  function fzf-down { _fzf_git_check "$@"; }
+  function is_in_git_repo { _fzf_git_check "$@"; }
+  function fzf-down { ble/contrib/integration:fzf-git/fzf "$@"; }
 }
 function ble/contrib:integration/fzf-git/type:old-functions {
-  builtin eval "function g$1 { _fzf_git_$2 \"\$@\"; }"
+  # Note: To suppress duplicate adjustment of the terminal states, we override
+  # "_ble_term_state" with the temporary environment. I.e., when fzf is called
+  # through these old function names, we never adjust the terminal states.
+  builtin eval "function g$1 { _ble_term_state= _fzf_git_$2 \"\$@\"; }"
 }
 
 function ble/contrib:integration/fzf-git/initialize {

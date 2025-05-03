@@ -35,7 +35,7 @@
 # ble-import layer/pattern
 #
 # ble/highlight/layer:{pattern}/declare pattern1
-# ble/highlight/layer:{pattern}/register pattern1 'rm -rf [^;&|]*' 'fg=white,bold,bg=red'
+# ble/highlight/layer:{pattern}/register pattern1 'rm -rf [^;&|]*' 'fg=231,bg=196,bold'
 # ble/array#insert-after _ble_highlight_layer_list syntax pattern1
 #
 # ble/highlight/layer:{pattern}/declare pattern2

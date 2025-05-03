@@ -18,7 +18,7 @@ function ble/lib/vim-airline/theme:xtermlight/initialize {
   ble-face -s vim_airline_b_visual                     fg=52,bg=214  # fg=#5f0000,bg=#ffaf00
   ble-face -s vim_airline_c                            fg=27,bg=159  # fg=#005fff,bg=#afffff
   ble-face -s vim_airline_c_inactive                   fg=248,bg=255 # fg=#a8a8a8,bg=#eeeeee
-  ble-face -s vim_airline_c_inactive_modified          fg=160,bg=0   # fg=#d70000,bg=0
+  ble-face -s vim_airline_c_inactive_modified          fg=160,bg=231 # fg=#d70000,bg=#ffffff
   ble-face -s vim_airline_c_insert                     fg=23,bg=156  # fg=#005f5f,bg=#afff87
   ble-face -s vim_airline_c_insert_modified            fg=160,bg=224 # fg=#d70000,bg=#ffdfdf
   ble-face -s vim_airline_c_normal_modified            fg=160,bg=224 # fg=#d70000,bg=#ffdfdf

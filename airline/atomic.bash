@@ -28,15 +28,15 @@ ble-import lib/vim-airline
 function ble/lib/vim-airline/theme:atomic/initialize {
   ble-face -r vim_airline_@
   ble-face -s vim_airline_a                            fg=-1,bg=-1   # fg=-1,bg=-1
-  ble-face -s vim_airline_a_inactive                   fg=124,bg=-1  # fg=#a52a2a,bg=-1
-  ble-face -s vim_airline_a_insert                     fg=-1,bg=29   # fg=-1,bg=#2e8b57
-  ble-face -s vim_airline_a_replace                    fg=-1,bg=231  # fg=-1,bg=#ffffff
-  ble-face -s vim_airline_a_visual                     fg=-1,bg=196  # fg=-1,bg=#ff0000
-  ble-face -s vim_airline_b                            fg=-1,bg=124  # fg=-1,bg=#a52a2a
-  ble-face -s vim_airline_b_inactive                   fg=124,bg=-1  # fg=#a52a2a,bg=-1
+  ble-face -s vim_airline_a_inactive                   fg=124,bg=231 # fg=#a52a2a,bg=#ffffff
+  ble-face -s vim_airline_a_insert                     fg=231,bg=29  # fg=#ffffff,bg=#2e8b57
+  ble-face -s vim_airline_a_replace                    fg=16,bg=231  # fg=#000000,bg=#ffffff
+  ble-face -s vim_airline_a_visual                     fg=231,bg=196 # fg=#ffffff,bg=#ff0000
+  ble-face -s vim_airline_b                            fg=231,bg=124 # fg=#ffffff,bg=#a52a2a
+  ble-face -s vim_airline_b_inactive                   fg=124,bg=231 # fg=#a52a2a,bg=#ffffff
   ble-face -s vim_airline_c                            fg=-1,bg=-1   # fg=-1,bg=-1
-  ble-face -s vim_airline_c_inactive                   fg=124,bg=-1  # fg=#a52a2a,bg=-1
-  ble-face -s vim_airline_c_insert                     fg=29,bg=-1   # fg=#2e8b57,bg=-1
-  ble-face -s vim_airline_c_replace                    fg=231,bg=-1  # fg=#ffffff,bg=-1
-  ble-face -s vim_airline_c_visual                     fg=196,bg=-1  # fg=#ff0000,bg=-1
+  ble-face -s vim_airline_c_inactive                   fg=124,bg=231 # fg=#a52a2a,bg=#ffffff
+  ble-face -s vim_airline_c_insert                     fg=29,bg=231  # fg=#2e8b57,bg=#ffffff
+  ble-face -s vim_airline_c_replace                    fg=231,bg=16  # fg=#ffffff,bg=#000000
+  ble-face -s vim_airline_c_visual                     fg=196,bg=231 # fg=#ff0000,bg=#ffffff
 }
