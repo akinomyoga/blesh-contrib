@@ -650,7 +650,7 @@ function ble/cmdinfo/complete:ble-histdb {
     ((${#ret[@]})) || return 0
 
     local cands
-    for sub in "${ret[@]#ble/histdb/sub:}"; do
+    for sub in "${ret[@]#ble/histdb/sub:}"; do # disable=#D2352
       if [[ $sub != */* && $sub == "$COMPV"* ]]; then
         ble/array#push cands "$sub"
       fi
