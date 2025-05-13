@@ -83,6 +83,16 @@ function ble/contrib/integration:fzf/locate-shell-settings {
   return 0
 }
 
+function ble/contrib/integration:fzf/.is-bind-dsr0 {
+  [[ $1 == '"\e[0n"'* ]] &&
+    ble/string#match "${FUNCNAME[2]#ble/function#advice/original:}" '^__?(fzf|skim)_'
+}
+
+function ble/contrib/integration:fzf/.is-printf-dsr5 {
+  [[ $1 == '\e[5n' ]] &&
+    ble/string#match "${FUNCNAME[2]#ble/function#advice/original:}" '^__?(fzf|skim)_'
+}
+
 function ble/contrib/integration:fzf/complete.advice {
   local opts=${1-}
 
@@ -106,7 +116,8 @@ function ble/contrib/integration:fzf/complete.advice {
     local COMP_LINE=$comp_line COMP_POINT=$comp_point
   fi
 
-  ble/function#push printf '[[ $1 == "\e[5n" ]] || builtin printf "$@"'
+  ble/function#push bind 'ble/contrib/integration:fzf/.is-bind-dsr0 "$@" || ble/builtin/bind "$@"'
+  ble/function#push printf 'ble/contrib/integration:fzf/.is-printf-dsr5 "$@" || builtin printf "$@"'
   ble/function#push caller 'builtin caller ${1+"$(($1+6))"}'
   ble/term/leave-for-widget
   if [[ :$opts: == *:keep-stdin:* ]]; then
@@ -117,6 +128,7 @@ function ble/contrib/integration:fzf/complete.advice {
   ble/term/enter-for-widget
   ble/function#pop caller
   ble/function#pop printf
+  ble/function#pop bind
   ble/textarea#invalidate
 
   # 単一候補生成の場合は他の候補 (sabbrev 等) を消去して単一確定させる
