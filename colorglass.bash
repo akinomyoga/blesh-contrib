@@ -523,7 +523,7 @@ function ble/fixed-point#pow {
         xx=$ret
         (((p<<=1)&_ble_fixed_unit)) && ble/array#push fac "$xx"
         ((p&0xFFFF))
-      do :; done
+      do ((1)); done
       ((x<_ble_fixed_unit)) && ble/array#reverse fac
       ble/fixed-point#mul "${fac[@]}"
       ((out=out*ret/_ble_fixed_unit))
