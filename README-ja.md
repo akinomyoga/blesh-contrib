@@ -30,7 +30,7 @@ fi
 if [[ ${BLE_VERSION-} ]]; then
   ble-import -d integration/fzf-completion
 else
-  [[ $- == *i* ]] && source "$_ble_contrib_fzf_base/shell/completion.bash" 2> /dev/null
+  [[ $- == *i* ]] && source -- "$_ble_contrib_fzf_base/shell/completion.bash" 2> /dev/null
 fi
 
 # キー束縛
@@ -38,7 +38,7 @@ fi
 if [[ ${BLE_VERSION-} ]]; then
   ble-import -d integration/fzf-key-bindings
 else
-  source "$_ble_contrib_fzf_base/shell/key-bindings.bash"
+  source -- "$_ble_contrib_fzf_base/shell/key-bindings.bash"
 fi
 ```
 

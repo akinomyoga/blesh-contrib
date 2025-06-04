@@ -48,7 +48,7 @@ The current recommended way is to directly write settings in your `.blerc` as fo
 # Note: If you would like to combine fzf-completion with bash_completion, you
 # need to load bash_completion earlier than fzf-completion.
 
-#source /path/to/bash_completion.sh
+#source -- /path/to/bash_completion.sh
 
 
 # Set up fzf
@@ -109,12 +109,12 @@ if [[ $- == *i* ]]; then
   # Note: If you would like to combine fzf-completion with bash_completion, you
   # need to load bash_completion earlier than fzf-completion.
 
-  #source /path/to/bash_completion.sh
+  #source -- /path/to/bash_completion.sh
 
   if [[ ${BLE_VERSION-} ]]; then
     ble-import -d integration/fzf-completion
   else
-    source /path/to/fzf/shell/completion.bash 2> /dev/null
+    source -- /path/to/fzf/shell/completion.bash 2> /dev/null
   fi
 fi
 
@@ -123,7 +123,7 @@ fi
 if [[ ${BLE_VERSION-} ]]; then
   ble-import -d integration/fzf-key-bindings
 else
-  source /path/to/fzf/shell/key-bindings.bash
+  source -- /path/to/fzf/shell/key-bindings.bash
 fi
 ```
 

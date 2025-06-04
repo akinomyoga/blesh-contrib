@@ -6,9 +6,9 @@
 if ! ble/is-function _fzf_complete; then
   ble-import contrib/integration/fzf-initialize || return 1
   if [[ -f $_ble_contrib_fzf_base/completion.bash ]]; then
-    source "$_ble_contrib_fzf_base/completion.bash"
+    source -- "$_ble_contrib_fzf_base/completion.bash"
   elif [[ -f $_ble_contrib_fzf_base/shell/completion.bash ]]; then
-    source "$_ble_contrib_fzf_base/shell/completion.bash"
+    source -- "$_ble_contrib_fzf_base/shell/completion.bash"
   elif [[ $_ble_contrib_fzf_base == */share/fzf && -f /etc/bash_completion.d/fzf ]]; then
     source /etc/bash_completion.d/fzf
   elif [[ $_ble_contrib_fzf_base == __eval_fzf_bash__ ]]; then

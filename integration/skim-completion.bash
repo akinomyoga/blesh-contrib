@@ -6,9 +6,9 @@
 if ! ble/is-function _skim_complete; then
   ble-import contrib/integration/skim-initialize || return 1
   if [[ -f $_ble_contrib_skim_base/completion.bash ]]; then
-    source "$_ble_contrib_skim_base/completion.bash"
+    source -- "$_ble_contrib_skim_base/completion.bash"
   elif [[ -f $_ble_contrib_skim_base/shell/completion.bash ]]; then
-    source "$_ble_contrib_skim_base/shell/completion.bash"
+    source -- "$_ble_contrib_skim_base/shell/completion.bash"
   elif [[ $_ble_contrib_skim_base == */share/skim && -f /etc/bash_completion.d/skim ]]; then
     source /etc/bash_completion.d/skim
   fi

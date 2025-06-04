@@ -6,9 +6,9 @@ if ! ble/is-function __skim_history__; then
   ble-import contrib/integration/skim-initialize || return 1
   ble/function#push bind :
   if [[ -f $_ble_contrib_skim_base/key-bindings.bash ]]; then
-    source "$_ble_contrib_skim_base/key-bindings.bash"
+    source -- "$_ble_contrib_skim_base/key-bindings.bash"
   elif [[ -f $_ble_contrib_skim_base/shell/key-bindings.bash ]]; then
-    source "$_ble_contrib_skim_base/shell/key-bindings.bash"
+    source -- "$_ble_contrib_skim_base/shell/key-bindings.bash"
   fi
   ble/function#pop bind
 fi
