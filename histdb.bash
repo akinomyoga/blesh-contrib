@@ -420,7 +420,7 @@ function ble/histdb/postexec.hook {
   local real=$_ble_exec_time_tot
   local usr=$_ble_exec_time_usr
   local sys=$_ble_exec_time_sys
-  local cpu=$((real>0?(usr+sys)/real:0))
+  local cpu=0; ((real>0)) && cpu=$(((usr+sys)/real))
   local usr_chld=$((usr-_ble_exec_time_usr_self))
   local sys_chld=$((sys-_ble_exec_time_sys_self))
 
