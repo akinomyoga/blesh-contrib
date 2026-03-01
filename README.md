@@ -30,6 +30,7 @@ License.  The details are explained in sub-pages:
 - &#x2699; Airline themes `contrib/airline/*`
 - &#x2699; Highlighting layers `contrib/layer/*`
 - &#x2699; Miscellaneous configurations
+  - :pencil: `contrib/config/alias-tips`
   - :pencil: `contrib/config/execmark`
   - :pencil: `contrib/config/github265-prompt-path-level-colors`
   - :pencil: `contrib/config/github288-filter-sabbrev-completion`
