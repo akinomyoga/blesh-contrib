@@ -2,6 +2,27 @@
 #
 # https://github.com/akinomyoga/ble.sh/issues/479
 
+_ble_contrib_fzf_menu_filter=
+function ble/contrib/integration:fzf-menu/initialize {
+  builtin unset -f "$FUNCNAME"
+
+  if ble/bin#freeze-utility-path column; then
+    local version
+    ble/util/assign version 'column --version 2>/dev/null'
+    if [[ $version == *' util-linux '* ]]; then
+      # * Note: Initially, we specified "-c unlimited".  However, the "-c"
+      #   option only affects the behavior of "column -t" when combined with
+      #   the "-R" or "-W" options.  In the present case, the output width
+      #   (specified by "-c") doesn't seem to affect the output, so we dropped
+      #   "-c unlimited".
+      # * Note: The "-o" option is not supported by BSD column, so we should
+      #   anyway check the version of column.
+      _ble_contrib_fzf_menu_filter=' | column -ts "$sep" -o "$sep"'
+    fi
+  fi
+}
+ble/contrib/integration:fzf-menu/initialize
+
 ## @fn ble/contrib/integration:fzf-menu/SELECTOR args...
 ##   Returns the index of the selected candidate.  Users can override this
 ##   function to adjust the detailed behavior.
@@ -40,9 +61,7 @@ function ble/contrib/integration:fzf-menu/SELECTOR {
   [[ :$comp_type: == *:i:* ]] &&
     ble/array#push fzf_options --ignore-case
 
-  local formatter="printf '%s\n' \"\$@\""
-  ble/bin#has column &&
-    formatter=$formatter' | column -ts "$sep" -o "$sep" -c unlimited'
+  local formatter="printf '%s\n' \"\$@\""$_ble_contrib_fzf_menu_filter
   ble/array#push fzf_options -d "$sep" --with-nth=2.. --nth=1
 
   builtin eval -- "$formatter" | fzf "${fzf_options[@]}" | cut -d "$sep" -f 1

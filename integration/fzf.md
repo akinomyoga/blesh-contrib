@@ -193,3 +193,17 @@ started instead of `menu-complete` built in `ble.sh`.
 
 ble-import -d integration/fzf-menu
 ```
+
+To customize the selector, users can override the shell function
+`ble/contrib/integration:fzf-menu/SELECTOR`.  This function receives the
+candidates as arguments.  Each argument has the format `<index>^\<cand>^\-
+<desc>`, where `<index>`, `<cand>`, and `<desc>` are the index, the completion
+candidate, and its description, respectively, which are separated by the FS
+control character (U+001C) represented by `^\`.
+
+The default selector implementation uses fzf to show and let the user select a
+candidate.  This implementation uses util-linux's `column`, if found in the
+system, to format the candidate list shown in `fzf`.  Please install
+util-linux's column if you want to align the positions of the descriptions in
+fzf.  For example, in macOS, util-linux can be installed using Homebrew with
+`brew install util-linux`.
