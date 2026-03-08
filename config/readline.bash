@@ -48,9 +48,9 @@ bleopt edit_marker=
 bleopt edit_marker_error=
 
 # Turn off Readline settings enabled by ble.sh
-bind 'set skip-completed-text       off'
-bind 'set colored-stats             off'
-bind 'set colored-completion-prefix off'
+builtin bind 'set skip-completed-text       off'
+builtin bind 'set colored-stats             off'
+builtin bind 'set colored-completion-prefix off'
 
 # Use audible bell instead of visible bell for editing error
 bleopt edit_bell=abell
