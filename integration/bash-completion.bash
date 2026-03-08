@@ -268,8 +268,14 @@ function ble/contrib/integration:bash-completion/_do_dnf5_completion.advice {
   ble/contrib/integration:bash-completion/cmd-with-conditional-sync.advice "$@"
   [[ ${BLE_ATTACHED-} ]] || return 0
   if ((${#COMPREPLY[@]}>=2)); then
+    if ! ble/complete/source/test-limit "${#COMPREPLY[@]}"; then
+      COMPREPLY=()
+      return 1
+    fi
+
     local i has_desc=
     for i in "${!COMPREPLY[@]}"; do
+      ((cand_iloop++%bleopt_complete_polling_cycle==0)) && ble/complete/check-cancel && return 148
       if ble/string#match "${COMPREPLY[i]}" '[[:blank:]]+\((.*)\)$'; then
         local cand=${COMPREPLY[i]%"$BASH_REMATCH"} desc=${BASH_REMATCH[1]}
         if [[ $cand && $cand != "${COMPREPLY[i]}" ]]; then
