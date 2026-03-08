@@ -15,14 +15,13 @@
 #   https://github.com/akinomyoga/ble.sh/discussions/678
 #
 
+ble-import core-complete
+
 bleopt/declare -v github678_expand_command_suffix exe:sh:bash
 
-function ble/complete/expand:github678-expand-command-suffix {
-  local pos comp_index=$_ble_edit_ind comp_text=$_ble_edit_str
-  ble/complete/sabbrev/locate-key 'command'
-  ((pos<comp_index)) || return 1
-
-  local word=${_ble_edit_str:pos:comp_index-pos} ret
+## @fn ble/complete/expand:github678-expand-command-suffix/.map word
+##   @var[out] ret
+function ble/complete/expand:github678-expand-command-suffix/.map {
   ble/syntax:bash/simple-word/safe-eval "$word" nonull || return 1
 
   # When an exact match of the command is found, expansion does not happen
@@ -32,13 +31,16 @@ function ble/complete/expand:github678-expand-command-suffix {
   local suffixes suffix
   ble/string#split suffixes : "$bleopt_github678_expand_command_suffix"
   for suffix in "${suffixes[@]}"; do
-    if [[ $suffix ]] && type -P -- "$cmd.$suffix" &>/dev/null; then
-      cmd=$cmd.$suffix
-      ble/widget/.replace-range "$pos" "$comp_index" "$cmd"
+    if [[ $suffix ]] && builtin type -P -- "$cmd.$suffix" &>/dev/null; then
+      ret=$cmd.$suffix
       return 0
     fi
   done
 
   # When nothing is found, we do not perform expansion.
   return 1
+}
+
+function ble/complete/expand:github678-expand-command-suffix {
+  ble/complete/expand/expand-command-name 'ble/complete/expand:github678-expand-command-suffix/.map' "$1"
 }
