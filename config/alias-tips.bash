@@ -25,7 +25,7 @@ function ble/contrib/config:alias-tips/preexec.hook {
   local best_name= best_value=
   local i name value
   for ((i = 0; i < ${#names[@]}; i++)); do
-    name=${names[i]} value=${values[i]}
+    name=${names[i]} value=${values[i]%[[:blank:]]}
 
     # Only consider an alias that shortens a command line
     ((${#name} < ${#value})) || continue
