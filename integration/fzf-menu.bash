@@ -143,7 +143,7 @@ function ble/widget/fzf-menu-complete {
   ble/widget/complete
 }
 
-ble-import -C 'ble/function#push ble/complete/menu/show "ble/contrib/integration:fzf-menu/.select-and-insert"' core-complete
+ble-import -C 'ble/function#push ble/complete/menu/show "ble/contrib/integration:fzf-menu/.select-and-insert \"\$@\""' core-complete
 
 # function ble/contrib/integration:fzf-menu/complete.after {
 #   [[ $bleopt_integration_fzf_menu_enabled ]] || return 0
