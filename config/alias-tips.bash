@@ -30,7 +30,7 @@ function ble/contrib/config:alias-tips/preexec.hook {
     # Only consider an alias that shortens a command line
     ((${#name} < ${#value})) || continue
 
-    # Only consider an alias value matching to the current command line
+    # Only consider an alias value matching the current command line
     ble/string#escape-for-extended-regex "$value"; local rex_value=$ret
     ble/string#match "$command" "^[$_ble_term_IFS]*$rex_value($|[$_ble_term_IFS=;|&()<>])" || continue
 

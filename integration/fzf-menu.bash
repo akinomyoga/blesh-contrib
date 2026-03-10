@@ -2,6 +2,8 @@
 #
 # https://github.com/akinomyoga/ble.sh/issues/479
 
+bleopt/declare -v integration_fzf_menu_enabled 1
+
 _ble_contrib_fzf_menu_filter=
 function ble/contrib/integration:fzf-menu/initialize {
   builtin unset -f "$FUNCNAME"
@@ -75,6 +77,11 @@ function ble/contrib/integration:fzf-menu/.get-common-prefix {
 }
 
 function ble/contrib/integration:fzf-menu/.select-and-insert {
+  if [[ ! $bleopt_integration_fzf_menu_enabled ]]; then
+    ble/function#push/call-top "$@"
+    return "$?"
+  fi
+
   if ((cand_count>1)); then
     local common_prefix=
     ble/contrib/integration:fzf-menu/.get-common-prefix "${cand_cand[@]}"
@@ -129,9 +136,17 @@ function ble/contrib/integration:fzf-menu/.select-and-insert {
   return 148
 }
 
+# Runs the normal completion but shows fzf instead of ble.sh's built-in menu
+# when there are multiple candidates.
+function ble/widget/fzf-menu-complete {
+  local bleopt_integration_fzf_menu_enabled=1
+  ble/widget/complete
+}
+
 ble-import -C 'ble/function#push ble/complete/menu/show "ble/contrib/integration:fzf-menu/.select-and-insert"' core-complete
 
 # function ble/contrib/integration:fzf-menu/complete.after {
+#   [[ $bleopt_integration_fzf_menu_enabled ]] || return 0
 #   [[ $_ble_complete_menu_active ]] || return 0
 #   local COMP1 COMP2 COMPS COMPV
 #   local comp_type comps_flags comps_fixed
