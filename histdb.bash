@@ -62,7 +62,7 @@ bleopt/declare -v histdb_file ''
 function ble/histdb/.get-filename {
   local basename=${bleopt_histdb_file%.sqlite3}
   local hostname=${HOSTNAME:-$_ble_base_env_HOSTNAME}
-  hostname=${hostname//'/'/'%'} # filename cannot contian /
+  hostname=${hostname//'/'/'%'} # filename cannot contain /
   ret=${basename:-$_ble_base_state/history}${hostname:+@$hostname}.sqlite3
 }
 

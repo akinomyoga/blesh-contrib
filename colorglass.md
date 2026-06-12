@@ -16,7 +16,7 @@ ble-import contrib/colorglass
 
 ## Options
 
-### Blopet `colorglass_gamma` (Integer)
+### Bleopt `colorglass_gamma` (Integer)
 
 This option specifies the change of gamma by percentage.  For example, `bleopt
 colorglass_gamma=5` performs the gamma correction with $\gamma=1.05$, and
@@ -27,7 +27,7 @@ colorglass_gamma=5` performs the gamma correction with $\gamma=1.05$, and
 bleopt colorglass_gamma=0
 ```
 
-### Blopet `colorglass_contrast` (Integer)
+### Bleopt `colorglass_contrast` (Integer)
 
 This option specifies the contrast modification in the range -100..100.
 
@@ -36,7 +36,7 @@ This option specifies the contrast modification in the range -100..100.
 bleopt colorglass_contrast=0
 ```
 
-### Blopet `colorglass_rotate` (Integer)
+### Bleopt `colorglass_rotate` (Integer)
 
 This option specifies the angle of hue rotation in degrees.
 
@@ -45,7 +45,7 @@ This option specifies the angle of hue rotation in degrees.
 bleopt colorglass_rotate=0
 ```
 
-### Blopet `colorglass_saturation` (Integer)
+### Bleopt `colorglass_saturation` (Integer)
 
 This option specifies the change of saturation in the range -100..100.
 
@@ -54,7 +54,7 @@ This option specifies the change of saturation in the range -100..100.
 bleopt colorglass_saturation=0
 ```
 
-### Blopet `colorglass_brightness` (Integer)
+### Bleopt `colorglass_brightness` (Integer)
 
 This option specifies the change of brightness in the range -100..100.
 
@@ -63,23 +63,23 @@ This option specifies the change of brightness in the range -100..100.
 bleopt colorglass_brightness=0
 ```
 
-### Blopet `colorglass_alpha` (Integer)
+### Bleopt `colorglass_alpha` (Integer)
 
 This option specifies the opacity in the range 0..255 when the color is
 synthesized with the background color specified by `bleopt colorglass_color`.
 
 ```bash
-# defualt
+# default
 bleopt colorglass_alpha=255
 ```
 
-### Blopet `colorglass_color` (Integer)
+### Bleopt `colorglass_color` (Integer)
 
 This option specifies the background color used by the color synthesis by
 `bleopt colorglass_alpha`.
 
 ```bash
-# defualt
+# default
 bleopt colorglass_color=0x8888FF
 ```
 
@@ -93,7 +93,7 @@ or [`colorglass.base16.dat`](https://github.com/akinomyoga/blesh-contrib/blob/ma
 for the list of available palettes.
 
 ```bash
-# defualt
+# default
 bleopt colorglass_base16_palette=
 ```
 
