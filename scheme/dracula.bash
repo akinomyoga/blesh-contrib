@@ -4,105 +4,106 @@
 # Author: shifu-ukraine
 # SPDX-License-Identifier: BSD-3-Clause
 
-# Dracula color palette:
-# Background   #282A36
-# Current      #44475A
-# Foreground   #F8F8F2
-# Comment      #6272A4
-# Cyan         #8BE9FD
-# Green        #50FA7B
-# Orange       #FFB86C
-# Pink         #FF79C6
-# Purple       #BD93F9
-# Red          #FF5555
-# Yellow       #F1FA8C
-
 ble-import contrib/scheme/default
 
 function ble/contrib/scheme:dracula/initialize {
   ble/contrib/scheme:default/initialize
+
+  # Dracula color palette:
+  ble/color/alias/set basic1  '#FF5555' # Red
+  ble/color/alias/set basic2  '#50FA7B' # Green
+  ble/color/alias/set basic3  '#F1FA8C' # Yellow
+  ble/color/alias/set basic4  '#BD93F9' # Purple
+  ble/color/alias/set basic5  '#FF79C6' # Pink
+  ble/color/alias/set basic6  '#8BE9FD' # Cyan
+  ble/color/alias/set basic7  '#F8F8F2' # Foreground
+  ble/color/alias/set basic8  '#6272A4' # Comment
+  ble/color/alias/set custom1 '#282A36' # Background
+  ble/color/alias/set custom2 '#44475A' # Current
+  ble/color/alias/set custom3 '#FFB86C' # Orange
+
   # Базовий синтаксис
-  ble-face -s syntax_default            fg=#BD93F9,bold
-  ble-face -s syntax_comment            fg=#6272A4
-  ble-face -s syntax_command            fg=#8BE9FD
-  ble-face -s syntax_function_name      fg=#50FA7B,bold
-  ble-face -s syntax_delimiter          fg=#FFB86C
-  ble-face -s syntax_brace              fg=#50FA7B
-  ble-face -s syntax_escape             fg=#BD93F9
-  ble-face -s syntax_expr               fg=#FF79C6
-  ble-face -s syntax_glob               fg=#FFB86C,bold
-  ble-face -s syntax_param_expansion    fg=#BD93F9
-  ble-face -s syntax_varname            fg=#50FA7B
-  ble-face -s syntax_quoted             fg=#F1FA8C
-  ble-face -s syntax_quotation          fg=#F1FA8C,bold
-  ble-face -s syntax_error              fg=#FF5555,bold
-  ble-face -s syntax_document           fg=#F1FA8C
-  ble-face -s syntax_document_begin     fg=#F1FA8C,bold
-  ble-face -s syntax_history_expansion  fg=#F8F8F2,bg=#44475A
-  ble-face -s syntax_tilde              fg=#BD93F9,bold
+  ble-face -s syntax_default            fg=%basic4,bold
+  ble-face -s syntax_comment            fg=%basic8
+  ble-face -s syntax_command            fg=%basic6
+  ble-face -s syntax_function_name      fg=%basic2,bold
+  ble-face -s syntax_delimiter          fg=%custom3
+  ble-face -s syntax_brace              fg=%basic2
+  ble-face -s syntax_escape             fg=%basic4
+  ble-face -s syntax_expr               fg=%basic5
+  ble-face -s syntax_glob               fg=%custom3,bold
+  ble-face -s syntax_param_expansion    fg=%basic4
+  ble-face -s syntax_varname            fg=%basic2
+  ble-face -s syntax_quoted             fg=%basic3
+  ble-face -s syntax_quotation          fg=%basic3,bold
+  ble-face -s syntax_error              fg=%basic1,bold
+  ble-face -s syntax_document           fg=%basic3
+  ble-face -s syntax_document_begin     fg=%basic3,bold
+  ble-face -s syntax_history_expansion  fg=%basic7,bg=%custom2
+  ble-face -s syntax_tilde              fg=%basic4,bold
 
   # Типи команд
-  ble-face -s command_builtin           fg=#8BE9FD,bold
-  ble-face -s command_function          fg=#8BE9FD,underline
-  ble-face -s command_file              fg=#8BE9FD
-  ble-face -s command_directory         fg=#BD93F9,underline
-  ble-face -s command_keyword           fg=#FF79C6,bold
-  ble-face -s command_alias             fg=#8BE9FD
-  ble-face -s command_suffix            fg=#F8F8F2,bg=#44475A
-  ble-face -s command_suffix_new        fg=#F8F8F2,bg=#FF5555,bold
-  ble-face -s command_jobs              fg=#FF5555,bold
+  ble-face -s command_builtin           fg=%basic6,bold
+  ble-face -s command_function          fg=%basic6,underline
+  ble-face -s command_file              fg=%basic6
+  ble-face -s command_directory         fg=%basic4,underline
+  ble-face -s command_keyword           fg=%basic5,bold
+  ble-face -s command_alias             fg=%basic6
+  ble-face -s command_suffix            fg=%basic7,bg=%custom2
+  ble-face -s command_suffix_new        fg=%basic7,bg=%basic1,bold
+  ble-face -s command_jobs              fg=%basic1,bold
 
   # Імена файлів при автодоповненні
-  ble-face -s filename_directory        fg=#BD93F9,underline
-  ble-face -s filename_executable       fg=#BD93F9,bold
-  ble-face -s filename_link             fg=#BD93F9,underline
-  ble-face -s filename_orphan           fg=#FF5555
-  ble-face -s filename_warning          fg=#FF5555,underline
-  ble-face -s filename_directory_sticky fg=#F8F8F2,bg=#44475A,underline
-  ble-face -s filename_character        fg=#8BE9FD,bg=#282A36,underline
-  ble-face -s filename_block            fg=#F1FA8C,bg=#282A36,underline
-  ble-face -s filename_pipe             fg=#50FA7B,bg=#282A36,underline
-  ble-face -s filename_setgid           fg=#282A36,bg=#FFB86C,underline
-  ble-face -s filename_setuid           fg=#282A36,bg=#FF5555,underline
-  ble-face -s filename_socket           fg=#BD93F9,bg=#282A36,underline
-  ble-face -s filename_url              fg=#8BE9FD,underline
+  ble-face -s filename_directory        fg=%basic4,underline
+  ble-face -s filename_executable       fg=%basic4,bold
+  ble-face -s filename_link             fg=%basic4,underline
+  ble-face -s filename_orphan           fg=%basic1
+  ble-face -s filename_warning          fg=%basic1,underline
+  ble-face -s filename_directory_sticky fg=%basic7,bg=%custom2,underline
+  ble-face -s filename_character        fg=%basic6,bg=%custom1,underline
+  ble-face -s filename_block            fg=%basic3,bg=%custom1,underline
+  ble-face -s filename_pipe             fg=%basic2,bg=%custom1,underline
+  ble-face -s filename_setgid           fg=%custom1,bg=%custom3,underline
+  ble-face -s filename_setuid           fg=%custom1,bg=%basic1,underline
+  ble-face -s filename_socket           fg=%basic4,bg=%custom1,underline
+  ble-face -s filename_url              fg=%basic6,underline
   ble-face -s filename_ls_colors        none
   ble-face -s filename_other            none
 
   # Автодоповнення та меню (використовуємо Current Line для підсвічування)
-  ble-face -s auto_complete             fg=#6272A4
-  ble-face -s menu_complete_match       fg=#F1FA8C,bold
-  ble-face -s menu_complete_selected    fg=#F8F8F2,bg=#44475A
-  ble-face -s menu_filter_input         fg=#282A36,bg=#F1FA8C
+  ble-face -s auto_complete             fg=%basic8
+  ble-face -s menu_complete_match       fg=%basic3,bold
+  ble-face -s menu_complete_selected    fg=%basic7,bg=%custom2
+  ble-face -s menu_filter_input         fg=%custom1,bg=%basic3
 
   # Виділення тексту (Region) та режими
-  ble-face -s region                    bg=#44475A
-  ble-face -s region_insert             fg=#F8F8F2,bg=#44475A
-  ble-face -s region_match              fg=#282A36,bg=#BD93F9
-  ble-face -s region_target             fg=#282A36,bg=#8BE9FD
-  ble-face -s overwrite_mode            fg=#282A36,bg=#FFB86C
-  ble-face -s prompt_status_line        fg=#F8F8F2,bg=#44475A
+  ble-face -s region                    bg=%custom2
+  ble-face -s region_insert             fg=%basic7,bg=%custom2
+  ble-face -s region_match              fg=%custom1,bg=%basic4
+  ble-face -s region_target             fg=%custom1,bg=%basic6
+  ble-face -s overwrite_mode            fg=%custom1,bg=%custom3
+  ble-face -s prompt_status_line        fg=%basic7,bg=%custom2
 
   # Аргументи та прапорці команд
-  ble-face -s argument_option           fg=#FFB86C
-  ble-face -s argument_error            fg=#F8F8F2,bg=#FF5555,bold
+  ble-face -s argument_option           fg=%custom3
+  ble-face -s argument_error            fg=%basic7,bg=%basic1,bold
 
   # Стани змінних
-  ble-face -s varname_export            fg=#FF79C6,bold
-  ble-face -s varname_readonly          fg=#BD93F9,bold
-  ble-face -s varname_new               fg=#50FA7B
-  ble-face -s varname_unset             fg=#6272A4
-  ble-face -s varname_empty             fg=#6272A4,bold
-  ble-face -s varname_expr              fg=#BD93F9
-  ble-face -s varname_hash              fg=#50FA7B,bold
-  ble-face -s varname_number            fg=#F1FA8C
-  ble-face -s varname_transform         fg=#FFB86C
-  ble-face -s varname_array             fg=#FFB86C,bold
+  ble-face -s varname_export            fg=%basic5,bold
+  ble-face -s varname_readonly          fg=%basic4,bold
+  ble-face -s varname_new               fg=%basic2
+  ble-face -s varname_unset             fg=%basic8
+  ble-face -s varname_empty             fg=%basic8,bold
+  ble-face -s varname_expr              fg=%basic4
+  ble-face -s varname_hash              fg=%basic2,bold
+  ble-face -s varname_number            fg=%basic3
+  ble-face -s varname_transform         fg=%custom3
+  ble-face -s varname_array             fg=%custom3,bold
 
   # Переходи cd (зараз синьо-зелені індекси)
-  ble-face -s cmdinfo_cd_cdpath         fg=#6272A4,bg=#44475A
+  ble-face -s cmdinfo_cd_cdpath         fg=%basic8,bg=%custom2
   # Вимкнені/неактивні елементи
-  ble-face -s disabled                  fg=#6272A4
+  ble-face -s disabled                  fg=%basic8
   # Очищення екрана візуального дзвінка
-  ble-face -s vbell_erase               bg=#282A36
+  ble-face -s vbell_erase               bg=%custom1
 }
