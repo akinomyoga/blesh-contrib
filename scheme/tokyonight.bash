@@ -1,4 +1,4 @@
-# ble.sh Color Scheme inspired by Tokyo Night theme for NeoVim created by folke.
+# ble.sh Color Scheme inspired by Tokyo Night theme for NeoVim created by folke
 # https://github.com/folke/tokyonight.nvim
 
 ble-import contrib/scheme/default
