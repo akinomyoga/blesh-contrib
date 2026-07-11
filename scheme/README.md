@@ -1,4 +1,4 @@
-# blesh/contrib/schemes
+# blesh/contrib/scheme
 
 ## Use the "base16" scheme with the terminal's color scheme
 
@@ -21,10 +21,11 @@ bleopt color_scheme=base16
 ## Use the "base16" scheme with a specified base16 palette
 
 The `base16` color scheme can be combined with one of base16 palettes defined
-in `contrib/colorglass.base16.dat`.  Currently, [**865
+in `contrib/colorglass.base16.dat`.  Currently (2026-07-11), [**865
 palettes**](https://akinomyoga.github.io/ble.sh/colorglass.base16.html) are
-available for `bleopt colorglass_base16_palette`.  For example, to use
-`TokyoNight` palette, one can use the following setting:
+available for [`bleopt
+colorglass_base16_palette`](https://github.com/akinomyoga/blesh-contrib/blob/master/colorglass.md#bleopt-colorglass_base16_palette-emptyenumerate).
+For example, to use `TokyoNight` palette, one can use the following setting:
 
 ```bash
 # ~/.blerc
@@ -72,3 +73,24 @@ function ble/contrib/scheme:sample/initialize {
 To derive a color scheme from an existing color scheme `example_base`, one can
 import and call `ble/contrib/scheme:example_base/initialize` instead of
 `ble/contrib/scheme:default/initialize`.
+
+## List of schemes
+
+- **bleopt color_scheme=default**
+
+This is the default color scheme of `ble.sh`.
+
+- **bleopt color_scheme=base16**
+
+This is the base16 color scheme, which only uses the index color 0..15.  This
+is useful when the user wants to use only the basic 16 colors, which are
+configured by the terminal's theme.
+  
+- **bleopt color_scheme=catppuccin_mocha**
+- **bleopt color_scheme=rosepine_dawn**
+- **bleopt color_scheme=rosepine_moon**
+- **bleopt color_scheme=dracula**
+- **bleopt color_scheme=tokyonight**
+
+Those color schemes provide the schemes using various colors from the
+corresponding named themes.

@@ -222,3 +222,9 @@ ble-import -d integration/fzf-menu -C '
   ble-bind -m emacs -f S-TAB fzf-menu-complete
 '
 ```
+
+## :pencil: `integration/skim-{completion,key-bindings}`
+
+Skim introduces very similar settings into Bash.  `integration/skim-completion`
+and `integration/skim-key-bindings` can be used in a similar manner as
+`integration/fzf-completion` and `integration/fzf-key-bindings`, respectively.
