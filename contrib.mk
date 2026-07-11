@@ -35,9 +35,10 @@ $(OUTDIR)/licenses/contrib/LICENSE: contrib/LICENSE | $(OUTDIR)/licenses/contrib
 
 # docs
 
-outdirs += $(OUTDIR)/doc/contrib $(OUTDIR)/doc/contrib/integration
+docdirs := $(OUTDIR)/doc/contrib $(OUTDIR)/doc/contrib/integration $(OUTDIR)/doc/contrib/scheme
+outdirs += $(docdirs)
 ifneq ($(USE_DOC),no)
   outfiles-doc += $(contrib-docfiles:contrib/%=$(OUTDIR)/doc/contrib/%)
 endif
-$(OUTDIR)/doc/contrib/%.md: contrib/%.md | $(OUTDIR)/doc/contrib $(OUTDIR)/doc/contrib/integration
+$(OUTDIR)/doc/contrib/%.md: contrib/%.md | $(docdirs)
 	$(CP) $< $@
