@@ -270,7 +270,9 @@ function bleopt/check:colorglass_base16_palette {
 function ble/contrib/colorglass.filter {
   # 24bit color
   local R= G= B= dirty=
-  if ((ccode<16)); then
+  if ((ccode<0)); then
+    return 0
+  elif ((ccode<16)); then
     local hex=${_ble_contrib_colorglass_base16_palette[ccode]-}
     if [[ $hex ]]; then
       ((hex=hex,R=0xFF&hex>>16,G=0xFF&hex>>8,B=0xFF&hex,dirty=1))
@@ -312,6 +314,8 @@ function ble/contrib/colorglass.filter {
     ((R=0xFF&ccode>>16))
     ((G=0xFF&ccode>>8))
     ((B=0xFF&ccode))
+  else
+    return 0
   fi
 
   local rot=$((bleopt_colorglass_rotate))
