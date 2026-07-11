@@ -3,7 +3,7 @@
 
 ble-import contrib/scheme/default
 
-function ble/contrib/scheme:tokyo_night/initialize {
+function ble/contrib/scheme:tokyonight/initialize {
   ble/contrib/scheme:default/initialize
 
   ble/color/alias/set basic0  '#16161e' # bg_dark
