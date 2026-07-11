@@ -1,9 +1,5 @@
 # Scheme Inspired by Rosé Pine Moon
 # https://rosepinetheme.com/palette/ingredients/#rose-pine-moon
-# Based on Catppuccin Mocha theme for ble.sh
-# https://github.com/catppuccin/catppuccin
-# initial idea/work by @abhijeeth-babu
-# https://github.com/akinomyoga/ble.sh/discussions/411#discussioncomment-10088978
 
 ble-import contrib/scheme/catppuccin_mocha
 
