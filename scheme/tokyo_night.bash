@@ -101,7 +101,7 @@ function ble/contrib/scheme:tokyo_night/initialize {
   ble-face -s argument_error            "fg=%basic0,bg=%basic3"
 
   # highlighting for completions
-  ble-face -s auto_complete             "fg=#238, bg=#254"            # approximate fg=238, bg=254 from default (use blue6 and bg_highlight)
+  ble-face -s auto_complete             "fg=#b4f9f8,bg=#292e42"       # approximate fg=238, bg=254 from default (use blue6 and bg_highlight)
   ble-face -s menu_complete_match       bold
   ble-face -s menu_complete_selected    reverse
   ble-face -s menu_desc_default         none
