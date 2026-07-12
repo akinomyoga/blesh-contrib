@@ -36,9 +36,9 @@ function ble/contrib/config:github302/perlre-server {
 if ble/util/bgproc#open perlre_server ble/contrib/config:github302/perlre-server; then
   # The main shell can send a request to fd ${perlre_server_bgproc[1]} and can
   # read from fd ${perlre_server_bgproc[0]}.
-  ble/util/print "ble/contrib/config:github30: perlre-server (${perlre_server_bgproc[4]}) has started." >&2
+  ble/util/print "ble/contrib/config:github302: perlre-server (${perlre_server_bgproc[4]}) has started." >&2
 else
-  ble/util/print 'ble/contrib/config:github30: failed to start perlre-server' >&2
+  ble/util/print 'ble/contrib/config:github302: failed to start perlre-server' >&2
   return 1
 fi
 

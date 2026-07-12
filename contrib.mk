@@ -2,6 +2,9 @@
 
 contrib-subdirs := airline config integration layer scheme syntax
 contrib-outdirs := $(OUTDIR)/contrib $(contrib-subdirs:%=$(OUTDIR)/contrib/%)
+# FIXME: I belive the ble.sh author encouraged me to put the perl-re-server2 in
+# it's own file, but for it to get correctly installed it would have to get
+# mentioned hereish
 contrib-srcfiles := $(wildcard contrib/*.bash $(contrib-subdirs:%=contrib/%/*.bash))
 contrib-datfiles := $(wildcard contrib/*.dat $(contrib-subdirs:%=contrib/%/*.dat))
 contrib-docfiles := $(wildcard contrib/*.md $(contrib-subdirs:%=contrib/%/*.md))
