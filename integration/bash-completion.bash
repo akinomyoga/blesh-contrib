@@ -302,6 +302,12 @@ function ble/contrib/integration:bash-completion/adjust {
 
   ble/contrib/integration:bash-completion/loader/adjust
 
+  # apt's _apt completion: apt-cache dumpavail stderr when captured by $()
+  # https://github.com/akinomyoga/ble.sh/issues/545
+  # upstream: https://salsa.debian.org/apt-team/apt/-/blob/master/completions/bash/apt
+  [[ $comp_func == _apt ]] &&
+    ble/function#suppress-stderr _apt 2>/dev/null
+
   _ble_contrib_integration_bash_completion_cmd_conditional_sync=(_comp_cmd_make _make _do_dnf5_completion)
 
   if [[ $comp_func == _comp_cmd_make || $comp_func == _make ]]; then
