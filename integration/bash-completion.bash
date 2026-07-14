@@ -297,46 +297,16 @@ function ble/contrib/integration:bash-completion/_do_dnf5_completion.advice {
   fi
 }
 
-## @fn ble/contrib/integration:bash-completion/apt/patch-function
-##   Fix broken "apt policy" (and related) completion in bash-completion.
-##
-##   bash-completion's _apt uses adjacent command substitutions and runs
-##   "apt-cache dumpavail" without stderr redirection.  "apt-cache dumpavail"
-##   emits "E: read, still have 1 to read but none left" to stderr when its
-##   stdout is captured by command substitution.  ble.sh auto-complete invokes
-##   completion on every key input, so the error appears after each keystroke.
-##
-##   https://github.com/akinomyoga/ble.sh/issues/545
-function ble/contrib/integration:bash-completion/apt/patch-function {
-  ble/is-function _apt || return 0
-
-  local lambda=ble/contrib/integration:bash-completion/apt/patch-function:orig
-  ble/is-function "$lambda" && return 0
-
-  local def
-  ble/util/assign def 'declare -f _apt' || return 0
-
-  local old='COMPREPLY=($(apt-cache --no-generate pkgnames "$cur" 2> /dev/null) $(apt-cache dumpavail | command grep "^Source: $cur" | sort -u | cut -f2 -d" "));'
-  local new='COMPREPLY=($({ apt-cache --no-generate pkgnames "$cur" 2> /dev/null; apt-cache dumpavail 2> /dev/null | command grep "^Source: $cur" | sort -u | cut -f2 -d" "; }));'
-  if [[ $def == *"$old"* ]]; then
-    def=${def//"$old"/"$new"}
-  elif [[ $def == *'apt-cache dumpavail |'* && $def != *'apt-cache dumpavail 2>'* ]]; then
-    def=${def//'apt-cache dumpavail |'/'apt-cache dumpavail 2> /dev/null |'}
-  else
-    return 0
-  fi
-
-  ble/function#.copy-primitive _apt "$lambda"
-  builtin eval "$def"
-}
-
 function ble/contrib/integration:bash-completion/adjust {
   ble/is-function _comp_initialize || ble/is-function _quote_readline_by_ref || return 0
 
   ble/contrib/integration:bash-completion/loader/adjust
 
+  # apt's _apt completion: apt-cache dumpavail stderr when captured by $()
+  # https://github.com/akinomyoga/ble.sh/issues/545
+  # upstream: https://salsa.debian.org/apt-team/apt/-/blob/master/completions/bash/apt
   [[ $comp_func == _apt ]] &&
-    ble/contrib/integration:bash-completion/apt/patch-function
+    ble/function#suppress-stderr _apt 2>/dev/null
 
   _ble_contrib_integration_bash_completion_cmd_conditional_sync=(_comp_cmd_make _make _do_dnf5_completion)
 
