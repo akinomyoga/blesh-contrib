@@ -325,9 +325,7 @@ function ble/histdb/collect-words {
     #   measure.  We count the number of commands where the word appears
     #   because the same word can easily appear in a single command multiple
     #   times.
-    ble/set#contains mark "$word" && return 0
-
-    ble/set#add mark "$word"
+    ble/set#add mark "$word" || return 0
     ble/array#push ret "$word"
   done
 }
