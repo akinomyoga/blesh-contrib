@@ -78,21 +78,24 @@ function ble/contrib/integration:bash-completion/loader/adjust {
 #------------------------------------------------------------------------------
 # Hooks for mandb
 
-## @fn ble/contrib/integration:bash-completion/mandb/.alloc-subcache command hash [opts]
+## @fn ble/contrib/integration:bash-completion/mandb/.alloc-subcache command key [opts]
 ##   @var[out] ret
 function ble/contrib/integration:bash-completion/mandb/.alloc-subcache {
   ret=
   [[ $_ble_attached ]] || return 1
 
-  local command=$1 hash=$2 opts=$3
+  local command=$1 key=$2 opts=$3
   if [[ :$opts: == *:dequote:* ]]; then
     ble/syntax:bash/simple-word/safe-eval "$command" noglob:nonull &&
       command=$ret
   fi
   [[ $command ]] || return 1
 
-  [[ $command == ble*/* ]] || command=${1##*/}
-  ble/string#hash-pjw "$args" 64; local hash=$ret
+  if [[ $command != ble*/* ]]; then
+    [[ $command != /* && $command == */* ]] && key=$PWD/${command#./}${key:+ $key}
+    command=${command##*/}
+  fi
+  ble/string#hash-pjw "$key" 64; local hash=$ret
   local lc_messages=${LC_ALL:-${LC_MESSAGES:-${LANG:-C}}}
   local mandb_cache_dir=$_ble_base_cache/complete.mandb/${lc_messages//'/'/%}
   ble/util/sprintf ret '%s.%014x' "$mandb_cache_dir/_parse_help.d/$command" "$hash"
