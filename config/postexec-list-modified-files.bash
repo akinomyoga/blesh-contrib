@@ -55,10 +55,10 @@ function ble/heap#.push {
   while ((__ble_i > 0)); do
     ((__ble_j=(__ble_i-1)/2))
     ble/heap#.less "$__ble_value" "${!__ble_jref}" || break
-    builtin eval "$__ble_iref"'=${'"$__ble_jref"'}'
+    builtin eval -- "$__ble_iref"'=${'"$__ble_jref"'}'
     __ble_i=$__ble_j
   done
-  builtin eval "$__ble_iref"'=$__ble_value'
+  builtin eval -- "$__ble_iref"'=$__ble_value'
 }
 
 ## @fn ble/heap#.replace i value
@@ -72,10 +72,10 @@ function ble/heap#.replace {
       ble/heap#.less "${!__ble_kref}" "${!__ble_jref}" &&
       ((__ble_j++))
     ble/heap#.less "${!__ble_jref}" "$__ble_value" || break
-    builtin eval "$__ble_iref"'=${'"$__ble_jref"'}'
+    builtin eval -- "$__ble_iref"'=${'"$__ble_jref"'}'
     __ble_i=$__ble_j
   done
-  builtin eval "$__ble_iref"'=$__ble_value'
+  builtin eval -- "$__ble_iref"'=$__ble_value'
 }
 
 ## @fn ble/heap#.pop
@@ -106,7 +106,7 @@ function ble/array#.heapify {
 ##   @param[in] predicate_less
 ##   @param[in] value
 function ble/heap#push {
-  local "${_ble_heap_vars[@]}"
+  local "${_ble_heap_vars[@]}" # disable=#D1566
   ble/heap#.initialize "$1" "$2"
   ble/heap#.push "$3"
 }
@@ -119,7 +119,7 @@ function ble/heap#push {
 ##     REPLY and exits with status 1.  Otherwise, the function sets REPLY and
 ##     exits with status 0.
 function ble/heap#pop {
-  local "${_ble_heap_vars[@]}"
+  local "${_ble_heap_vars[@]}" # disable=#D1566
   ble/heap#.initialize "$1" "$2"
   ble/heap#.pop
 }
@@ -129,7 +129,7 @@ function ble/heap#pop {
 ##   @param[in] predicate_less
 ##   @param[in] value
 function ble/heap#replace-top {
-  local "${_ble_heap_vars[@]}"
+  local "${_ble_heap_vars[@]}" # disable=#D1566
   ble/heap#.initialize "$1" "$2"
   ble/heap#.replace 0 "$3"
 }
@@ -138,7 +138,7 @@ function ble/heap#replace-top {
 ##   @param[in] name
 ##   @param[in] predicate_less
 function ble/array#heapify {
-  local "${_ble_heap_vars[@]}"
+  local "${_ble_heap_vars[@]}" # disable=#D1566
   ble/heap#.initialize "$1" "$2"
   ble/array#.heapify
 }
@@ -147,7 +147,7 @@ function ble/array#heapify {
 ##   @param[in] name
 ##   @param[in] predicate_less
 function ble/array#is-heap {
-  local "${_ble_heap_vars[@]}"
+  local "${_ble_heap_vars[@]}" # disable=#D1566
   ble/heap#.initialize "$1" "$2"
   local __ble_i __ble_j
   for ((__ble_i = __ble_len / 2 - 1; __ble_i >= 0; __ble_i--)); do
@@ -209,7 +209,7 @@ function ble/array#.max {
 ##   @param[in] count
 ##   @arr[out] REPLY
 function ble/array#min {
-  local "${_ble_heap_vars[@]}"
+  local "${_ble_heap_vars[@]}" # disable=#D1566
   ble/heap#.initialize "$1" "$2" reverse
   ble/array#.max "${3:-1}"
 }
@@ -220,7 +220,7 @@ function ble/array#min {
 ##   @param[in] count
 ##   @arr[out] REPLY
 function ble/array#max {
-  local "${_ble_heap_vars[@]}"
+  local "${_ble_heap_vars[@]}" # disable=#D1566
   ble/heap#.initialize "$1" "$2"
   ble/array#.max "${3:-1}"
 }
