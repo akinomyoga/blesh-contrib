@@ -78,12 +78,13 @@ function ble/contrib/integration:bash-preexec/preexec.hook {
 ## @fn ble/contrib/integration:bash-preexec/attach.hook
 ##   Remove bash-preexec hooks
 function ble/contrib/integration:bash-preexec/attach.hook {
-  local BP_TRAPDEBUG_STRING=${__bp_trapdebug_string:-'__bp_preexec_invoke_exec "$_"'}
+  local trapdebug_string=${__bp_trapdebug_string:-'__bp_preexec_invoke_exec "$_"'}
 
-  # Remove bash-preexec preexec hook in builtin DEBUG trap.
-  local trap_string q="'" Q="'\''"
+  # Remove bash-preexec preexec hook in the DEBUG trap with "builtin trap",
+  # which will not be removed by "__bp_uninstall".
+  local q="'" Q="'\''" trap_string
   ble/util/assign trap_string 'builtin trap -p DEBUG'
-  if [[ $trap_string == "trap -- '${BP_TRAPDEBUG_STRING//$q/$Q}' DEBUG" ]]; then
+  if [[ $trap_string == "trap -- '${trapdebug_string//$q/$Q}' DEBUG" ]]; then
     if [[ ${__bp_trap_string-} ]]; then
       builtin eval -- "builtin $__bp_trap_string"
     else
@@ -96,35 +97,47 @@ function ble/contrib/integration:bash-preexec/attach.hook {
   else
     # For older bash-preexec.sh
 
-    local BP_INSTALL_STRING=${__bp_install_string:-$'__bp_trap_string="$(trap -p DEBUG)"\ntrap - DEBUG\n__bp_install'}
-    local BP_PROMPT_COMMAND_PREFIX=__bp_precmd_invoke_cmd
-    local BP_PROMPT_COMMAND_SUFFIX=__bp_interactive_mode
+    local install_string=${__bp_install_string:-$'__bp_trap_string="$(trap -p DEBUG)"\ntrap - DEBUG\n__bp_install'}
+    local prologue_v1=__bp_precmd_invoke_cmd
+    local epilogue_v1=__bp_interactive_mode
+    local prologue_v2='__bp_precmd_invoke_cmd "$_"'
+    if ble/is-function __bp_remove_command_from_prompt_command; then
+      # This utility was introduced when $prologue_v2 was used.
+      __bp_remove_command_from_prompt_command "$prologue_v2"
+      __bp_remove_command_from_prompt_command "$epilogue_v1"
+      __bp_remove_command_from_prompt_command "$install_string"
+    else
+      # Remove precmd hook from PROMPT_COMMAND
+      local i prompt_command
+      for i in "${!PROMPT_COMMAND[@]}"; do
+        prompt_command=${PROMPT_COMMAND[i]}
 
-    # Remove __bp_install hook from PROMPT_COMMAND
-    if [[ ${PROMPT_COMMAND-} == *"$__bp_install_string"* ]]; then
-      PROMPT_COMMAND="${PROMPT_COMMAND//$BP_INSTALL_STRING[;$'\n']}" # Edge case of appending to PROMPT_COMMAND
-      PROMPT_COMMAND="${PROMPT_COMMAND//$BP_INSTALL_STRING}"
+        # Remove __bp_install hook from PROMPT_COMMAND
+        prompt_command=${prompt_command//"$install_string"[;$'\n']} # Edge case of appending to PROMPT_COMMAND
+        prompt_command=${prompt_command//"$install_string"}
+
+        case $prompt_command in
+        ("$prologue_v1"|"$epilogue_v1"|"$prologue_v2")
+          prompt_command= ;;
+        (*)
+          prompt_command=${prompt_command/#"$prologue_v2"$'\n'/$'\n'}
+          prompt_command=${prompt_command/#"$prologue_v1"$'\n'/$'\n'}
+          prompt_command=${prompt_command%$'\n'"$epilogue_v1"}
+          prompt_command=${prompt_command#$'\n'}
+        esac
+        PROMPT_COMMAND[i]=$prompt_command
+      done
     fi
 
-    # Remove precmd hook from PROMPT_COMMAND
-    local i prompt_command
-    for i in "${!PROMPT_COMMAND[@]}"; do
-      prompt_command=${PROMPT_COMMAND[i]}
-      case $prompt_command in
-      ("$BP_PROMPT_COMMAND_PREFIX"|"$BP_PROMPT_COMMAND_SUFFIX")
-        prompt_command= ;;
-      (*)
-        prompt_command=${prompt_command/#"$BP_PROMPT_COMMAND_PREFIX"$'\n'/$'\n'}
-        prompt_command=${prompt_command%$'\n'"$BP_PROMPT_COMMAND_SUFFIX"}
-        prompt_command=${prompt_command#$'\n'}
-      esac
-      PROMPT_COMMAND[i]=$prompt_command
-    done
+    # Remove bash-preexec hook in PS0
+    local ps0_string='${ __bp_invoke_preexec_from_ps0 "$_" >&2; }'
+    PS0=${PS0//"$ps0_string"}
 
-    # Remove preexec hook in the DEBUG trap
+    # Remove bash-preexec hook in the DEBUG trap within the "trap" command,
+    # that is replaced by ble.sh.
     local q="'" Q="'\''" trap_string
     ble/util/assign trap_string 'trap -p DEBUG'
-    if [[ $trap_string == "trap -- '${BP_TRAPDEBUG_STRING//$q/$Q}' DEBUG" ]]; then
+    if [[ $trap_string == "trap -- '${trapdebug_string//$q/$Q}' DEBUG" ]]; then
       if [[ ${__bp_trap_string-} ]]; then
         builtin eval -- "$__bp_trap_string"
       else
